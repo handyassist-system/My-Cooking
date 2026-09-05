@@ -1,0 +1,13 @@
+{
+  "name": "煮意生活",
+  "short_name": "煮意生活",
+  "description": "找食譜、排菜單、列採購清單的家庭料理規劃工具",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F6F1E7",
+  "theme_color": "#A8462E",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

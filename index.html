@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>煮意生活｜今天，煮什麼？</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#A8462E">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -817,6 +820,18 @@
   }
   .btn-primary:disabled{opacity:0.6;}
   .login-msg{margin-top:12px; font-size:var(--fs-label); color:var(--color-accent-dark); min-height:16px; line-height:var(--lh-base);}
+  .install-hint-btn{
+    width:100%; margin-top:14px; padding:12px; border-radius:var(--radius-md);
+    background:var(--color-jade-soft); color:var(--color-jade); border:1px solid var(--color-jade);
+    font-size:var(--fs-caption); font-weight:var(--weight-semibold); font-family:var(--font-family);
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  .install-hint-btn:active{transform:scale(0.98);}
+  .install-help{
+    margin-top:10px; padding:11px 13px; border-radius:var(--radius-md);
+    background:var(--color-bg); border:1px solid var(--color-border);
+    font-size:var(--fs-label); color:var(--color-text-soft); line-height:var(--lh-base); text-align:left;
+  }
 
   /* ---------- 彈窗 sheet（裝置上限／試用歡迎／到期提醒） ---------- */
   .overlay{
@@ -863,6 +878,8 @@
     <label class="login-consent"><input type="checkbox" id="agreeChk"> <span>我已閱讀並同意 <a id="termsLink" class="login-terms-link">《服務條款與隱私政策》</a></span></label>
     <button id="loginBtn" class="btn-primary">登入</button>
     <div id="loginMsg" class="login-msg"></div>
+    <button id="installHintBtn" type="button" class="install-hint-btn" style="display:none;">📲 安裝到手機桌面</button>
+    <div id="installHelp" class="install-help" style="display:none;"></div>
   </div>
 </div>
 <div id="modalRoot"></div>
@@ -1281,6 +1298,54 @@
     e.preventDefault();
     showTermsSheet();
   });
+
+  // 安裝到手機桌面：Android/桌面Chrome這類瀏覽器支援
+  // beforeinstallprompt事件，可以跳出瀏覽器原生的安裝
+  // 對話框；iOS Safari完全不支援這個事件，只能手動教學
+  // （點分享→加入主畫面），兩種情況分開處理。
+  // 如果已經是安裝後的獨立視窗模式（standalone），代表
+  // 已經裝過了，不用再顯示這顆按鈕。
+  var deferredInstallPrompt = null;
+  function isStandaloneMode(){
+    try{
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }catch(e){ return false; }
+  }
+  function isIOSDevice(){
+    return /iphone|ipad|ipod/i.test(navigator.userAgent || '');
+  }
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if(!isStandaloneMode()){
+      var btn = document.getElementById('installHintBtn');
+      if(btn) btn.style.display = 'block';
+    }
+  });
+  if(isIOSDevice() && !isStandaloneMode()){
+    // iOS 不會觸發 beforeinstallprompt，直接顯示按鈕，
+    // 點下去改成秀手動安裝說明
+    var iosBtn = document.getElementById('installHintBtn');
+    if(iosBtn) iosBtn.style.display = 'block';
+  }
+  document.getElementById('installHintBtn').addEventListener('click', async function(){
+    if(deferredInstallPrompt){
+      deferredInstallPrompt.prompt();
+      try{ await deferredInstallPrompt.userChoice; }catch(e){}
+      deferredInstallPrompt = null;
+      var btn = document.getElementById('installHintBtn');
+      if(btn) btn.style.display = 'none';
+    } else {
+      var help = document.getElementById('installHelp');
+      if(help){
+        help.style.display = 'block';
+        help.innerHTML = isIOSDevice()
+          ? '請點瀏覽器下方（或右上角）的「分享」圖示 <b>⬆️</b>，選擇「加入主畫面」即可安裝。'
+          : '請點瀏覽器右上角選單（⋮），選擇「安裝應用程式」或「加到主畫面」。';
+      }
+    }
+  });
+
   function showTrialWelcome(expiry){
     showInfoSheet("🎉", "歡迎使用煮意生活！",
       '已開啟 <b style="color:#3E9B8E">21 天全功能免費試用</b><br>到期日：'+expiry
