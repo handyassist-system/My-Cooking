@@ -1119,18 +1119,18 @@
     if(!state.user || state.isAdmin) return null;
     var key=emailKey(state.user);
     var code=genInviteCode(), exp=Date.now()+30*60*1000;
-    try{ await db.ref("subscribers/"+key+"/inviteCode").set({code:code, exp:exp}); }catch(e){ return null; }
+    try{ await db.ref("jiachangzhu_subscribers/"+key+"/inviteCode").set({code:code, exp:exp}); }catch(e){ return null; }
     return { code:code, exp:exp };
   }
   async function verifyInviteCode(email, code){
     var key=emailKey(email);
     var snap;
-    try{ snap=await db.ref("subscribers/"+key+"/inviteCode").once("value"); }catch(e){ return false; }
+    try{ snap=await db.ref("jiachangzhu_subscribers/"+key+"/inviteCode").once("value"); }catch(e){ return false; }
     var v=snap.val();
     if(!v || !v.code) return false;
     if(String(v.code)!==String(code).trim()) return false;
     if(Date.now() > Number(v.exp||0)) return false;
-    try{ await db.ref("subscribers/"+key+"/inviteCode").remove(); }catch(e){}
+    try{ await db.ref("jiachangzhu_subscribers/"+key+"/inviteCode").remove(); }catch(e){}
     return true;
   }
   function userBase(){
@@ -1183,43 +1183,43 @@
     var key=emailKey(email), id=_devId(), now=Date.now();
     var limit=planDeviceLimit(plan);
     var snap;
-    try{ snap=await db.ref("subscribers/"+key+"/devices").once("value"); }
+    try{ snap=await db.ref("jiachangzhu_subscribers/"+key+"/devices").once("value"); }
     catch(e){ return {ok:true}; }
     var devs=snap.val()||{};
     var CUT=30*86400000, changed=false;
     Object.keys(devs).forEach(function(k){
       if(k!==id && devs[k] && devs[k].last && (now-devs[k].last)>CUT){ delete devs[k]; changed=true; }
     });
-    if(changed){ try{ await db.ref("subscribers/"+key+"/devices").set(devs); }catch(e){} }
+    if(changed){ try{ await db.ref("jiachangzhu_subscribers/"+key+"/devices").set(devs); }catch(e){} }
     if(devs[id]){
       var ids=Object.keys(devs);
       if(ids.length>limit){
         ids.sort(function(a,b){ return (devs[b].last||0)-(devs[a].last||0); });
         if(ids.slice(0,limit).indexOf(id)<0) return {ok:false, limit:limit, plan:plan};
       }
-      try{ db.ref("subscribers/"+key+"/devices/"+id+"/last").set(now); }catch(e){}
+      try{ db.ref("jiachangzhu_subscribers/"+key+"/devices/"+id+"/last").set(now); }catch(e){}
       return {ok:true};
     }
     if(Object.keys(devs).length >= limit) return {ok:false, limit:limit, plan:plan};
-    try{ await db.ref("subscribers/"+key+"/devices/"+id).set({ name:_devName(), last:now, first:now }); }catch(e){}
-    try{ db.ref("subscribers/"+key+"/deviceLimit").set(limit); }catch(e){}
+    try{ await db.ref("jiachangzhu_subscribers/"+key+"/devices/"+id).set({ name:_devName(), last:now, first:now }); }catch(e){}
+    try{ db.ref("jiachangzhu_subscribers/"+key+"/deviceLimit").set(limit); }catch(e){}
     return {ok:true};
   }
   async function verifyCustomer(email){
     var key=emailKey(email);
     var now=await getServerTime();
     var snap;
-    try{ snap=await db.ref("subscribers/"+key).once("value"); }
+    try{ snap=await db.ref("jiachangzhu_subscribers/"+key).once("value"); }
     catch(e){ return { ok:true, plan: (localStorage.getItem("cal_plan")||"free") }; }
     var sub=snap.val();
     if(!sub){
       var expTs=now+21*86400000;
       var rec={ email:email, plan:"trial", expiry:_ymdTs(expTs), status:"active", deviceLimit:2, createdAt:now, lastSeen:now, devices:{} };
-      try{ await db.ref("subscribers/"+key).set(rec); }catch(e){}
+      try{ await db.ref("jiachangzhu_subscribers/"+key).set(rec); }catch(e){}
       return { ok:true, plan:"trial", expiry:rec.expiry, newTrial:true };
     }
     if(sub.status==="disabled") return { ok:false, msg:"此帳號已停用，請聯繫客服" };
-    try{ db.ref("subscribers/"+key+"/lastSeen").set(now); }catch(e){}
+    try{ db.ref("jiachangzhu_subscribers/"+key+"/lastSeen").set(now); }catch(e){}
     var expMs = sub.expiry ? Date.parse(sub.expiry+"T23:59:59") : 0;
     var expired = expMs && now>expMs;
     var effPlan = expired ? "free" : (sub.plan||"free");
@@ -1375,7 +1375,7 @@
     if(_fbUser && _fbUser.email && _fbUser.email.toLowerCase()===input.toLowerCase()){
       // 管理員Email也要先走過這道真正的Firebase驗證，通過後
       // 才標記管理員身分——不走訂閱/試用那套客戶邏輯，這樣
-      // 管理員讀取subscribers/資料時，才符合資料庫規則要求的
+      // 管理員讀取jiachangzhu_subscribers/資料時，才符合資料庫規則要求的
       // 「auth != null」，不會被安全規則擋下來變成空白畫面
       if(input.toLowerCase()===ADMIN_EMAIL){
         state.isAdmin=true; state.user=input; state.plan="full";
@@ -1449,7 +1449,7 @@
     container.innerHTML = '<p class="menu-subtitle">載入中...</p>';
     let list = [];
     try{
-      const snap = await db.ref('subscribers').once('value');
+      const snap = await db.ref('jiachangzhu_subscribers').once('value');
       const v = snap.val() || {};
       list = Object.keys(v).map(k => Object.assign({ _key:k }, v[k]));
     }catch(e){}
@@ -1543,7 +1543,7 @@
     const now = await getServerTime();
     const expTs = now + 21 * 86400000;
     const rec = { email:trimmed, plan:'trial', expiry:_ymdTs(expTs), status:'active', deviceLimit:2, createdAt:now, lastSeen:now, devices:{} };
-    try{ await db.ref('subscribers/' + key).set(rec); alert('已新增客戶：' + trimmed); }
+    try{ await db.ref('jiachangzhu_subscribers/' + key).set(rec); alert('已新增客戶：' + trimmed); }
     catch(e){ alert('新增失敗'); }
     renderAdminView();
   }
@@ -1553,14 +1553,14 @@
     if(days === null) return;
     const addDays = parseInt(days, 10) || 30;
     try{
-      const snap = await db.ref('subscribers/' + key).once('value');
+      const snap = await db.ref('jiachangzhu_subscribers/' + key).once('value');
       const sub = snap.val();
       if(!sub) return;
       const now = await getServerTime();
       const baseTs = sub.expiry ? Math.max(Date.parse(sub.expiry + 'T23:59:59'), now) : now;
       const newExp = _ymdTs(baseTs + addDays * 86400000);
-      await db.ref('subscribers/' + key + '/expiry').set(newExp);
-      await db.ref('subscribers/' + key + '/status').set('active');
+      await db.ref('jiachangzhu_subscribers/' + key + '/expiry').set(newExp);
+      await db.ref('jiachangzhu_subscribers/' + key + '/status').set('active');
       alert('已續約至 ' + newExp);
     }catch(e){ alert('續約失敗'); }
     renderAdminView();
@@ -1573,8 +1573,8 @@
     const trimmed = plan.trim();
     if(validPlans.indexOf(trimmed) === -1){ alert('請輸入：' + validPlans.join('／')); return; }
     try{
-      await db.ref('subscribers/' + key + '/plan').set(trimmed);
-      await db.ref('subscribers/' + key + '/deviceLimit').set(planDeviceLimit(trimmed));
+      await db.ref('jiachangzhu_subscribers/' + key + '/plan').set(trimmed);
+      await db.ref('jiachangzhu_subscribers/' + key + '/deviceLimit').set(planDeviceLimit(trimmed));
       alert('已改成 ' + (PLAN_LABELS[trimmed] || trimmed));
     }catch(e){ alert('修改失敗'); }
     renderAdminView();
@@ -1582,16 +1582,16 @@
 
   async function adminToggleStatus(key){
     try{
-      const snap = await db.ref('subscribers/' + key + '/status').once('value');
+      const snap = await db.ref('jiachangzhu_subscribers/' + key + '/status').once('value');
       const next = snap.val() === 'disabled' ? 'active' : 'disabled';
-      await db.ref('subscribers/' + key + '/status').set(next);
+      await db.ref('jiachangzhu_subscribers/' + key + '/status').set(next);
     }catch(e){ alert('操作失敗'); }
     renderAdminView();
   }
 
   async function adminDeleteCustomer(key){
     if(!confirm('確定要刪除這位客戶嗎？此動作無法復原。')) return;
-    try{ await db.ref('subscribers/' + key).remove(); }
+    try{ await db.ref('jiachangzhu_subscribers/' + key).remove(); }
     catch(e){ alert('刪除失敗'); }
     renderAdminView();
   }
@@ -1599,7 +1599,7 @@
   function adminClearDevices(key){
     if(!state.isAdmin){ return; }
     if(!confirm("清除此客戶的所有裝置紀錄？\n客戶需重新登入。")) return;
-    db.ref("subscribers/"+key+"/devices").remove().then(function(){ alert("已清除裝置"); renderAdminView(); })
+    db.ref("jiachangzhu_subscribers/"+key+"/devices").remove().then(function(){ alert("已清除裝置"); renderAdminView(); })
      .catch(function(){ alert("清除失敗"); });
   }
 
@@ -6764,6 +6764,27 @@
       status: "confirmed",
       source: "official"
     }
+    ,{
+      id: "dish246", name: "四神湯", icon: "🥣", category: "湯品", difficulty: "簡單",
+      priority: 3,
+      servings: 4, prepTime: 15, cookTime: 50,
+      ingredients: [ {name:"大腸", amount:300, unit:"g"}, {name:"茯苓", amount:15, unit:"g"}, {name:"芡實", amount:15, unit:"g"}, {name:"蓮子", amount:15, unit:"g"}, {name:"山藥", amount:1, unit:"段"} ],
+      seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"米酒", amount:2, unit:"大匙"}, {name:"鹽", amount:1, unit:"小匙"} ],
+      tools: ["湯鍋"],
+      preparationSteps: ["大腸洗淨切段，冷水下鍋加薑片汆燙去腥味撈起","茯苓、芡實、蓮子稍微沖洗，山藥去皮切塊"],
+      cookingSteps: [
+        {step:1, description:"湯鍋加水，放入大腸、茯苓、芡實、蓮子，大火煮滾", heatLevel:"大火", time:5},
+        {step:2, description:"轉小火燉煮", heatLevel:"小火", time:35, tip:"藥材要燉煮夠久，湯頭才會濃郁回甘"},
+        {step:3, description:"加入山藥塊、米酒續煮至軟", heatLevel:"小火", time:10},
+        {step:4, description:"加鹽調味即可起鍋", heatLevel:"小火", time:1}
+      ],
+      heatLevel: "小火長時間燉煮為關鍵",
+      tips: ["大腸要先處理乾淨並汆燙去腥，湯頭才會清爽","山藥晚一點下鍋，避免燉煮過久化掉"],
+      commonMistakes: ["大腸沒處理乾淨，帶有腥味","燉煮時間不夠，藥材風味沒有釋放出來"],
+      aliases: ["四神湯"],
+      status: "confirmed",
+      source: "official"
+    }
   ];
 
   function getAllDishes(){
@@ -7254,6 +7275,10 @@
     { id:"ing147", name:"鴨血", icon:"🩸", category:"肉類", aliases:[], matchNames:["鴨血"], commonUnits:["塊","g"], status:"confirmed", source:"official" },
     { id:"ing148", name:"螺肉罐頭", icon:"🐚", category:"海鮮", aliases:["螺肉"], matchNames:["螺肉罐頭","螺肉"], commonUnits:["罐"], status:"confirmed", source:"official" },
     { id:"ing149", name:"青龍椒", icon:"🫑", category:"蔬菜", aliases:[], matchNames:["青龍椒"], commonUnits:["條","把"], status:"confirmed", source:"official" },
+    { id:"ing150", name:"茯苓", icon:"🌿", category:"其他", aliases:[], matchNames:["茯苓"], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing151", name:"芡實", icon:"🌿", category:"其他", aliases:[], matchNames:["芡實"], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing152", name:"蓮子", icon:"🌰", category:"其他", aliases:[], matchNames:["蓮子"], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing153", name:"山藥", icon:"🍠", category:"蔬菜", aliases:[], matchNames:["山藥"], commonUnits:["段","g"], status:"confirmed", source:"official" },
     // 蛋／豆製品
     { id:"ing027", name:"雞蛋", icon:"🥚", category:"蛋豆製品", aliases:["蛋","雞子"], matchNames:["雞蛋"], commonUnits:["顆"], status:"confirmed", source:"official" },
     { id:"ing028", name:"豆腐", icon:"🫘", category:"蛋豆製品", aliases:[], matchNames:["板豆腐"], commonUnits:["盒"], status:"confirmed", source:"official" },
