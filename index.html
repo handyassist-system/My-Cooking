@@ -796,11 +796,6 @@
     font-size:var(--fs-body); font-family:var(--font-family); color:var(--color-text);
     box-sizing:border-box;
   }
-  .login-invite-toggle{
-    font-size:var(--fs-label); color:var(--color-accent-dark); text-align:right;
-    margin-top:8px; cursor:pointer; -webkit-tap-highlight-color:transparent;
-  }
-  .login-invite-input{margin-top:10px;}
   .code-hint{
     margin-top:14px; padding:10px 12px; border-radius:var(--radius-md);
     background:var(--color-jade-soft); color:var(--color-jade);
@@ -872,13 +867,15 @@
     <h1 class="login-title">煮意生活</h1>
     <p class="login-desc">請輸入 Email 登入</p>
     <input id="codeInput" class="code-input" type="email" inputmode="email" autocomplete="email" placeholder="請輸入 Email" maxlength="60">
-    <div id="inviteToggle" class="login-invite-toggle">有邀請碼嗎？</div>
-    <input id="inviteInput" class="code-input login-invite-input" style="display:none;" type="text" inputmode="numeric" maxlength="6" placeholder="輸入 6 位邀請碼">
     <div class="code-hint">🎁 首次登入即享 21 天全功能免費試用</div>
     <label class="login-consent"><input type="checkbox" id="agreeChk"> <span>我已閱讀並同意 <a id="termsLink" class="login-terms-link">《服務條款與隱私政策》</a></span></label>
     <button id="loginBtn" class="btn-primary">登入</button>
     <div id="loginMsg" class="login-msg"></div>
     <button id="installHintBtn" type="button" class="install-hint-btn" style="display:none;">📲 安裝到手機桌面</button>
+    <div id="installProgress" class="install-progress" style="display:none;">
+      <div class="install-progress-check">✅ 已開始安裝</div>
+      <div class="install-progress-warn">需稍等幾秒等待桌面圖示出現<br><b>請勿關閉視窗！</b></div>
+    </div>
     <div id="installHelp" class="install-help" style="display:none;"></div>
   </div>
 </div>
@@ -1119,40 +1116,9 @@
   const codeInput=document.getElementById("codeInput"), loginBtn=document.getElementById("loginBtn"), loginMsg=document.getElementById("loginMsg");
   loginBtn.addEventListener("click", doLogin);
   codeInput.addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
-  (function(){
-    var t=document.getElementById("inviteToggle"), i=document.getElementById("inviteInput");
-    if(t && i) t.addEventListener("click", function(){
-      var open=i.style.display!=="none";
-      i.style.display=open?"none":"";
-      t.textContent=open?"有邀請碼嗎？":"收起邀請碼欄位";
-      if(!open) i.focus();
-    });
-  })();
 
   function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
   function emailKey(e){ return String(e||"").toLowerCase().replace(/[.#$\[\]]/g,"_"); }
-  var FAMILY_DEVICE_KEY="cal_role_family";
-  function isFamilyDevice(){ try{ return localStorage.getItem(FAMILY_DEVICE_KEY)==="1"; }catch(e){ return false; } }
-  function markDeviceRole(isFamily){ try{ localStorage.setItem(FAMILY_DEVICE_KEY, isFamily?"1":"0"); }catch(e){} }
-  function genInviteCode(){ return String(Math.floor(100000+Math.random()*900000)); }
-  async function createInviteCode(){
-    if(!state.user || state.isAdmin) return null;
-    var key=emailKey(state.user);
-    var code=genInviteCode(), exp=Date.now()+30*60*1000;
-    try{ await db.ref("jiachangzhu_subscribers/"+key+"/inviteCode").set({code:code, exp:exp}); }catch(e){ return null; }
-    return { code:code, exp:exp };
-  }
-  async function verifyInviteCode(email, code){
-    var key=emailKey(email);
-    var snap;
-    try{ snap=await db.ref("jiachangzhu_subscribers/"+key+"/inviteCode").once("value"); }catch(e){ return false; }
-    var v=snap.val();
-    if(!v || !v.code) return false;
-    if(String(v.code)!==String(code).trim()) return false;
-    if(Date.now() > Number(v.exp||0)) return false;
-    try{ await db.ref("jiachangzhu_subscribers/"+key+"/inviteCode").remove(); }catch(e){}
-    return true;
-  }
   function userBase(){
     var u=state.user||"";
     if(isEmail(u)) return "users/"+emailKey(u)+"/";
@@ -1350,7 +1316,7 @@
     showInfoSheet("🎉", "歡迎使用煮意生活！",
       '已開啟 <b style="color:#3E9B8E">21 天全功能免費試用</b><br>到期日：'+expiry
       +'<div style="margin:16px 0;border-top:1px dashed #E3DED4"></div>'
-      +'<b>👪 試試「全家共用」</b><br>到「我的菜單」→「邀請家人」產生邀請碼，把碼給家人，就能直接登入！'
+      +'<b>👪 全家共用</b><br>家人用同一個Email登入即可共用，依方案有裝置數量上限。'
       +'<div style="margin-top:14px;color:#8A8A93">到期後仍可使用基本功能 😊</div>');
   }
   function showTrialExpired(){
@@ -1428,17 +1394,6 @@
     if(_agree && !_agree.checked){ loginMsg.textContent="請先勾選同意服務條款與隱私政策"; return; }
     try{ localStorage.setItem("agreedTerms","1"); }catch(e){}
     if(!isEmail(input)){ loginMsg.textContent="Email 格式不正確"; return; }
-    var _inviteEl=document.getElementById("inviteInput");
-    var _invite=_inviteEl ? _inviteEl.value.trim() : "";
-    if(_invite){
-      loginBtn.disabled=true; loginBtn.textContent="驗證中…";
-      var _ok=await verifyInviteCode(input, _invite);
-      loginBtn.disabled=false; loginBtn.textContent="登入";
-      if(!_ok){ loginMsg.textContent="😕 邀請碼錯誤或已過期，請確認代碼或請本人重新產生"; return; }
-      markDeviceRole(true);
-      await finishCustomerLogin(input);
-      return;
-    }
     var _fbUser = auth ? await waitAuthReady() : null;
     if(_fbUser && _fbUser.email && _fbUser.email.toLowerCase()===input.toLowerCase()){
       // 管理員Email也要先走過這道真正的Firebase驗證，通過後
@@ -1451,7 +1406,6 @@
         enterApp();
         return;
       }
-      markDeviceRole(false);
       await finishCustomerLogin(input);
       return;
     }
@@ -1489,7 +1443,6 @@
   function doLogout(){
     localStorage.removeItem(AUTH_KEY);
     localStorage.removeItem("cal_admin_on");
-    localStorage.removeItem(FAMILY_DEVICE_KEY);
     location.reload();
   }
 
@@ -3228,7 +3181,16 @@
       commonMistakes: ["米沒有先泡水，蒸出來口感偏硬","配料味道太淡，蒸熟後米飯不夠入味"],
       aliases: ["油飯","米糕"],
       status: "confirmed",
-      source: "official"
+      source: "official",
+      riceInfo: {
+        riceType: "圓糯米（或白米）",
+        riceAmount: 2,
+        riceUnit: "米杯",
+        waterMethod: "電鍋外鍋",
+        waterAmount: 1,
+        texture: "Q彈油亮",
+        riceNotes: ["米要先泡水2小時，蒸出來才不會夾生","電鍋外鍋水量是蒸氣用水，跟米本身不直接接觸"]
+      }
     }
     ,{
       id: "dish070", name: "涼拌豆芽", icon: "🌱", category: "蔬菜", difficulty: "簡單",
@@ -6441,7 +6403,16 @@
       commonMistakes: ["食材擺放位置錯誤，倒扣後圖案不在表面","糯米飯沒壓實，倒扣時容易散開"],
       aliases: ["八寶飯"],
       status: "confirmed",
-      source: "official"
+      source: "official",
+      riceInfo: {
+        riceType: "圓糯米",
+        riceAmount: 2,
+        riceUnit: "米杯",
+        waterMethod: "拌入的水量",
+        waterAmount: 1.2,
+        texture: "Q彈不軟爛",
+        riceNotes: ["水量比煮白飯少，蒸出來的糯米飯才會粒粒分明有嚼勁","泡米時間要足夠，否則蒸完偏硬夾生"]
+      }
     }
     ,{
       id: "dish226", name: "雞捲（五香捲）", icon: "🥢", category: "肉類", difficulty: "中等",
@@ -6514,7 +6485,7 @@
       cookingSteps: [
         {step:1, description:"熱鍋下油，紅蔥頭、蝦米小火炒至金黃酥香", heatLevel:"小火", time:5},
         {step:2, description:"加入豬肉丁、香菇丁炒香，加醬油、米酒調味成滷料", heatLevel:"中火", time:5},
-        {step:3, description:"糯米加入香菇水拌勻，電鍋外鍋加1杯水蒸熟", heatLevel:"大火蒸", time:25},
+        {step:3, description:"糯米加入香菇水（約1.2米杯）拌勻，電鍋外鍋加1杯水蒸熟", heatLevel:"大火蒸", time:25},
         {step:4, description:"小碗底部鋪上滷料，填入蒸熟的糯米飯壓實，倒扣脫模即可享用", heatLevel:"免加熱", time:5, tip:"滷料鋪在碗底，倒扣後才會出現在最上面"}
       ],
       heatLevel: "先炒香滷料，糯米需大火蒸熟",
@@ -6522,7 +6493,16 @@
       commonMistakes: ["滷料位置擺反，倒扣後看不到配料","糯米沒泡足時間，蒸出來偏硬"],
       aliases: ["筒仔米糕","米糕"],
       status: "confirmed",
-      source: "official"
+      source: "official",
+      riceInfo: {
+        riceType: "圓糯米",
+        riceAmount: 2,
+        riceUnit: "米杯",
+        waterMethod: "拌入香菇水",
+        waterAmount: 1.2,
+        texture: "Q彈不軟爛",
+        riceNotes: ["水量比煮白飯少，蒸出來的糯米飯才會粒粒分明有嚼勁","泡米時間要足夠，否則蒸完偏硬夾生"]
+      }
     }
     ,{
       id: "dish230", name: "蔭豉蚵仔", icon: "🦪", category: "海鮮", difficulty: "簡單",
@@ -6874,6 +6854,35 @@
       aliases: ["四神湯"],
       status: "confirmed",
       source: "official"
+    }
+    ,{
+      id: "dish247", name: "白粥", icon: "🥣", category: "主食", difficulty: "簡單",
+      priority: 1,
+      servings: 4, prepTime: 5, cookTime: 40,
+      ingredients: [ {name:"白米", amount:1, unit:"米杯"} ],
+      seasonings: [],
+      tools: ["湯鍋"],
+      preparationSteps: ["白米淘洗2-3次至水略為清澈，瀝乾","依「米飯資訊」的水量方式加水，可浸泡20分鐘讓米粒吸水，粥會更快軟爛"],
+      cookingSteps: [
+        {step:1, description:"白米加水，大火煮滾", heatLevel:"大火", time:5, tip:"水滾後容易噴濺，鍋子不要蓋太緊，或留一點縫隙"},
+        {step:2, description:"轉小火，不加蓋或半蓋，慢煮至米粒軟爛、湯水濃稠", heatLevel:"小火", time:30, tip:"中途偶爾攪拌，避免黏底燒焦"},
+        {step:3, description:"熄火後燜5分鐘讓粥更綿密即可享用", heatLevel:"免加熱", time:5}
+      ],
+      heatLevel: "大火煮滾後轉小火慢熬",
+      tips: ["水量抓多一點，粥才會綿密不乾稠","中途攪拌幾次，避免米粒黏鍋底燒焦"],
+      commonMistakes: ["水量不夠，粥容易煮乾、黏底燒焦","全程大火猛煮，米粒外爛內硬且容易噴出"],
+      aliases: ["白粥","稀飯","米粥"],
+      status: "confirmed",
+      source: "official",
+      riceInfo: {
+        riceType: "白米",
+        riceAmount: 1,
+        riceUnit: "米杯",
+        waterMethod: "鍋中直接煮",
+        waterAmount: 8,
+        texture: "軟爛綿密",
+        riceNotes: ["喜歡稀一點可以水量抓到10杯，喜歡稠一點可以減到6杯","水量是白飯的好幾倍，直接下鍋煮，不是用電鍋內鍋刻度"]
+      }
     }
   ];
 
