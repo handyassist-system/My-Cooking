@@ -1369,8 +1369,18 @@
       try{ localStorage.removeItem("emailForSignIn"); }catch(e){}
       try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
       try{ codeInput.value=email; }catch(e){}
-      if(loginMsg) loginMsg.textContent="✅ 已驗證成功，請按下方「登入」進入";
-      return false;
+      // 驗證通過後直接接續完成登入、進入App，不用使用者
+      // 再手動按一次「登入」——點信箱連結＝登入完成，
+      // 跟其他App（例如智在生活）的行為一致，不會卡在
+      // 登入畫面讓人誤以為沒成功
+      if(email.toLowerCase()===ADMIN_EMAIL){
+        state.isAdmin=true; state.user=email; state.plan="full";
+        localStorage.setItem(AUTH_KEY,email);
+        enterApp();
+      } else {
+        await finishCustomerLogin(email);
+      }
+      return true;
     }catch(e){
       if(loginMsg) loginMsg.textContent="😕 驗證連結無效或已過期，請重新登入。";
       try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
