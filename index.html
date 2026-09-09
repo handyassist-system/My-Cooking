@@ -1392,7 +1392,22 @@
     if(!auth) return Promise.resolve(null);
     if(_authReadyPromise) return _authReadyPromise;
     _authReadyPromise=new Promise(function(resolve){
-      var unsub=auth.onAuthStateChanged(function(u){ try{ unsub(); }catch(e){} resolve(u); });
+      var settled=false;
+      var unsub=auth.onAuthStateChanged(function(u){
+        if(u){
+          // 拿到真正登入的使用者，立刻採信、結束等待
+          if(!settled){ settled=true; try{ unsub(); }catch(e){} resolve(u); }
+        } else if(!settled){
+          // 頁面剛載入時，Firebase有時會先送出一次「還不
+          // 知道，暫時當沒登入」的過渡通知，過一下子才會
+          // 補送正確的登入狀態——先別急著判定沒登入，等
+          // 800毫秒看有沒有補送正確狀態進來，沒有的話才
+          // 真的當作沒登入
+          setTimeout(function(){
+            if(!settled){ settled=true; try{ unsub(); }catch(e){} resolve(null); }
+          }, 800);
+        }
+      });
     });
     return _authReadyPromise;
   }
