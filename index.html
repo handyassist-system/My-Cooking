@@ -1701,7 +1701,7 @@
     }
     html += '<button class="settings-row danger" id="logoutBtn"><span class="settings-row-icon">🚪</span><span class="settings-row-label">登出</span></button>';
     html += '</div>';
-    html += '<p class="app-version">v2026.09.02-1　登入與設定版</p>';
+    html += '<p class="app-version">v2026.09.09-1　登入優化與付費鎖定版</p>';
     document.getElementById('settingsContent').innerHTML = html;
     bindSettingsViewEvents();
   }
@@ -1951,13 +1951,13 @@
       priority: 1,
       servings: 4, prepTime: 10, cookTime: 40,
       ingredients: [ {name:"小排骨", amount:400, unit:"g"}, {name:"玉米", amount:2, unit:"支"}, {name:"紅蘿蔔", amount:1, unit:"條"} ],
-      seasonings: [ {name:"鹽", amount:1, unit:"小匙"} ],
+      seasonings: [ {name:"鹽", amount:1, unit:"小匙"}, {name:"白胡椒粉", amount:0.3, unit:"小匙"} ],
       tools: ["湯鍋"],
       preparationSteps: ["排骨冷水下鍋汆燙去血水，撈起沖淨","玉米切段，紅蘿蔔滾刀切塊"],
       cookingSteps: [
         {step:1, description:"湯鍋加水，放入排骨煮滾", heatLevel:"大火", time:5},
         {step:2, description:"轉小火，加入玉米、紅蘿蔔續煮", heatLevel:"小火", time:30},
-        {step:3, description:"起鍋前加鹽調味", heatLevel:"小火", time:2}
+        {step:3, description:"起鍋前加鹽、白胡椒粉調味", heatLevel:"小火", time:2}
       ],
       heatLevel: "大火煮滾後轉小火慢燉",
       tips: ["排骨務必汆燙去血水，湯頭才會清澈","小火慢燉能讓湯頭更甜"],
@@ -2288,14 +2288,14 @@
       priority: 1,
       servings: 4, prepTime: 15, cookTime: 45,
       ingredients: [ {name:"排骨", amount:400, unit:"g"}, {name:"白蘿蔔", amount:1, unit:"條"} ],
-      seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"鹽", amount:1, unit:"小匙"}, {name:"米酒", amount:1, unit:"大匙"} ],
+      seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"鹽", amount:1, unit:"小匙"}, {name:"米酒", amount:1, unit:"大匙"}, {name:"白胡椒粉", amount:0.3, unit:"小匙"} ],
       tools: ["湯鍋"],
       preparationSteps: ["排骨冷水下鍋汆燙去血水，撈起洗淨","白蘿蔔去皮切塊"],
       cookingSteps: [
         {step:1, description:"湯鍋加水，放入排骨、薑片，大火煮滾", heatLevel:"大火", time:5},
         {step:2, description:"轉小火燉煮", heatLevel:"小火", time:30},
         {step:3, description:"加入白蘿蔔塊續煮至軟透", heatLevel:"小火", time:15, tip:"蘿蔔燉到軟透吸飽湯汁最好吃"},
-        {step:4, description:"加鹽、米酒調味即可起鍋", heatLevel:"小火", time:2}
+        {step:4, description:"加鹽、米酒、白胡椒粉調味即可起鍋", heatLevel:"小火", time:2}
       ],
       heatLevel: "小火慢燉為主",
       tips: ["排骨先汆燙去血水，湯頭才會清澈","蘿蔔燉久一點會更入味"],
@@ -2393,13 +2393,13 @@
       priority: 1,
       servings: 4, prepTime: 15, cookTime: 60,
       ingredients: [ {name:"五花肉", amount:600, unit:"g"}, {name:"薑", amount:1, unit:"小塊"} ],
-      seasonings: [ {name:"醬油", amount:3, unit:"大匙"}, {name:"冰糖", amount:2, unit:"大匙"}, {name:"米酒", amount:3, unit:"大匙"} ],
+      seasonings: [ {name:"醬油", amount:3, unit:"大匙"}, {name:"冰糖", amount:2, unit:"大匙"}, {name:"米酒", amount:3, unit:"大匙"}, {name:"八角", amount:1, unit:"顆"} ],
       tools: ["炒鍋或砂鍋"],
       preparationSteps: ["五花肉切塊，冷水下鍋汆燙去血水","薑切片備用"],
       cookingSteps: [
         {step:1, description:"鍋中放少許油與冰糖，小火炒至融化呈焦糖色", heatLevel:"小火", time:3},
         {step:2, description:"放入五花肉塊拌炒上色", heatLevel:"中火", time:4},
-        {step:3, description:"加入醬油、米酒、薑片與水，蓋鍋燜煮", heatLevel:"小火", time:40},
+        {step:3, description:"加入醬油、米酒、薑片、八角與水，蓋鍋燜煮", heatLevel:"小火", time:40},
         {step:4, description:"開蓋收汁至濃稠即可起鍋", heatLevel:"中火", time:8}
       ],
       heatLevel: "小火燜煮為主",
@@ -2599,14 +2599,14 @@
       priority: 1,
       servings: 4, prepTime: 15, cookTime: 40,
       ingredients: [ {name:"排骨", amount:400, unit:"g"}, {name:"冬瓜", amount:600, unit:"g"} ],
-      seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"鹽", amount:1, unit:"小匙"} ],
+      seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"鹽", amount:1, unit:"小匙"}, {name:"白胡椒粉", amount:0.3, unit:"小匙"} ],
       tools: ["湯鍋"],
       preparationSteps: ["排骨冷水下鍋汆燙去血水","冬瓜去皮去籽切塊"],
       cookingSteps: [
         {step:1, description:"湯鍋加水，放入排骨、薑片，大火煮滾", heatLevel:"大火", time:5},
         {step:2, description:"轉小火燉煮至排骨軟嫩", heatLevel:"小火", time:25},
         {step:3, description:"加入冬瓜塊續煮至透明軟化", heatLevel:"小火", time:10, tip:"冬瓜煮到略透明表示已經熟透入味"},
-        {step:4, description:"加鹽調味即可起鍋", heatLevel:"小火", time:1}
+        {step:4, description:"加鹽、白胡椒粉調味即可起鍋", heatLevel:"小火", time:1}
       ],
       heatLevel: "小火慢燉為主",
       tips: ["排骨先燉軟再加冬瓜，避免冬瓜煮過爛","冬瓜留皮燉煮風味更清爽（可依喜好選擇）"],
@@ -3108,14 +3108,14 @@
       priority: 1,
       servings: 4, prepTime: 15, cookTime: 40,
       ingredients: [ {name:"排骨", amount:400, unit:"g"}, {name:"苦瓜", amount:1, unit:"條"} ],
-      seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"鹽", amount:1, unit:"小匙"} ],
+      seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"鹽", amount:1, unit:"小匙"}, {name:"白胡椒粉", amount:0.3, unit:"小匙"} ],
       tools: ["湯鍋"],
       preparationSteps: ["排骨冷水下鍋汆燙去血水","苦瓜對半去籽切塊"],
       cookingSteps: [
         {step:1, description:"湯鍋加水，放入排骨、薑片，大火煮滾", heatLevel:"大火", time:5},
         {step:2, description:"轉小火燉煮至排骨軟嫩", heatLevel:"小火", time:25},
         {step:3, description:"加入苦瓜塊續煮至軟透", heatLevel:"小火", time:10},
-        {step:4, description:"加鹽調味即可起鍋", heatLevel:"小火", time:1}
+        {step:4, description:"加鹽、白胡椒粉調味即可起鍋", heatLevel:"小火", time:1}
       ],
       heatLevel: "小火慢燉為主",
       tips: ["排骨先燉軟再加苦瓜，避免苦瓜煮過爛","苦瓜燉久一點苦味會轉為回甘"],
@@ -3823,13 +3823,13 @@
       priority: 1,
       servings: 4, prepTime: 15, cookTime: 15,
       ingredients: [ {name:"牛肉", amount:300, unit:"g"} ],
-      seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"鹽", amount:1, unit:"小匙"}, {name:"米酒", amount:1, unit:"大匙"}, {name:"青蔥", amount:1, unit:"根"} ],
+      seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"鹽", amount:1, unit:"小匙"}, {name:"米酒", amount:1, unit:"大匙"}, {name:"白胡椒粉", amount:0.3, unit:"小匙"}, {name:"青蔥", amount:1, unit:"根"} ],
       tools: ["湯鍋"],
       preparationSteps: ["牛肉逆紋切薄片，薑切絲，蔥切蔥花"],
       cookingSteps: [
         {step:1, description:"湯鍋加水，放入薑絲煮滾", heatLevel:"大火", time:5},
         {step:2, description:"轉中小火，將牛肉片逐片下鍋涮煮", heatLevel:"中小火", time:2, tip:"牛肉片薄切、快速涮熟，口感才會嫩"},
-        {step:3, description:"加鹽、米酒調味，撒蔥花即可起鍋", heatLevel:"小火", time:1}
+        {step:3, description:"加鹽、米酒、白胡椒粉調味，撒蔥花即可起鍋", heatLevel:"小火", time:1}
       ],
       heatLevel: "湯底大火煮滾，牛肉下鍋改中小火",
       tips: ["牛肉切薄片，燙煮時間短，口感才嫩",  "牛肉下鍋後不要久煮，變色即可撈起"],
@@ -4665,13 +4665,13 @@
       priority: 2,
       servings: 4, prepTime: 15, cookTime: 40,
       ingredients: [ {name:"排骨", amount:600, unit:"g"} ],
-      seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"蒜頭", amount:3, unit:"瓣"}, {name:"醬油", amount:3, unit:"大匙"}, {name:"冰糖", amount:1, unit:"大匙"}, {name:"米酒", amount:2, unit:"大匙"} ],
+      seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"蒜頭", amount:3, unit:"瓣"}, {name:"醬油", amount:3, unit:"大匙"}, {name:"冰糖", amount:1, unit:"大匙"}, {name:"米酒", amount:2, unit:"大匙"}, {name:"八角", amount:1, unit:"顆"} ],
       tools: ["炒鍋"],
       preparationSteps: ["排骨冷水下鍋汆燙去血水，撈起瀝乾"],
       cookingSteps: [
         {step:1, description:"熱鍋下油，薑蒜爆香", heatLevel:"中火", time:2},
         {step:2, description:"排骨下鍋煎至表面上色", heatLevel:"中大火", time:5},
-        {step:3, description:"加入醬油、冰糖、米酒與適量水，蓋鍋燜煮", heatLevel:"小火", time:25},
+        {step:3, description:"加入醬油、冰糖、米酒、八角與適量水，蓋鍋燜煮", heatLevel:"小火", time:25},
         {step:4, description:"開蓋轉中火收汁至濃稠即可起鍋", heatLevel:"中火", time:5}
       ],
       heatLevel: "小火燜煮為主",
@@ -5877,14 +5877,14 @@
       priority: 3,
       servings: 3, prepTime: 20, cookTime: 15,
       ingredients: [ {name:"牛肉", amount:300, unit:"g"} ],
-      seasonings: [ {name:"薑", amount:3, unit:"片"}, {name:"鹽", amount:1, unit:"小匙"}, {name:"米酒", amount:1, unit:"大匙"}, {name:"香油", amount:1, unit:"小匙"} ],
+      seasonings: [ {name:"薑", amount:3, unit:"片"}, {name:"鹽", amount:1, unit:"小匙"}, {name:"米酒", amount:1, unit:"大匙"}, {name:"白胡椒粉", amount:0.3, unit:"小匙"}, {name:"香油", amount:1, unit:"小匙"} ],
       tools: ["湯鍋"],
       preparationSteps: ["牛肉逆紋切極薄片，薑切絲"],
       cookingSteps: [
         {step:1, description:"薑絲加水煮成薑湯，大火煮滾", heatLevel:"大火", time:10, tip:"薑湯要充分熬煮出味，湯頭才會有層次"},
         {step:2, description:"轉大火，將牛肉片鋪在碗底", heatLevel:"免加熱", time:1},
         {step:3, description:"滾燙的薑湯直接沖入碗中燙熟牛肉片", heatLevel:"大火", time:1, tip:"湯要夠滾夠燙，才能瞬間燙熟牛肉片保持粉嫩"},
-        {step:4, description:"加鹽、米酒、香油調味即可享用", heatLevel:"免加熱", time:1}
+        {step:4, description:"加鹽、米酒、白胡椒粉、香油調味即可享用", heatLevel:"免加熱", time:1}
       ],
       heatLevel: "湯頭需大火滾燙才能沖燙牛肉",
       tips: ["牛肉片一定要切極薄，才能被滾湯瞬間燙熟","湯一定要滾燙沖入，牛肉才會呈現粉嫩口感"],
@@ -6913,18 +6913,18 @@
       id: "dish248", name: "羅宋湯", icon: "🍅", category: "湯品", difficulty: "簡單",
       priority: 2,
       servings: 4, prepTime: 20, cookTime: 50,
-      ingredients: [ {name:"牛肉", amount:300, unit:"g"}, {name:"番茄", amount:2, unit:"顆"}, {name:"高麗菜", amount:0.3, unit:"顆"}, {name:"馬鈴薯", amount:1, unit:"顆"}, {name:"紅蘿蔔", amount:1, unit:"條"}, {name:"洋蔥", amount:1, unit:"顆"} ],
-      seasonings: [ {name:"番茄醬", amount:3, unit:"大匙"}, {name:"鹽", amount:1, unit:"小匙"}, {name:"黑胡椒粒", amount:0.5, unit:"小匙"} ],
+      ingredients: [ {name:"牛肉", amount:300, unit:"g"}, {name:"番茄", amount:2, unit:"顆"}, {name:"高麗菜", amount:0.3, unit:"顆"}, {name:"馬鈴薯", amount:1, unit:"顆"}, {name:"紅蘿蔔", amount:1, unit:"條"}, {name:"洋蔥", amount:1, unit:"顆"}, {name:"西洋芹", amount:1, unit:"根"} ],
+      seasonings: [ {name:"番茄醬", amount:3, unit:"大匙"}, {name:"月桂葉", amount:1, unit:"片"}, {name:"鹽", amount:1, unit:"小匙"}, {name:"黑胡椒粒", amount:0.5, unit:"小匙"} ],
       tools: ["湯鍋"],
-      preparationSteps: ["牛肉切塊，冷水下鍋汆燙去血水","番茄、高麗菜、馬鈴薯、紅蘿蔔、洋蔥切塊"],
+      preparationSteps: ["牛肉切塊，冷水下鍋汆燙去血水","番茄、高麗菜、馬鈴薯、紅蘿蔔、洋蔥、西洋芹切塊"],
       cookingSteps: [
-        {step:1, description:"熱鍋下油，洋蔥炒至微透明，加入番茄塊炒出汁", heatLevel:"中火", time:5, tip:"番茄炒出汁再燉煮，湯頭會更濃郁香甜"},
+        {step:1, description:"熱鍋下油，洋蔥、西洋芹炒至微透明，加入番茄塊炒出汁", heatLevel:"中火", time:5, tip:"番茄炒出汁再燉煮，湯頭會更濃郁香甜"},
         {step:2, description:"加入牛肉塊、番茄醬拌炒均勻", heatLevel:"中大火", time:3},
-        {step:3, description:"加入足量水，煮滾後轉小火燉煮", heatLevel:"小火", time:30},
-        {step:4, description:"加入紅蘿蔔、馬鈴薯、高麗菜續煮至軟，加鹽、黑胡椒粒調味即可起鍋", heatLevel:"小火", time:15}
+        {step:3, description:"加入足量水、月桂葉，煮滾後轉小火燉煮", heatLevel:"小火", time:30, tip:"月桂葉是西式燉湯常見的提香辛香料，燉煮時放入即可，起鍋前記得挑掉"},
+        {step:4, description:"加入紅蘿蔔、馬鈴薯、高麗菜續煮至軟，挑掉月桂葉，加鹽、黑胡椒粒調味即可起鍋", heatLevel:"小火", time:15}
       ],
       heatLevel: "小火長時間燉煮為主",
-      tips: ["番茄跟洋蔥先炒過，湯頭甜味跟層次會更豐富","根莖類蔬菜晚一點下鍋，避免燉煮過爛"],
+      tips: ["番茄跟洋蔥、西洋芹先炒過，湯頭甜味跟層次會更豐富","月桂葉燉煮的時間不宜太短，才能釋放足夠香氣，但也別忘了起鍋前挑掉"],
       commonMistakes: ["蔬菜太早下鍋，煮到過爛失去口感","番茄沒炒出汁，湯頭酸甜味不夠濃郁"],
       aliases: ["羅宋湯"],
       status: "confirmed",
@@ -7424,6 +7424,7 @@
     { id:"ing151", name:"芡實", icon:"🌿", category:"其他", aliases:[], matchNames:["芡實"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing152", name:"蓮子", icon:"🌰", category:"其他", aliases:[], matchNames:["蓮子"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing153", name:"山藥", icon:"🍠", category:"蔬菜", aliases:[], matchNames:["山藥"], commonUnits:["段","g"], status:"confirmed", source:"official" },
+    { id:"ing154", name:"西洋芹", icon:"🥬", category:"蔬菜", aliases:[], matchNames:["西洋芹"], commonUnits:["根"], status:"confirmed", source:"official" },
     // 蛋／豆製品
     { id:"ing027", name:"雞蛋", icon:"🥚", category:"蛋豆製品", aliases:["蛋","雞子"], matchNames:["雞蛋"], commonUnits:["顆"], status:"confirmed", source:"official" },
     { id:"ing028", name:"豆腐", icon:"🫘", category:"蛋豆製品", aliases:[], matchNames:["板豆腐"], commonUnits:["盒"], status:"confirmed", source:"official" },
@@ -8872,7 +8873,7 @@
         '</div>'
       ).join('') + '</div>';
     }
-    html += '<p class="app-version">v2026.09.01-4　清空功能版</p>';
+    html += '<p class="app-version">v2026.09.09-1　登入優化與付費鎖定版</p>';
     document.getElementById('signatureContent').innerHTML = html;
     const clearSigBtn = document.getElementById('clearSignatureBtn');
     if(clearSigBtn){
