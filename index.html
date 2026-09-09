@@ -1296,11 +1296,14 @@
   }
   document.getElementById('installHintBtn').addEventListener('click', async function(){
     if(deferredInstallPrompt){
+      var progress = document.getElementById('installProgress');
+      var btn = document.getElementById('installHintBtn');
+      if(progress) progress.style.display = 'block';
+      if(btn) btn.style.display = 'none';
       deferredInstallPrompt.prompt();
       try{ await deferredInstallPrompt.userChoice; }catch(e){}
       deferredInstallPrompt = null;
-      var btn = document.getElementById('installHintBtn');
-      if(btn) btn.style.display = 'none';
+      if(progress) progress.style.display = 'none';
     } else {
       var help = document.getElementById('installHelp');
       if(help){
