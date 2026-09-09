@@ -6909,6 +6909,27 @@
         riceNotes: ["喜歡稀一點可以水量抓到10杯，喜歡稠一點可以減到6杯","水量是白飯的好幾倍，直接下鍋煮，不是用電鍋內鍋刻度"]
       }
     }
+    ,{
+      id: "dish248", name: "羅宋湯", icon: "🍅", category: "湯品", difficulty: "簡單",
+      priority: 2,
+      servings: 4, prepTime: 20, cookTime: 50,
+      ingredients: [ {name:"牛肉", amount:300, unit:"g"}, {name:"番茄", amount:2, unit:"顆"}, {name:"高麗菜", amount:0.3, unit:"顆"}, {name:"馬鈴薯", amount:1, unit:"顆"}, {name:"紅蘿蔔", amount:1, unit:"條"}, {name:"洋蔥", amount:1, unit:"顆"} ],
+      seasonings: [ {name:"番茄醬", amount:3, unit:"大匙"}, {name:"鹽", amount:1, unit:"小匙"}, {name:"黑胡椒粒", amount:0.5, unit:"小匙"} ],
+      tools: ["湯鍋"],
+      preparationSteps: ["牛肉切塊，冷水下鍋汆燙去血水","番茄、高麗菜、馬鈴薯、紅蘿蔔、洋蔥切塊"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，洋蔥炒至微透明，加入番茄塊炒出汁", heatLevel:"中火", time:5, tip:"番茄炒出汁再燉煮，湯頭會更濃郁香甜"},
+        {step:2, description:"加入牛肉塊、番茄醬拌炒均勻", heatLevel:"中大火", time:3},
+        {step:3, description:"加入足量水，煮滾後轉小火燉煮", heatLevel:"小火", time:30},
+        {step:4, description:"加入紅蘿蔔、馬鈴薯、高麗菜續煮至軟，加鹽、黑胡椒粒調味即可起鍋", heatLevel:"小火", time:15}
+      ],
+      heatLevel: "小火長時間燉煮為主",
+      tips: ["番茄跟洋蔥先炒過，湯頭甜味跟層次會更豐富","根莖類蔬菜晚一點下鍋，避免燉煮過爛"],
+      commonMistakes: ["蔬菜太早下鍋，煮到過爛失去口感","番茄沒炒出汁，湯頭酸甜味不夠濃郁"],
+      aliases: ["羅宋湯"],
+      status: "confirmed",
+      source: "official"
+    }
   ];
 
   function getAllDishes(){
