@@ -91,6 +91,7 @@
     -webkit-tap-highlight-color:transparent;
   }
   .back-btn:active{transform:scale(0.94);}
+  .page-logo{width:34px; height:34px; border-radius:10px; flex-shrink:0; object-fit:cover;}
   .header-settings-btn{
     margin-left:auto; flex-shrink:0;
     width:38px; height:38px; border-radius:var(--radius-pill);
@@ -131,8 +132,8 @@
   /* ---------- 找食譜：頂層選擇畫面 ---------- */
   .find-choice-list{padding:8px 22px 20px; display:flex; flex-direction:column; gap:14px;}
   .home-greeting{
-    font-size:var(--fs-card-title); font-weight:var(--weight-bold); color:var(--color-text);
-    padding:16px 22px 4px; margin:0;
+    font-size:var(--fs-heading); font-weight:var(--weight-bold); color:var(--color-text);
+    padding:18px 22px 4px; margin:0; line-height:var(--lh-tight);
   }
   .home-status-row{display:flex; gap:12px; padding:12px 22px 4px;}
   .home-status-card{
@@ -660,14 +661,6 @@
     font-size:var(--fs-section); font-weight:var(--weight-bold); margin:0 0 10px;
     display:flex; align-items:center; gap:8px;
   }
-  .shopping-done-toggle{
-    display:flex; align-items:center; justify-content:space-between; width:calc(100% - 44px);
-    margin:0 22px 16px; padding:13px 16px; border-radius:var(--radius-md);
-    border:1px solid var(--color-border); background:var(--color-jade-soft);
-    color:var(--color-jade); font-size:var(--fs-body); font-weight:var(--weight-medium);
-    font-family:var(--font-family); cursor:pointer; -webkit-tap-highlight-color:transparent;
-  }
-  .shopping-done-arrow{font-size:11px;}
   .shopping-item-list{display:flex; flex-direction:column; gap:8px;}
   .shopping-item-row{
     display:flex; align-items:center; gap:8px; width:100%;
@@ -944,7 +937,8 @@
       <button class="back-btn" id="findBackBtn" aria-label="返回" style="display:none;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B241D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
       </button>
-      <h2 class="page-title">找食譜</h2>
+      <img id="findHeaderLogo" class="page-logo" src="icon-192.png" alt="煮意生活">
+      <h2 class="page-title" id="findHeaderTitle" style="display:none;">找食譜</h2>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
     </div>
 
@@ -986,6 +980,7 @@
   <!-- ============ SELECTED MENU VIEW（這次要煮）============ -->
   <section class="view" id="view-selected-menu">
     <div class="page-header no-back">
+      <img class="page-logo" src="icon-192.png" alt="煮意生活">
       <h2 class="page-title">🍳 今日料理</h2>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
     </div>
@@ -995,6 +990,7 @@
   <!-- ============ SHOPPING VIEW（採購）============ -->
   <section class="view" id="view-shopping">
     <div class="page-header no-back">
+      <img class="page-logo" src="icon-192.png" alt="煮意生活">
       <h2 class="page-title">🛒 採購清單</h2>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
     </div>
@@ -1008,6 +1004,7 @@
   <!-- ============ SIGNATURE VIEW（我的菜單）============ -->
   <section class="view" id="view-signature">
     <div class="page-header no-back">
+      <img class="page-logo" src="icon-192.png" alt="煮意生活">
       <h2 class="page-title">📖 我的菜單</h2>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
     </div>
@@ -1097,8 +1094,8 @@
 
 <nav class="bottom-nav">
   <button class="nav-item active" data-tab="find">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-    找食譜
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"></path></svg>
+    首頁
   </button>
   <button class="nav-item" data-tab="selected-menu">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 3-3 4-3 7a3 3 0 0 0 6 0c0-1-1-2-1-3 1 1 3 3 3 6a5 5 0 0 1-10 0c0-4 3-6 5-10z"></path></svg>
@@ -8135,7 +8132,13 @@
     document.getElementById('findRecipeContent').style.display = findMode === 'recipe' ? 'block' : 'none';
     document.getElementById('findIngredientsContent').style.display = findMode === 'ingredients' ? 'block' : 'none';
 
-    document.getElementById('findBackBtn').style.display = findMode === 'choice' ? 'none' : '';
+    const isChoice = findMode === 'choice';
+    document.getElementById('findBackBtn').style.display = isChoice ? 'none' : '';
+    document.getElementById('findHeaderLogo').style.display = isChoice ? '' : 'none';
+    const titleEl = document.getElementById('findHeaderTitle');
+    titleEl.style.display = isChoice ? 'none' : '';
+    if(findMode === 'recipe'){ titleEl.textContent = '依菜色找'; }
+    else if(findMode === 'ingredients'){ titleEl.textContent = '依食材找'; }
 
     if(findMode === 'choice'){
       renderFindChoiceHome();
@@ -8861,7 +8864,6 @@
      ========================================================= */
   const SHOPPING_CATEGORY_ORDER = ["肉類","雞肉","海鮮","蔬菜","蛋豆製品","菇類","辛香料","主食","調味料"];
   const MANUAL_ITEM_CATEGORIES = ["蔬菜","肉類","雞肉","海鮮","蛋豆製品","菇類","辛香料","主食","調味料","其他"];
-  let shoppingDoneExpanded = false;
   let manualItemCategory = "其他";
   let shoppingTab = "list"; // list=採購清單, inventory=我的庫存
   let manualInventoryCategory = "其他";
@@ -8950,9 +8952,8 @@
 
     const overview = computeShoppingOverview();
     const needItems = overview.filter(i => i.status === 'need');
-    const haveItems = overview.filter(i => i.status === 'have');
 
-    let html = '<p class="menu-subtitle">這次要煮需要準備的全部食材，點一下切換要買／已有</p>';
+    let html = '<p class="menu-subtitle">這次要煮需要準備的全部食材，點一下標記已買，會移到我的庫存</p>';
 
     html += '<div class="shopping-actions-row">';
     html += '<button class="shopping-action-link" id="addManualItemBtn">＋ 新增採購項目</button>';
@@ -8970,23 +8971,14 @@
       '<button class="ai-generate-btn" id="confirmManualAddBtn">加入</button>' +
     '</div>';
 
-    if(overview.length === 0){
+    if(needItems.length === 0){
       html += '<div class="shopping-empty-state">' +
         '<p class="shopping-empty-emoji">🛒</p>' +
-        '<p class="shopping-empty-title">目前沒有需要準備的食材</p>' +
-        '<p class="shopping-empty-desc">先到「要煮」分頁加入想煮的料理，或自己新增一項</p>' +
+        '<p class="shopping-empty-title">' + (overview.length === 0 ? '目前沒有需要準備的食材' : '要買的都買齊了') + '</p>' +
+        '<p class="shopping-empty-desc">' + (overview.length === 0 ? '先到「要煮」分頁加入想煮的料理，或自己新增一項' : '標記過已買的項目，都在「我的庫存」分頁') + '</p>' +
       '</div>';
     } else {
       html += renderShoppingSection('🛒 要買', needItems);
-      if(haveItems.length > 0){
-        html += '<button class="shopping-done-toggle" id="shoppingDoneToggleBtn">' +
-          '✓ 已完成 ' + haveItems.length + ' 項' +
-          '<span class="shopping-done-arrow">' + (shoppingDoneExpanded ? '▲' : '▼') + '</span>' +
-        '</button>';
-        if(shoppingDoneExpanded){
-          html += renderShoppingSection('', haveItems);
-        }
-      }
     }
 
     document.getElementById('shoppingContent').innerHTML = html;
@@ -9093,13 +9085,6 @@
   }
 
   function bindShoppingViewEvents(){
-    const doneToggleBtn = document.getElementById('shoppingDoneToggleBtn');
-    if(doneToggleBtn){
-      doneToggleBtn.addEventListener('click', () => {
-        shoppingDoneExpanded = !shoppingDoneExpanded;
-        renderShoppingView();
-      });
-    }
     document.querySelectorAll('#shoppingContent .shopping-item-toggle').forEach(row => {
       row.addEventListener('click', () => {
         const key = row.dataset.itemKey;
@@ -9107,7 +9092,7 @@
         const item = overview.find(i => (i.name + '|' + i.unit) === key);
         if(!item) return;
         toggleInventoryStatus(item);
-        showToast(item.status === 'have' ? '已標記為要買' : '已標記為已有');
+        showToast(item.status === 'have' ? '已標記已買，移到我的庫存' : '已標記為要買');
         renderShoppingView();
       });
     });
