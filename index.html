@@ -688,6 +688,13 @@
   .shopping-item-row.seasoning .shopping-item-name{color:var(--color-accent-dark);}
   .shopping-item-row.checked .shopping-item-name{color:var(--color-text-soft); text-decoration:line-through;}
   .shopping-item-amount{font-size:var(--fs-caption); font-weight:var(--weight-regular); color:var(--color-text-soft); flex-shrink:0;}
+  .shopping-stepper{display:flex; align-items:center; gap:6px; flex-shrink:0;}
+  .shopping-stepper-btn{
+    width:26px; height:26px; border-radius:50%; border:1px solid var(--color-border);
+    background:var(--color-bg); color:var(--color-text-soft); font-size:15px; line-height:1;
+    cursor:pointer; -webkit-tap-highlight-color:transparent; font-family:var(--font-family);
+  }
+  .shopping-stepper-num{min-width:20px; text-align:center; font-size:var(--fs-body); font-weight:var(--weight-semibold); color:var(--color-text);}
   .shopping-item-delete{
     flex-shrink:0; width:32px; height:32px; margin-right:8px; border-radius:50%;
     border:1px solid var(--color-border); background:var(--color-bg); color:var(--color-text-soft);
@@ -7190,6 +7197,21 @@
     inventory = inventory.filter(i => !(i.name === name && i.unit === unit));
     saveInventory();
   }
+  function adjustInventoryItemAmount(id, delta){
+    const item = inventory.find(i => i.id === id);
+    if(!item) return;
+    const newAmount = (parseInt(item.amount, 10) || 1) + delta;
+    if(newAmount <= 0){
+      inventory = inventory.filter(i => i.id !== id);
+    } else {
+      item.amount = newAmount;
+      if(item.source === 'manual'){
+        const shopItem = manualShoppingItems.find(m => m.name === item.name && m.unit === item.unit);
+        if(shopItem){ shopItem.amount = newAmount; saveManualShoppingItems(); }
+      }
+    }
+    saveInventory();
+  }
   // 採購頁的狀態切換：要買 ↔ 已有，兩種狀態，「已有」不管
   // 是本來就有還是剛買的，都是同一個狀態，直接對應庫存
   // 裡「有沒有這一筆」
@@ -7220,14 +7242,37 @@
   function addManualShoppingItem(name, category, amount){
     const trimmed = (name || '').trim();
     if(!trimmed) return;
-    manualShoppingItems.push({
-      id: generateShoppingItemId(),
-      name: trimmed,
-      amount: (amount || '').trim(),
-      unit: '',
-      category: category || findIngredientCategoryByName(trimmed),
-      createdAt: new Date().toISOString().slice(0, 10)
-    });
+    const qty = Math.max(1, parseInt(amount, 10) || 1);
+    const existing = manualShoppingItems.find(m => m.name === trimmed);
+    if(existing){
+      existing.amount = (parseInt(existing.amount, 10) || 0) + qty;
+    } else {
+      manualShoppingItems.push({
+        id: generateShoppingItemId(),
+        name: trimmed,
+        amount: qty,
+        unit: '',
+        category: category || findIngredientCategoryByName(trimmed),
+        createdAt: new Date().toISOString().slice(0, 10)
+      });
+    }
+    saveManualShoppingItems();
+  }
+  // 手動項目的數量調整（+／-），減到0直接整筆移除，
+  // 同時清掉對應的庫存紀錄避免留下孤兒資料
+  function adjustManualShoppingItemAmount(name, unit, delta){
+    const item = manualShoppingItems.find(m => m.name === name && m.unit === unit);
+    if(!item) return;
+    const newAmount = (parseInt(item.amount, 10) || 1) + delta;
+    if(newAmount <= 0){
+      manualShoppingItems = manualShoppingItems.filter(m => m.id !== item.id);
+      inventory = inventory.filter(i => !(i.name === name && i.unit === unit && i.source === 'manual'));
+      saveInventory();
+    } else {
+      item.amount = newAmount;
+      const invItem = inventory.find(i => i.name === name && i.unit === unit && i.source === 'manual');
+      if(invItem){ invItem.amount = newAmount; saveInventory(); }
+    }
     saveManualShoppingItems();
   }
   // 用 name+unit 找到對應的手動項目並整筆刪除（不是標記，是真的移除），
@@ -8826,14 +8871,20 @@
   function addManualInventoryItem(name, category){
     const trimmed = (name || '').trim();
     if(!trimmed) return;
-    addToInventory({
-      name: trimmed,
-      unit: '',
-      amount: '',
-      category: category || findIngredientCategoryByName(trimmed),
-      type: 'ingredient',
-      source: 'manual'
-    });
+    const existing = inventory.find(i => i.name === trimmed && i.unit === '');
+    if(existing){
+      existing.amount = (parseInt(existing.amount, 10) || 1) + 1;
+      saveInventory();
+    } else {
+      addToInventory({
+        name: trimmed,
+        unit: '',
+        amount: 1,
+        category: category || findIngredientCategoryByName(trimmed),
+        type: 'ingredient',
+        source: 'manual'
+      });
+    }
   }
   function getShoppingCategoryOrder(items){
     const found = new Set(items.map(i => i.category));
@@ -8849,15 +8900,23 @@
 
   function renderShoppingRow(item){
     const key = item.name + '|' + item.unit;
-    const deleteBtn = item.source === 'manual'
+    const isManual = item.source === 'manual';
+    const deleteBtn = isManual
       ? '<button class="shopping-item-delete" data-delete-key="' + key + '" aria-label="刪除">✕</button>'
       : '';
+    const amountHtml = isManual
+      ? '<span class="shopping-stepper">' +
+          '<button class="shopping-stepper-btn" data-stepper-key="' + key + '" data-step="-1" aria-label="減少">−</button>' +
+          '<span class="shopping-stepper-num">' + (parseInt(item.amount, 10) || 1) + '</span>' +
+          '<button class="shopping-stepper-btn" data-stepper-key="' + key + '" data-step="1" aria-label="增加">＋</button>' +
+        '</span>'
+      : '<span class="shopping-item-amount">' + (item.amount ? (item.unit ? item.amount + ' ' + item.unit : item.amount) : '') + '</span>';
     return '<div class="shopping-item-row' + (item.type === 'seasoning' ? ' seasoning' : '') + (item.status === 'have' ? ' checked' : '') + '">' +
       '<button class="shopping-item-toggle" data-item-key="' + key + '">' +
         '<span class="shopping-item-box">' + (item.status === 'have' ? '🟢' : '🛒') + '</span>' +
         '<span class="shopping-item-name">' + item.name + '</span>' +
-        '<span class="shopping-item-amount">' + (item.amount ? (item.unit ? item.amount + ' ' + item.unit : item.amount) : '') + '</span>' +
       '</button>' +
+      amountHtml +
       deleteBtn +
     '</div>';
   }
@@ -8901,7 +8960,7 @@
 
     html += '<div class="manual-add-form" id="manualAddForm" style="display:none;">' +
       '<input type="text" id="manualItemInput" class="ai-name-input" placeholder="想買什麼？例如：牛奶">' +
-      '<input type="text" id="manualItemAmountInput" class="ai-name-input" placeholder="數量（選填，例如：2包、一瓶）" style="margin-top:8px;">' +
+      '<input type="number" id="manualItemAmountInput" class="ai-name-input" placeholder="數量" value="1" min="1" style="margin-top:8px;">' +
       '<p class="manual-category-label">分類</p>' +
       '<div class="chip-row manual-category-row" id="manualCategoryRow">' +
         MANUAL_ITEM_CATEGORIES.map(cat =>
@@ -8969,9 +9028,14 @@
         html += '<div class="shopping-group">';
         html += '<p class="shopping-group-title">' + ingredientCategoryIcon(cat) + ' ' + cat + '</p>';
         items.forEach(item => {
+          const qty = parseInt(item.amount, 10) || 1;
           html += '<div class="inventory-item-row">' +
-            '<span class="inventory-item-name">' + item.name + '</span>' +
-            (item.amount ? '<span class="inventory-item-amount">' + item.amount + (item.unit || '') + '</span>' : '') +
+            '<span class="inventory-item-name">' + item.name + (item.unit ? '（' + item.unit + '）' : '') + '</span>' +
+            '<span class="shopping-stepper">' +
+              '<button class="shopping-stepper-btn" data-inv-step-id="' + item.id + '" data-step="-1" aria-label="減少">−</button>' +
+              '<span class="shopping-stepper-num">' + qty + '</span>' +
+              '<button class="shopping-stepper-btn" data-inv-step-id="' + item.id + '" data-step="1" aria-label="增加">＋</button>' +
+            '</span>' +
             '<button class="inventory-item-used-btn" data-inv-id="' + item.id + '">用完了</button>' +
           '</div>';
         });
@@ -8991,6 +9055,13 @@
         inventory = inventory.filter(i => i.id !== item.id);
         saveInventory();
         showToast('已從庫存移除');
+        renderInventoryTab();
+      });
+    });
+    document.querySelectorAll('#shoppingContent .shopping-stepper-btn[data-inv-step-id]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        adjustInventoryItemAmount(btn.dataset.invStepId, parseInt(btn.dataset.step, 10));
         renderInventoryTab();
       });
     });
@@ -9051,12 +9122,25 @@
         renderShoppingView();
       });
     });
+    document.querySelectorAll('#shoppingContent .shopping-stepper-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const key = btn.dataset.stepperKey;
+        const separatorIdx = key.lastIndexOf('|');
+        const name = key.slice(0, separatorIdx);
+        const unit = key.slice(separatorIdx + 1);
+        adjustManualShoppingItemAmount(name, unit, parseInt(btn.dataset.step, 10));
+        renderShoppingView();
+      });
+    });
     const addBtn = document.getElementById('addManualItemBtn');
     if(addBtn){
       addBtn.addEventListener('click', () => {
         manualItemCategory = '其他';
         const form = document.getElementById('manualAddForm');
         form.style.display = 'block';
+        const amountInput = document.getElementById('manualItemAmountInput');
+        if(amountInput) amountInput.value = '1';
         document.getElementById('manualItemInput').focus();
       });
     }
