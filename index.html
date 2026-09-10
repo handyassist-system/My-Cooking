@@ -7217,13 +7217,13 @@
   }
   loadManualShoppingItems();
 
-  function addManualShoppingItem(name, category){
+  function addManualShoppingItem(name, category, amount){
     const trimmed = (name || '').trim();
     if(!trimmed) return;
     manualShoppingItems.push({
       id: generateShoppingItemId(),
       name: trimmed,
-      amount: '',
+      amount: (amount || '').trim(),
       unit: '',
       category: category || findIngredientCategoryByName(trimmed),
       createdAt: new Date().toISOString().slice(0, 10)
@@ -8856,7 +8856,7 @@
       '<button class="shopping-item-toggle" data-item-key="' + key + '">' +
         '<span class="shopping-item-box">' + (item.status === 'have' ? '🟢' : '🛒') + '</span>' +
         '<span class="shopping-item-name">' + item.name + '</span>' +
-        '<span class="shopping-item-amount">' + (item.amount ? item.amount + ' ' + item.unit : '') + '</span>' +
+        '<span class="shopping-item-amount">' + (item.amount ? (item.unit ? item.amount + ' ' + item.unit : item.amount) : '') + '</span>' +
       '</button>' +
       deleteBtn +
     '</div>';
@@ -8901,6 +8901,7 @@
 
     html += '<div class="manual-add-form" id="manualAddForm" style="display:none;">' +
       '<input type="text" id="manualItemInput" class="ai-name-input" placeholder="想買什麼？例如：牛奶">' +
+      '<input type="text" id="manualItemAmountInput" class="ai-name-input" placeholder="數量（選填，例如：2包、一瓶）" style="margin-top:8px;">' +
       '<p class="manual-category-label">分類</p>' +
       '<div class="chip-row manual-category-row" id="manualCategoryRow">' +
         MANUAL_ITEM_CATEGORIES.map(cat =>
@@ -9071,7 +9072,8 @@
     if(confirmAddBtn){
       confirmAddBtn.addEventListener('click', () => {
         const input = document.getElementById('manualItemInput');
-        addManualShoppingItem(input.value, manualItemCategory);
+        const amountInput = document.getElementById('manualItemAmountInput');
+        addManualShoppingItem(input.value, manualItemCategory, amountInput ? amountInput.value : '');
         renderShoppingView();
       });
     }
