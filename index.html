@@ -178,6 +178,27 @@
     scrollbar-width:none;
   }
   .chip-row::-webkit-scrollbar{display:none;}
+  .shopping-tab-row{display:flex; gap:8px; padding:14px 22px 4px;}
+  .shopping-tab-btn{
+    flex:1; padding:11px; border-radius:var(--radius-md); border:1px solid var(--color-border);
+    background:var(--color-surface); color:var(--color-text-soft);
+    font-size:var(--fs-body); font-weight:var(--weight-semibold); font-family:var(--font-family);
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  .shopping-tab-btn.active{background:var(--color-accent); color:#FBF3EE; border-color:var(--color-accent);}
+  .inventory-item-row{
+    display:flex; align-items:center; gap:12px; width:100%;
+    padding:12px 14px; border-radius:var(--radius-md);
+    border:1px solid var(--color-border); background:var(--color-surface); margin-bottom:8px;
+  }
+  .inventory-item-name{flex:1; font-size:var(--fs-body); font-weight:var(--weight-medium); color:var(--color-text);}
+  .inventory-item-amount{font-size:var(--fs-caption); color:var(--color-text-soft); margin-right:4px;}
+  .inventory-item-used-btn{
+    flex-shrink:0; padding:6px 12px; border-radius:var(--radius-pill); border:1px solid var(--color-border);
+    background:var(--color-bg); color:var(--color-text-soft);
+    font-size:var(--fs-caption); font-weight:var(--weight-medium); font-family:var(--font-family);
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
   .chip{
     flex-shrink:0;
     padding:8px 16px;
@@ -969,6 +990,10 @@
     <div class="page-header no-back">
       <h2 class="page-title">🛒 採購清單</h2>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
+    </div>
+    <div class="shopping-tab-row">
+      <button class="shopping-tab-btn" id="shoppingTabList">採購清單</button>
+      <button class="shopping-tab-btn" id="shoppingTabInventory">我的庫存</button>
     </div>
     <div id="shoppingContent"></div>
   </section>
@@ -7964,7 +7989,8 @@
   }
 
   function goBackFromDetail(){
-    if(detailReturnView === 'find-recipe'){ findMode = 'recipe'; renderFindView(); navigate('find'); }
+    if(detailReturnView === 'find-choice'){ findMode = 'choice'; renderFindView(); navigate('find'); }
+    else if(detailReturnView === 'find-recipe'){ findMode = 'recipe'; renderFindView(); navigate('find'); }
     else if(detailReturnView === 'find-ingredients'){ findMode = 'ingredients'; renderFindView(); navigate('find'); }
     else if(detailReturnView === 'selected-menu'){ renderSelectedMenuView(); navigate('selected-menu'); }
     else if(detailReturnView === 'signature'){ renderSignatureView(); navigate('signature'); }
@@ -8055,7 +8081,7 @@
     const shopCard = document.getElementById('homeShoppingCard');
     if(shopCard) shopCard.addEventListener('click', () => openShoppingListView());
     document.querySelectorAll('#findChoiceContent .home-inspire-card').forEach(btn => {
-      btn.addEventListener('click', () => openDetail(btn.dataset.inspireDish, 'find-recipe'));
+      btn.addEventListener('click', () => openDetail(btn.dataset.inspireDish, 'find-choice'));
     });
   }
 
@@ -8116,6 +8142,14 @@
   });
 
   document.getElementById('findBackBtn').addEventListener('click', () => findGoBack());
+  document.getElementById('shoppingTabList').addEventListener('click', () => {
+    shoppingTab = 'list';
+    renderShoppingView();
+  });
+  document.getElementById('shoppingTabInventory').addEventListener('click', () => {
+    shoppingTab = 'inventory';
+    renderShoppingView();
+  });
   document.getElementById('detailBackBtn').addEventListener('click', () => goBackFromDetail());
 
   const navItems = document.querySelectorAll('.nav-item');
@@ -8784,6 +8818,23 @@
   const MANUAL_ITEM_CATEGORIES = ["蔬菜","肉類","雞肉","海鮮","蛋豆製品","菇類","辛香料","主食","調味料","其他"];
   let shoppingDoneExpanded = false;
   let manualItemCategory = "其他";
+  let shoppingTab = "list"; // list=採購清單, inventory=我的庫存
+  let manualInventoryCategory = "其他";
+  // 我的庫存分頁專用：直接新增一筆到inventory，不透過
+  // 採購清單勾選這條路徑，適合「朋友送的」「家裡本來就有」
+  // 這種沒有經過採購流程的東西
+  function addManualInventoryItem(name, category){
+    const trimmed = (name || '').trim();
+    if(!trimmed) return;
+    addToInventory({
+      name: trimmed,
+      unit: '',
+      amount: '',
+      category: category || findIngredientCategoryByName(trimmed),
+      type: 'ingredient',
+      source: 'manual'
+    });
+  }
   function getShoppingCategoryOrder(items){
     const found = new Set(items.map(i => i.category));
     const ordered = SHOPPING_CATEGORY_ORDER.filter(c => found.has(c));
@@ -8828,6 +8879,16 @@
   }
 
   function renderShoppingView(){
+    const tabList = document.getElementById('shoppingTabList');
+    const tabInv = document.getElementById('shoppingTabInventory');
+    if(tabList) tabList.classList.toggle('active', shoppingTab === 'list');
+    if(tabInv) tabInv.classList.toggle('active', shoppingTab === 'inventory');
+
+    if(shoppingTab === 'inventory'){
+      renderInventoryTab();
+      return;
+    }
+
     const overview = computeShoppingOverview();
     const needItems = overview.filter(i => i.status === 'need');
     const haveItems = overview.filter(i => i.status === 'have');
@@ -8870,6 +8931,93 @@
 
     document.getElementById('shoppingContent').innerHTML = html;
     bindShoppingViewEvents();
+  }
+
+  // ---------- 我的庫存分頁：直接列出inventory清單，不受
+  // 今日料理目前有沒有相關的菜影響，避免菜被移除後，已經
+  // 標記「有」的東西就從畫面上完全消失、感覺像被刪除 ----------
+  function renderInventoryTab(){
+    let html = '<p class="menu-subtitle">手邊現有的食材／用品，跟今日料理是否用到無關</p>';
+
+    html += '<div class="shopping-actions-row">';
+    html += '<button class="shopping-action-link" id="addInventoryItemBtn">＋ 新增庫存項目</button>';
+    html += '</div>';
+
+    html += '<div class="manual-add-form" id="manualInventoryForm" style="display:none;">' +
+      '<input type="text" id="manualInventoryInput" class="ai-name-input" placeholder="例如：牛奶、衛生紙">' +
+      '<p class="manual-category-label">分類</p>' +
+      '<div class="chip-row manual-category-row" id="manualInventoryCategoryRow">' +
+        MANUAL_ITEM_CATEGORIES.map(cat =>
+          '<button class="chip' + (cat === manualInventoryCategory ? ' active' : '') + '" data-manual-category="' + cat + '">' + cat + '</button>'
+        ).join('') +
+      '</div>' +
+      '<button class="ai-generate-btn" id="confirmManualInventoryBtn">加入</button>' +
+    '</div>';
+
+    if(inventory.length === 0){
+      html += '<div class="shopping-empty-state">' +
+        '<p class="shopping-empty-emoji">📦</p>' +
+        '<p class="shopping-empty-title">目前庫存是空的</p>' +
+        '<p class="shopping-empty-desc">在採購清單勾選「已有」，或自己新增一項</p>' +
+      '</div>';
+    } else {
+      const categories = getShoppingCategoryOrder(inventory);
+      categories.forEach(cat => {
+        const items = inventory.filter(i => i.category === cat);
+        if(items.length === 0) return;
+        html += '<div class="shopping-group">';
+        html += '<p class="shopping-group-title">' + ingredientCategoryIcon(cat) + ' ' + cat + '</p>';
+        items.forEach(item => {
+          html += '<div class="inventory-item-row">' +
+            '<span class="inventory-item-name">' + item.name + '</span>' +
+            (item.amount ? '<span class="inventory-item-amount">' + item.amount + (item.unit || '') + '</span>' : '') +
+            '<button class="inventory-item-used-btn" data-inv-id="' + item.id + '">用完了</button>' +
+          '</div>';
+        });
+        html += '</div>';
+      });
+    }
+
+    document.getElementById('shoppingContent').innerHTML = html;
+    bindInventoryTabEvents();
+  }
+
+  function bindInventoryTabEvents(){
+    document.querySelectorAll('#shoppingContent .inventory-item-used-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = inventory.find(i => i.id === btn.dataset.invId);
+        if(!item) return;
+        inventory = inventory.filter(i => i.id !== item.id);
+        saveInventory();
+        showToast('已從庫存移除');
+        renderInventoryTab();
+      });
+    });
+    const addBtn = document.getElementById('addInventoryItemBtn');
+    if(addBtn){
+      addBtn.addEventListener('click', () => {
+        manualInventoryCategory = '其他';
+        const form = document.getElementById('manualInventoryForm');
+        form.style.display = 'block';
+        document.getElementById('manualInventoryInput').focus();
+      });
+    }
+    document.querySelectorAll('#manualInventoryCategoryRow .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        manualInventoryCategory = chip.dataset.manualCategory;
+        document.querySelectorAll('#manualInventoryCategoryRow .chip').forEach(c => {
+          c.classList.toggle('active', c.dataset.manualCategory === manualInventoryCategory);
+        });
+      });
+    });
+    const confirmBtn = document.getElementById('confirmManualInventoryBtn');
+    if(confirmBtn){
+      confirmBtn.addEventListener('click', () => {
+        const input = document.getElementById('manualInventoryInput');
+        addManualInventoryItem(input.value, manualInventoryCategory);
+        renderInventoryTab();
+      });
+    }
   }
 
   function bindShoppingViewEvents(){
