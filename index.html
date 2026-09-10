@@ -482,23 +482,23 @@
   .ingredient-category-name{font-size:var(--fs-body); font-weight:var(--weight-semibold); color:var(--color-text);}
 
   /* 食材勾選清單（分類詳細頁／搜尋結果共用） */
-  .ing-check-list{display:flex; flex-direction:column; gap:8px; padding:4px 22px 8px;}
+  .ing-check-list{display:flex; flex-wrap:wrap; gap:8px; padding:4px 22px 8px;}
   .ing-check-row{
-    display:flex; align-items:center; gap:12px; width:100%;
-    padding:14px 16px; border-radius:var(--radius-md);
+    display:inline-flex; align-items:center; gap:6px; width:auto;
+    padding:9px 13px; border-radius:var(--radius-pill);
     border:1px solid var(--color-border); background:var(--color-surface);
     cursor:pointer; -webkit-tap-highlight-color:transparent;
     font-family:var(--font-family); text-align:left;
     transition:background .12s ease, border-color .12s ease;
   }
   .ing-check-row.selected{background:var(--color-jade-soft); border-color:var(--color-jade);}
-  .ing-check-box{font-size:18px; flex-shrink:0; color:var(--color-text-soft);}
+  .ing-check-box{font-size:14px; flex-shrink:0; color:var(--color-text-soft);}
   .ing-check-row.selected .ing-check-box{color:var(--color-jade);}
-  .ing-check-icon{font-size:20px; flex-shrink:0;}
-  .ing-check-name{font-size:var(--fs-body); font-weight:var(--weight-medium); color:var(--color-text);}
+  .ing-check-icon{font-size:16px; flex-shrink:0;}
+  .ing-check-name{font-size:var(--fs-label); font-weight:var(--weight-medium); color:var(--color-text);}
   .ing-stock-hint{
-    margin-left:auto; flex-shrink:0; font-size:var(--fs-label); font-weight:var(--weight-medium);
-    color:var(--color-jade); background:var(--color-jade-soft); padding:3px 9px; border-radius:var(--radius-pill);
+    flex-shrink:0; font-size:10px; font-weight:var(--weight-medium);
+    color:var(--color-jade); background:rgba(255,255,255,0.6); padding:1px 6px; border-radius:var(--radius-pill);
   }
 
   /* 固定於畫面底部的主要按鈕（各食材選擇畫面共用） */
@@ -8445,7 +8445,7 @@
     const query = q.toLowerCase();
     const matches = getAllIngredients().filter(e =>
       e.name.toLowerCase().includes(query) || (e.aliases || []).some(a => a.toLowerCase().includes(query))
-    );
+    ).sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
     if(matches.length === 0){
       return '<div class="ingredient-empty-state">' +
         '<p class="ingredient-empty-emoji">🔍</p>' +
@@ -8499,7 +8499,8 @@
   // ---------- category-detail 畫面 ----------
   function renderCategoryDetailScreen(){
     const cat = ingredientsActiveCategory;
-    const items = getAllIngredients().filter(e => e.category === cat);
+    const items = getAllIngredients().filter(e => e.category === cat)
+      .sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
     let html = '';
     html += renderSelectedBar();
     html += '<p class="section-label">' + ingredientCategoryIcon(cat) + ' ' + cat + '</p>';
