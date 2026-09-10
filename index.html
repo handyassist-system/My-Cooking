@@ -8349,6 +8349,7 @@
   let ingredientsScreen = 'categories';
   let ingredientsActiveCategory = null;
   let ingredientSearchQuery = '';
+  let categoryDetailSearchQuery = '';
 
   function toggleIngredientSelection(id){
     const idx = selectedIngredients.indexOf(id);
@@ -8468,6 +8469,7 @@
         ingredientsActiveCategory = btn.dataset.category;
         ingredientsScreen = 'category-detail';
         ingredientSearchQuery = '';
+        categoryDetailSearchQuery = '';
         renderIngredientsView();
         window.scrollTo(0, 0);
       });
@@ -8497,24 +8499,61 @@
   }
 
   // ---------- category-detail 畫面 ----------
+  function renderCategoryDetailBody(){
+    const cat = ingredientsActiveCategory;
+    const q = categoryDetailSearchQuery.trim().toLowerCase();
+    let items = getAllIngredients().filter(e => e.category === cat);
+    if(q){
+      items = items.filter(e => e.name.toLowerCase().includes(q) || (e.aliases || []).some(a => a.toLowerCase().includes(q)));
+    }
+    items = items.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+    if(items.length === 0){
+      return '<div class="ingredient-empty-state">' +
+        '<p class="ingredient-empty-emoji">🔍</p>' +
+        '<p class="ingredient-empty-title">這個分類裡沒有符合的食材</p>' +
+        '<p class="ingredient-empty-desc">換個關鍵字試試看</p>' +
+      '</div>';
+    }
+    return '<div class="ing-check-list">' + items.map(e => renderIngredientCheckRow(e.id)).join('') + '</div>';
+  }
+
+  // 只更新搜尋結果區塊，不重繪整頁，輸入框才不會失去焦點
+  function updateCategoryDetailResultsOnly(){
+    document.getElementById('categoryDetailResultsContainer').innerHTML = renderCategoryDetailBody();
+    bindCategoryDetailResultsEvents();
+  }
+
+  function bindCategoryDetailResultsEvents(){
+    document.querySelectorAll('#categoryDetailResultsContainer .ing-check-row').forEach(btn => {
+      btn.addEventListener('click', () => toggleIngredientSelection(btn.dataset.ingredientId));
+    });
+  }
+
   function renderCategoryDetailScreen(){
     const cat = ingredientsActiveCategory;
-    const items = getAllIngredients().filter(e => e.category === cat)
-      .sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
     let html = '';
     html += renderSelectedBar();
     html += '<p class="section-label">' + ingredientCategoryIcon(cat) + ' ' + cat + '</p>';
-    html += '<div class="ing-check-list">' + items.map(e => renderIngredientCheckRow(e.id)).join('') + '</div>';
+
+    html += '<div class="search-wrap"><label class="search-box">';
+    html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#867A6C" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>';
+    html += '<input type="text" id="categoryDetailSearchInput" placeholder="在' + cat + '裡搜尋" autocomplete="off">';
+    html += '</label></div>';
+
+    html += '<div id="categoryDetailResultsContainer">' + renderCategoryDetailBody() + '</div>';
     html += renderCtaButton();
 
     document.getElementById('ingredientsContent').innerHTML = html;
+    document.getElementById('categoryDetailSearchInput').value = categoryDetailSearchQuery;
+    document.getElementById('categoryDetailSearchInput').addEventListener('input', (e) => {
+      categoryDetailSearchQuery = e.target.value;
+      updateCategoryDetailResultsOnly();
+    });
     bindClearIngredientsBtn();
     document.querySelectorAll('.my-ing-chip').forEach(chip => {
       chip.addEventListener('click', () => toggleIngredientSelection(chip.dataset.removeId));
     });
-    document.querySelectorAll('.ing-check-row').forEach(btn => {
-      btn.addEventListener('click', () => toggleIngredientSelection(btn.dataset.ingredientId));
-    });
+    bindCategoryDetailResultsEvents();
     const ctaBtn = document.getElementById('viewResultsBtn');
     ctaBtn.addEventListener('click', () => {
       if(selectedIngredients.length === 0) return;
