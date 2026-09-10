@@ -130,6 +130,32 @@
 
   /* ---------- 找食譜：頂層選擇畫面 ---------- */
   .find-choice-list{padding:8px 22px 20px; display:flex; flex-direction:column; gap:14px;}
+  .home-greeting{
+    font-size:var(--fs-card-title); font-weight:var(--weight-bold); color:var(--color-text);
+    padding:16px 22px 4px; margin:0;
+  }
+  .home-status-row{display:flex; gap:12px; padding:12px 22px 4px;}
+  .home-status-card{
+    flex:1; display:flex; flex-direction:column; align-items:flex-start; gap:2px;
+    background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg);
+    padding:14px 16px; cursor:pointer; -webkit-tap-highlight-color:transparent; text-align:left;
+    font-family:var(--font-family);
+  }
+  .home-status-card:active{transform:scale(0.98);}
+  .home-status-num{font-size:24px; font-weight:var(--weight-bold); color:var(--color-accent-dark); line-height:1.2;}
+  .home-status-label{font-size:var(--fs-caption); color:var(--color-text-soft);}
+  .home-inspire-section{padding:14px 0 4px;}
+  .home-inspire-title{font-size:var(--fs-body); font-weight:var(--weight-semibold); color:var(--color-text); margin:0 22px 10px;}
+  .home-inspire-scroll{display:flex; gap:12px; overflow-x:auto; padding:0 22px 4px; scrollbar-width:none;}
+  .home-inspire-scroll::-webkit-scrollbar{display:none;}
+  .home-inspire-card{
+    flex-shrink:0; width:96px; display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg);
+    padding:14px 8px; cursor:pointer; -webkit-tap-highlight-color:transparent; font-family:var(--font-family);
+  }
+  .home-inspire-card:active{transform:scale(0.96);}
+  .home-inspire-emoji{font-size:26px;}
+  .home-inspire-name{font-size:var(--fs-caption); font-weight:var(--weight-semibold); color:var(--color-text); text-align:center; line-height:var(--lh-tight);}
   .find-choice-btn{
     display:flex; align-items:center; gap:16px; width:100%;
     padding:22px 20px; border-radius:var(--radius-lg);
@@ -894,25 +920,7 @@
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
     </div>
 
-    <div id="findChoiceContent">
-      <p class="menu-subtitle">今天想找哪道菜？</p>
-      <div class="find-choice-list">
-        <button class="find-choice-btn" data-find-mode="recipe">
-          <span class="find-choice-icon">📋</span>
-          <span class="find-choice-body">
-            <span class="find-choice-title">依菜色找</span>
-            <span class="find-choice-desc">知道想吃什麼，直接搜尋</span>
-          </span>
-        </button>
-        <button class="find-choice-btn" data-find-mode="ingredients">
-          <span class="find-choice-icon">🥦</span>
-          <span class="find-choice-body">
-            <span class="find-choice-title">依食材找</span>
-            <span class="find-choice-desc">看看手邊食材能煮什麼</span>
-          </span>
-        </button>
-      </div>
-    </div>
+    <div id="findChoiceContent"></div>
 
     <div id="findRecipeContent" style="display:none;">
       <div class="search-wrap">
@@ -1107,8 +1115,7 @@
   function enterApp(){
     document.getElementById('login').style.display = 'none';
     document.getElementById('appRoot').style.display = 'block';
-    renderChips();
-    renderResults();
+    renderFindView();
   }
 
   const ADMIN_EMAIL = "mp65p@hotmail.com";
@@ -7988,6 +7995,70 @@
 
   // 只重繪目前狀態，不重置——detail頁／AI建立頁返回會用這個，
   // 保留使用者原本鑽到哪一層
+  function getGreeting(){
+    const hour = new Date().getHours();
+    if(hour < 5) return '夜深了，還在想菜單嗎？';
+    if(hour < 11) return '早安，今天想煮點什麼？';
+    if(hour < 14) return '午安，中午想吃什麼呢？';
+    if(hour < 17) return '下午茶時間，來點靈感吧';
+    if(hour < 20) return '晚餐時間到了，看看想煮什麼';
+    return '晚安，明天想煮點什麼？';
+  }
+
+  function getInspirationDishes(count){
+    const pool = getSearchableDishes().filter(d => (d.priority||1) <= 2);
+    const shuffled = pool.slice().sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  }
+
+  // 首頁（找食譜分頁預設畫面）：問候語＋今日料理／採購清單
+  // 待辦數量總覽＋隨機靈感推薦，每次回到這個畫面都重新
+  // 渲染一次，確保數字跟推薦內容是新的
+  function renderFindChoiceHome(){
+    const container = document.getElementById('findChoiceContent');
+    const todayCount = selectedMenuDishIds.length;
+    const shoppingNeedCount = computeShoppingOverview().filter(i => i.status === 'need').length;
+    const inspireDishes = getInspirationDishes(3);
+
+    let html = '';
+    html += '<p class="home-greeting">' + getGreeting() + '</p>';
+
+    html += '<div class="home-status-row">';
+    html += '<button class="home-status-card" id="homeTodayCard"><span class="home-status-num">' + todayCount + '</span><span class="home-status-label">今日料理待煮</span></button>';
+    html += '<button class="home-status-card" id="homeShoppingCard"><span class="home-status-num">' + shoppingNeedCount + '</span><span class="home-status-label">採購清單待買</span></button>';
+    html += '</div>';
+
+    if(inspireDishes.length > 0){
+      html += '<div class="home-inspire-section">';
+      html += '<p class="home-inspire-title">🍳 今天煮什麼？試試這幾道</p>';
+      html += '<div class="home-inspire-scroll">' + inspireDishes.map(d =>
+        '<button class="home-inspire-card" data-inspire-dish="' + d.id + '">' +
+          '<span class="home-inspire-emoji">' + getDishIcon(d) + '</span>' +
+          '<span class="home-inspire-name">' + d.name + '</span>' +
+        '</button>'
+      ).join('') + '</div></div>';
+    }
+
+    html += '<p class="menu-subtitle">或是自己找找看：</p>';
+    html += '<div class="find-choice-list">';
+    html += '<button class="find-choice-btn" data-find-mode="recipe"><span class="find-choice-icon">📋</span><span class="find-choice-body"><span class="find-choice-title">依菜色找</span><span class="find-choice-desc">知道想吃什麼，直接搜尋</span></span></button>';
+    html += '<button class="find-choice-btn" data-find-mode="ingredients"><span class="find-choice-icon">🥦</span><span class="find-choice-body"><span class="find-choice-title">依食材找</span><span class="find-choice-desc">看看手邊食材能煮什麼</span></span></button>';
+    html += '</div>';
+
+    container.innerHTML = html;
+
+    document.querySelectorAll('#findChoiceContent .find-choice-btn').forEach(btn => {
+      btn.addEventListener('click', () => openFindView(btn.dataset.findMode));
+    });
+    const todayCard = document.getElementById('homeTodayCard');
+    if(todayCard) todayCard.addEventListener('click', () => openSelectedMenuView());
+    const shopCard = document.getElementById('homeShoppingCard');
+    if(shopCard) shopCard.addEventListener('click', () => openShoppingListView());
+    document.querySelectorAll('#findChoiceContent .home-inspire-card').forEach(btn => {
+      btn.addEventListener('click', () => openDetail(btn.dataset.inspireDish, 'find-recipe'));
+    });
+  }
+
   function renderFindView(){
     document.getElementById('findChoiceContent').style.display = findMode === 'choice' ? 'block' : 'none';
     document.getElementById('findRecipeContent').style.display = findMode === 'recipe' ? 'block' : 'none';
@@ -7995,7 +8066,9 @@
 
     document.getElementById('findBackBtn').style.display = findMode === 'choice' ? 'none' : '';
 
-    if(findMode === 'recipe'){
+    if(findMode === 'choice'){
+      renderFindChoiceHome();
+    } else if(findMode === 'recipe'){
       renderChips();
       renderResults();
     } else if(findMode === 'ingredients'){
@@ -8036,10 +8109,6 @@
     }
     window.scrollTo(0, 0);
   }
-
-  document.querySelectorAll('.find-choice-btn').forEach(btn => {
-    btn.addEventListener('click', () => openFindView(btn.dataset.findMode));
-  });
 
   document.getElementById('searchInput').addEventListener('input', (e)=>{
     searchQuery = e.target.value;
