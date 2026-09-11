@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>煮意生活｜今天，煮什麼？</title>
+<title>料理小幫手｜今天，煮什麼？</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#A8462E">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -835,6 +835,7 @@
     border:1px solid var(--color-border); border-radius:var(--radius-lg);
     padding:32px 26px; text-align:center;
   }
+  .login-logo-img{width:84px; height:84px; border-radius:20px; display:block; margin:0 auto 14px; object-fit:cover;}
   .login-title{font-size:var(--fs-title); font-weight:var(--weight-bold); color:var(--color-text); margin:0 0 6px;}
   .login-desc{font-size:var(--fs-caption); font-weight:var(--weight-regular); color:var(--color-text-soft); margin:0 0 20px;}
   .code-input{
@@ -911,7 +912,8 @@
 
 <div id="login" style="display:none">
   <div class="login-card">
-    <h1 class="login-title">煮意生活</h1>
+    <img class="login-logo-img" src="icon-192.png" alt="料理小幫手">
+    <h1 class="login-title">料理小幫手</h1>
     <p class="login-desc">請輸入 Email 登入</p>
     <input id="codeInput" class="code-input" type="email" inputmode="email" autocomplete="email" placeholder="請輸入 Email" maxlength="60">
     <div class="code-hint">🎁 首次登入即享 21 天全功能免費試用</div>
@@ -937,7 +939,7 @@
       <button class="back-btn" id="findBackBtn" aria-label="返回" style="display:none;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B241D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
       </button>
-      <img id="findHeaderLogo" class="page-logo" src="icon-192.png" alt="煮意生活">
+      <img id="findHeaderLogo" class="page-logo" src="icon-192.png" alt="料理小幫手">
       <h2 class="page-title" id="findHeaderTitle">🏠 首頁</h2>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
     </div>
@@ -980,7 +982,7 @@
   <!-- ============ SELECTED MENU VIEW（這次要煮）============ -->
   <section class="view" id="view-selected-menu">
     <div class="page-header no-back">
-      <img class="page-logo" src="icon-192.png" alt="煮意生活">
+      <img class="page-logo" src="icon-192.png" alt="料理小幫手">
       <h2 class="page-title">🍳 今日料理</h2>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
     </div>
@@ -990,7 +992,7 @@
   <!-- ============ SHOPPING VIEW（採購）============ -->
   <section class="view" id="view-shopping">
     <div class="page-header no-back">
-      <img class="page-logo" src="icon-192.png" alt="煮意生活">
+      <img class="page-logo" src="icon-192.png" alt="料理小幫手">
       <h2 class="page-title">🛒 採購清單</h2>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
     </div>
@@ -1004,7 +1006,7 @@
   <!-- ============ SIGNATURE VIEW（我的菜單）============ -->
   <section class="view" id="view-signature">
     <div class="page-header no-back">
-      <img class="page-logo" src="icon-192.png" alt="煮意生活">
+      <img class="page-logo" src="icon-192.png" alt="料理小幫手">
       <h2 class="page-title">📖 我的菜單</h2>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
     </div>
@@ -1268,7 +1270,7 @@
     var root = document.getElementById('modalRoot');
     var body =
       '<p class="terms-section-title">服務說明</p>' +
-      '<p class="terms-section-body">本服務（找食譜、菜單規劃、採購清單管理）為「煮意生活」提供之個人／家庭料理規劃工具，以電子郵件登入使用。</p>' +
+      '<p class="terms-section-body">本服務（找食譜、菜單規劃、採購清單管理）為「料理小幫手」提供之個人／家庭料理規劃工具，以電子郵件登入使用。</p>' +
       '<p class="terms-section-title">訂閱與付款</p>' +
       '<p class="terms-section-body">提供免費試用及付費訂閱，方案與價格以App內公告為準。付款採LINE Pay或轉帳等人工方式，確認後開通。數位服務一經開通原則上不退款，特殊情形請透過官方LINE協商。</p>' +
       '<p class="terms-section-title">使用者義務</p>' +
@@ -1285,12 +1287,12 @@
       '<p class="terms-section-body"><b>未成年人：</b>未滿十八歲者，應在法定代理人同意後使用。</p>' +
       '<p class="terms-section-title">準據法與管轄</p>' +
       '<p class="terms-section-body">本條款以中華民國（台灣）法律為準據法；因本服務所生爭議，以臺灣高雄地方法院為第一審管轄法院。</p>' +
-      '<p class="terms-meta">最後更新：2026年9月2日<br>聯絡：「煮意生活」官方LINE</p>';
+      '<p class="terms-meta">最後更新：2026年9月2日<br>聯絡：「料理小幫手」官方LINE</p>';
     root.innerHTML =
       '<div class="overlay" id="ovl" style="align-items:center"><div class="sheet terms-sheet" id="sheet">' +
-        '<img class="terms-logo-img" src="terms-logo.png" alt="煮意生活">' +
+        '<img class="terms-logo-img" src="terms-logo.png" alt="料理小幫手">' +
         '<div class="terms-title">服務條款與隱私權政策</div>' +
-        '<p class="terms-subtitle">煮意生活・請閱讀後同意再開始使用</p>' +
+        '<p class="terms-subtitle">料理小幫手・請閱讀後同意再開始使用</p>' +
         '<div class="terms-body">' + body + '</div>' +
         '<button id="termsSheetOk" class="terms-close-btn">關閉</button>' +
       '</div></div>';
@@ -1352,7 +1354,7 @@
   });
 
   function showTrialWelcome(expiry){
-    showInfoSheet("🎉", "歡迎使用煮意生活！",
+    showInfoSheet("🎉", "歡迎使用料理小幫手！",
       '已開啟 <b style="color:#3E9B8E">21 天全功能免費試用</b><br>到期日：'+expiry
       +'<div style="margin:16px 0;border-top:1px dashed #E3DED4"></div>'
       +'<b>👪 全家共用</b><br>家人用同一個Email登入即可共用，依方案有裝置數量上限。'
@@ -1760,7 +1762,7 @@
   async function shareApp(){
     const url = location.href.split('#')[0].split('?')[0];
     if(navigator.share){
-      try{ await navigator.share({ title:'煮意生活', text:'一起用煮意生活找食譜、排菜單、列採購清單', url:url }); }
+      try{ await navigator.share({ title:'料理小幫手', text:'一起用料理小幫手找食譜、排菜單、列採購清單', url:url }); }
       catch(e){}
     } else if(navigator.clipboard){
       try{ await navigator.clipboard.writeText(url); showToast('已複製App連結'); }
@@ -1785,7 +1787,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = '煮意生活備份_' + new Date().toISOString().slice(0,10) + '.json';
+    a.download = '料理小幫手備份_' + new Date().toISOString().slice(0,10) + '.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -6980,7 +6982,7 @@
      ---------------------------------------------------------
      - userCreatedDishes：跟官方DISHES完全獨立存放，不會寫進
        DISHES，存在 localStorage，重新整理仍會保留。
-     - 「AI幫我建立料理」這個功能目前已經移除（煮意生活改成
+     - 「AI幫我建立料理」這個功能目前已經移除（料理小幫手改成
        資料庫優先架構，不依賴AI即時生成，所有搜尋直接讀取
        結構化資料庫）。這個資料結構、source／status欄位
        刻意保留不刪，之後如果要恢復AI功能、或用別的方式
@@ -8275,7 +8277,7 @@
   }
   function showSignatureLockedMessage(){
     showInfoSheet('🔒', '我的菜單是付費功能',
-      '收藏拿手菜、建立自己的常用菜單，是煮意生活的付費功能。'
+      '收藏拿手菜、建立自己的常用菜單，是料理小幫手的付費功能。'
       + '<div style="margin:14px 0;border-top:1px dashed #E3DED4"></div>'
       + '找食譜、依食材找、今日料理、採購清單這些功能都可以'
       + '免費使用，想解鎖我的菜單，歡迎透過官方LINE升級方案。'
