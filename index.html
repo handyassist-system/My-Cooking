@@ -301,6 +301,14 @@
     font-size:var(--fs-caption); font-weight:var(--weight-regular); color:var(--color-text-soft);
     margin:-14px 0 22px; display:none;
   }
+  .sop-signature-btn{
+    width:100%; padding:14px; border:none; border-radius:var(--radius-lg); margin-bottom:22px;
+    background:var(--color-accent); color:#FBF3EE;
+    font-size:var(--fs-body); font-weight:var(--weight-semibold); font-family:var(--font-family);
+    cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .12s ease;
+  }
+  .sop-signature-btn:active{transform:scale(0.98);}
+  .sop-signature-btn.added{background:var(--color-jade-soft); color:var(--color-jade);}
 
 
   /* ---------- Dish result cards ---------- */
@@ -651,7 +659,6 @@
     background:var(--color-bg); color:var(--color-text); font-size:var(--fs-caption); font-weight:var(--weight-medium);
     font-family:var(--font-family); cursor:pointer; -webkit-tap-highlight-color:transparent;
   }
-  .selected-menu-action-btn.complete{border-color:var(--color-jade); color:var(--color-jade); background:var(--color-jade-soft);}
   .selected-menu-action-btn.remove{border-color:var(--color-accent); color:var(--color-accent-dark); background:var(--color-accent-soft);}
 
   .menu-empty-state{padding:60px 30px; text-align:center;}
@@ -1106,6 +1113,7 @@
         <p class="sop-done-title">今天完成了！</p>
         <p class="sop-done-dish" id="sopDoneDishName">—</p>
         <p class="sop-done-menu-note" id="sopDoneMenuNote"></p>
+        <button class="sop-signature-btn" id="sopSignatureBtn">⭐ 加入我的菜單</button>
 
         <div class="sop-rating-block">
           <p class="sop-rating-label">這次做得如何？</p>
@@ -8426,6 +8434,7 @@
     document.getElementById('sopStepScreen').style.display = 'none';
     document.getElementById('sopDoneScreen').style.display = 'block';
     document.getElementById('sopDoneDishName').textContent = sopDish.name;
+    renderSopSignatureBtn();
 
     // 完成SOP＝這道料理這次已經煮完了：從「這次要煮」移除，
     // 但「我的菜單」是長期收藏，完全不受影響
@@ -8444,6 +8453,21 @@
     sopSelectedRating = 0;
     document.getElementById('sopNote').value = '';
     renderSopStars();
+  }
+
+  // SOP完成畫面的「加入我的菜單」按鈕：完成料理的當下就能
+  // 一併收藏，不用另外跳回詳細頁才找得到這個按鈕
+  function renderSopSignatureBtn(){
+    const btn = document.getElementById('sopSignatureBtn');
+    if(!btn || !sopDish) return;
+    if(isSignatureLocked()){
+      btn.textContent = '🔒 我的菜單（付費功能）';
+      btn.classList.remove('added');
+      return;
+    }
+    const inSignature = mySignatureDishIds.includes(sopDish.id);
+    btn.textContent = inSignature ? '✓ 已加入我的菜單' : '⭐ 加入我的菜單';
+    btn.classList.toggle('added', inSignature);
   }
 
   function renderSopStars(){
@@ -8485,6 +8509,15 @@
     const note = document.getElementById('sopNote').value.trim();
     logCook(sopDish.id, sopServings, sopSelectedRating, note);
     showToast('已儲存這次的紀錄');
+  });
+  document.getElementById('sopSignatureBtn').addEventListener('click', () => {
+    if(!sopDish) return;
+    if(isSignatureLocked()){
+      openUpgradeView();
+      return;
+    }
+    toggleSignatureDish(sopDish.id);
+    renderSopSignatureBtn();
   });
 
   /* =========================================================
@@ -8814,7 +8847,6 @@
       '</div>' +
       '<button class="selected-menu-start-btn" data-start-cook="' + dish.id + '">📋 料理詳細說明</button>' +
       '<div class="selected-menu-card-actions">' +
-        '<button class="selected-menu-action-btn complete" data-complete-dish="' + dish.id + '">☑ 標記已完成</button>' +
         '<button class="selected-menu-action-btn remove" data-remove-selected="' + dish.id + '">✕ 移除</button>' +
       '</div>' +
     '</div>';
@@ -8899,15 +8931,6 @@
       btn.addEventListener('click', () => {
         const dish = getDishById(btn.dataset.startCook);
         if(dish){ openDetail(dish.id, 'selected-menu', getMenuServings(dish.id)); }
-      });
-    });
-    document.querySelectorAll('#selectedMenuContent [data-complete-dish]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.completeDish;
-        logCook(id, getMenuServings(id), null, '');
-        removeFromSelectedMenu(id);
-        showToast('已標記完成');
-        renderSelectedMenuView();
       });
     });
     document.querySelectorAll('#selectedMenuContent [data-remove-selected]').forEach(btn => {
