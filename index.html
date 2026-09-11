@@ -938,7 +938,7 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B241D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
       </button>
       <img id="findHeaderLogo" class="page-logo" src="icon-192.png" alt="煮意生活">
-      <h2 class="page-title" id="findHeaderTitle" style="display:none;">找食譜</h2>
+      <h2 class="page-title" id="findHeaderTitle">🏠 首頁</h2>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
     </div>
 
@@ -8136,8 +8136,8 @@
     document.getElementById('findBackBtn').style.display = isChoice ? 'none' : '';
     document.getElementById('findHeaderLogo').style.display = isChoice ? '' : 'none';
     const titleEl = document.getElementById('findHeaderTitle');
-    titleEl.style.display = isChoice ? 'none' : '';
-    if(findMode === 'recipe'){ titleEl.textContent = '依菜色找'; }
+    if(isChoice){ titleEl.textContent = '🏠 首頁'; }
+    else if(findMode === 'recipe'){ titleEl.textContent = '依菜色找'; }
     else if(findMode === 'ingredients'){ titleEl.textContent = '依食材找'; }
 
     if(findMode === 'choice'){
