@@ -617,6 +617,15 @@
     border:1px solid var(--color-border); background:var(--color-bg); color:var(--color-text-soft);
     font-size:14px; cursor:pointer; -webkit-tap-highlight-color:transparent;
   }
+  .cook-log-row{
+    padding:14px 16px; border-radius:var(--radius-lg); border:1px solid var(--color-border);
+    background:var(--color-surface); margin-bottom:10px;
+  }
+  .cook-log-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px;}
+  .cook-log-name{font-size:var(--fs-card-title); font-weight:var(--weight-bold); color:var(--color-text);}
+  .cook-log-date{font-size:var(--fs-label); color:var(--color-text-soft); flex-shrink:0;}
+  .cook-log-stars{font-size:var(--fs-body); color:#E0A93B; margin:6px 0 0;}
+  .cook-log-note{font-size:var(--fs-caption); color:var(--color-text-soft); margin:6px 0 0; line-height:var(--lh-base);}
   .menu-card-emoji{
     width:44px; height:44px; border-radius:12px; flex-shrink:0;
     background:var(--color-accent-soft); display:flex; align-items:center; justify-content:center; font-size:20px;
@@ -1050,6 +1059,10 @@
       <h2 class="page-title">📖 我的菜單</h2>
       <button class="header-upgrade-btn" data-open-upgrade>升級</button>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
+    </div>
+    <div class="shopping-tab-row" id="signatureTabRow">
+      <button class="shopping-tab-btn" id="signatureTabMenu">我的菜單</button>
+      <button class="shopping-tab-btn" id="signatureTabLog">料理紀錄</button>
     </div>
     <div id="signatureContent"></div>
   </section>
@@ -8506,6 +8519,14 @@
     shoppingTab = 'inventory';
     renderShoppingView();
   });
+  document.getElementById('signatureTabMenu').addEventListener('click', () => {
+    signatureTab = 'menu';
+    renderSignatureView();
+  });
+  document.getElementById('signatureTabLog').addEventListener('click', () => {
+    signatureTab = 'log';
+    renderSignatureView();
+  });
   document.getElementById('detailBackBtn').addEventListener('click', () => goBackFromDetail());
 
   const navItems = document.querySelectorAll('.nav-item');
@@ -9188,6 +9209,7 @@
   const MANUAL_ITEM_CATEGORIES = ["蔬菜","肉類","雞肉","海鮮","蛋豆製品","菇類","辛香料","主食","調味料","其他"];
   let manualItemCategory = "其他";
   let shoppingTab = "list"; // list=採購清單, inventory=我的庫存
+  let signatureTab = "menu"; // menu=我的菜單, log=料理紀錄
   let manualInventoryCategory = "其他";
   // 我的庫存分頁專用：直接新增一筆到inventory，不透過
   // 採購清單勾選這條路徑，適合「朋友送的」「家裡本來就有」
@@ -9496,17 +9518,31 @@
   }
 
   function renderSignatureView(){
+    const tabRow = document.getElementById('signatureTabRow');
+    const tabMenu = document.getElementById('signatureTabMenu');
+    const tabLog = document.getElementById('signatureTabLog');
+
     if(isFreePlan()){
+      if(tabRow) tabRow.style.display = 'none';
       document.getElementById('signatureContent').innerHTML =
         '<div class="menu-empty-state">' +
           '<p class="menu-empty-emoji">🔒</p>' +
-          '<p class="menu-empty-title">我的菜單是付費功能</p>' +
-          '<p class="menu-empty-desc">升級後即可收藏拿手菜、建立自己的常用菜單</p>' +
+          '<p class="menu-empty-title">我的菜單／料理紀錄是付費功能</p>' +
+          '<p class="menu-empty-desc">升級後即可收藏拿手菜、建立自己的常用菜單，並瀏覽每次完成料理的紀錄</p>' +
           '<button class="menu-cta-btn" id="signatureUpgradeBtn" style="margin-top:16px;">查看升級方案</button>' +
         '</div>';
       document.getElementById('signatureUpgradeBtn').addEventListener('click', openUpgradeView);
       return;
     }
+    if(tabRow) tabRow.style.display = '';
+    if(tabMenu) tabMenu.classList.toggle('active', signatureTab === 'menu');
+    if(tabLog) tabLog.classList.toggle('active', signatureTab === 'log');
+
+    if(signatureTab === 'log'){
+      renderCookLogTab();
+      return;
+    }
+
     const items = mySignatureDishIds.map(id => {
       const dish = getDishById(id);
       if(!dish) return null;
@@ -9561,6 +9597,37 @@
     document.querySelectorAll('#signatureContent .menu-card').forEach(card => {
       card.addEventListener('click', () => openDetail(card.dataset.dishId, 'signature'));
     });
+  }
+
+  // 料理紀錄分頁：純粹列出cookLogs的每一筆完成紀錄，跟
+  // 「我的菜單」（收藏清單）完全獨立——不管那道菜有沒有
+  // 被收藏，只要完成過SOP並儲存評分，都會出現在這裡，
+  // 依時間新到舊排序
+  function renderCookLogTab(){
+    const sorted = cookLogs.slice().sort((a, b) => (b.cookedAt || '').localeCompare(a.cookedAt || ''));
+    let html;
+    if(sorted.length === 0){
+      html = '<div class="menu-empty-state">' +
+        '<p class="menu-empty-emoji">📝</p>' +
+        '<p class="menu-empty-title">還沒有料理紀錄</p>' +
+        '<p class="menu-empty-desc">完成SOP並儲存評分後，會出現在這裡</p>' +
+      '</div>';
+    } else {
+      html = '<div class="menu-list">' + sorted.map(log => {
+        const dish = getDishById(log.dishId);
+        const dishName = dish ? dish.name : '（已刪除的料理）';
+        const stars = log.rating ? '★'.repeat(log.rating) + '☆'.repeat(5 - log.rating) : '未評分';
+        return '<div class="cook-log-row">' +
+          '<div class="cook-log-head">' +
+            '<span class="cook-log-name">' + dishName + '</span>' +
+            '<span class="cook-log-date">' + (log.cookedAt || '') + '</span>' +
+          '</div>' +
+          '<p class="cook-log-stars">' + stars + '</p>' +
+          (log.note ? '<p class="cook-log-note">' + log.note + '</p>' : '') +
+        '</div>';
+      }).join('') + '</div>';
+    }
+    document.getElementById('signatureContent').innerHTML = html;
   }
   // App要先通過登入才會顯示，這裡不再直接renderChips/
   // renderResults——那兩行現在移到enterApp()裡，只有登入
