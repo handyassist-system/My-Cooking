@@ -643,6 +643,12 @@
     cursor:pointer; -webkit-tap-highlight-color:transparent;
   }
   .meal-chip.active{background:var(--color-accent-soft); border-color:var(--color-accent); color:var(--color-accent-dark);}
+  .meal-chip-locked{
+    flex:1; padding:9px 8px; border-radius:var(--radius-md); border:1px dashed var(--color-border);
+    background:var(--color-bg); color:var(--color-text-soft);
+    font-size:var(--fs-label); font-weight:var(--weight-medium); font-family:var(--font-family);
+    cursor:pointer; -webkit-tap-highlight-color:transparent; text-align:center;
+  }
 
   .selected-menu-start-btn{
     display:block; width:100%; margin-top:14px; padding:13px;
@@ -1679,13 +1685,19 @@
     const simFreeBtn = document.getElementById('adminSimFreeBtn');
     if(simFreeBtn) simFreeBtn.addEventListener('click', () => {
       state.plan = 'free';
-      showToast('已模擬 free 版，我的菜單會顯示付費鎖定畫面');
+      renderSelectedMenuView();
+      renderShoppingView();
+      renderSignatureView();
+      showToast('已模擬 free 版，我的菜單/採購清單/庫存/早中晚分類會顯示付費鎖定畫面');
       navigate('find');
     });
     const simPaidBtn = document.getElementById('adminSimPaidBtn');
     if(simPaidBtn) simPaidBtn.addEventListener('click', () => {
       state.plan = 'basic';
-      showToast('已模擬個人版，我的菜單可以正常使用');
+      renderSelectedMenuView();
+      renderShoppingView();
+      renderSignatureView();
+      showToast('已模擬個人版，付費功能都可以正常使用');
       navigate('find');
     });
   }
@@ -1790,6 +1802,7 @@
       ['找食譜／依食材找', true, true],
       ['料理詳細頁／SOP步驟', true, true],
       ['今日料理規劃', true, true],
+      ['早中晚分類', false, true],
       ['採購清單自動彙整', false, true],
       ['我的庫存', false, true],
       ['我的菜單（收藏拿手菜）', false, true],
@@ -7057,6 +7070,208 @@
       status: "confirmed",
       source: "official"
     }
+    ,{
+      id: "dish249", name: "粉漿蛋餅", icon: "🥞", category: "主食", difficulty: "簡單",
+      priority: 1,
+      servings: 2, prepTime: 10, cookTime: 10,
+      ingredients: [ {name:"中筋麵粉", amount:100, unit:"g"}, {name:"太白粉", amount:2, unit:"大匙"}, {name:"雞蛋", amount:2, unit:"顆"} ],
+      seasonings: [ {name:"鹽", amount:0.3, unit:"小匙"}, {name:"青蔥", amount:1, unit:"根"} ],
+      tools: ["平底鍋"],
+      preparationSteps: ["中筋麵粉、太白粉加水（約180ml）與鹽拌勻成粉漿，過篩去除顆粒","蔥切蔥花拌入粉漿"],
+      cookingSteps: [
+        {step:1, description:"平底鍋刷薄油，倒入一勺粉漿轉動鍋子攤成薄餅", heatLevel:"中小火", time:2, tip:"粉漿要薄薄一層，太厚不容易熟透"},
+        {step:2, description:"底部凝固後打一顆蛋在餅皮上，用鍋鏟稍微抹開", heatLevel:"中小火", time:2},
+        {step:3, description:"翻面煎至蛋熟，捲起切段即可享用，可依喜好刷醬油膏或甜辣醬", heatLevel:"中小火", time:2}
+      ],
+      heatLevel: "全程中小火，避免粉漿餅皮焦掉",
+      tips: ["粉漿過篩可以讓餅皮更均勻細緻，沒有顆粒感","鍋子要夠熱但火不能太大，餅皮才會Q彈不易破"],
+      commonMistakes: ["粉漿沒有過篩，煎出來的餅皮有顆粒不夠滑順","火太大導致餅皮還沒熟就先焦掉"],
+      aliases: ["粉漿蛋餅"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish250", name: "南瓜濃湯", icon: "🎃", category: "湯品", difficulty: "簡單",
+      priority: 2,
+      servings: 4, prepTime: 15, cookTime: 25,
+      ingredients: [ {name:"南瓜", amount:1, unit:"顆"}, {name:"洋蔥", amount:0.5, unit:"顆"}, {name:"鮮奶", amount:200, unit:"ml"} ],
+      seasonings: [ {name:"奶油", amount:1, unit:"大匙"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"黑胡椒粒", amount:0.3, unit:"小匙"} ],
+      tools: ["湯鍋","食物調理機或果汁機"],
+      preparationSteps: ["南瓜去皮去籽切塊，洋蔥切碎"],
+      cookingSteps: [
+        {step:1, description:"鍋中放奶油，洋蔥炒至透明軟化", heatLevel:"小火", time:5},
+        {step:2, description:"加入南瓜塊與足量水，煮滾後轉小火燉煮至南瓜軟爛", heatLevel:"小火", time:15, tip:"用筷子能輕鬆插入南瓜表示已經夠軟"},
+        {step:3, description:"放涼後用調理機打成細滑濃湯", heatLevel:"免加熱", time:3},
+        {step:4, description:"倒回鍋中加鮮奶、鹽、黑胡椒粒，小火加熱至微滾即可", heatLevel:"小火", time:5, tip:"加鮮奶後不要大火煮滾，避免油水分離"}
+      ],
+      heatLevel: "南瓜需燉煮至軟爛，鮮奶加入後只需小火加熱",
+      tips: ["南瓜燉夠軟爛，打出來的濃湯才會細滑不粗糙","打湯前先放涼一點，用調理機比較安全"],
+      commonMistakes: ["南瓜沒煮到夠軟，打出來的濃湯有顆粒感","加鮮奶後大火煮滾，容易油水分離變得不細滑"],
+      aliases: ["南瓜濃湯"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish251", name: "玉米濃湯", icon: "🌽", category: "湯品", difficulty: "簡單",
+      priority: 1,
+      servings: 4, prepTime: 10, cookTime: 15,
+      ingredients: [ {name:"玉米", amount:2, unit:"支"}, {name:"雞蛋", amount:1, unit:"顆"} ],
+      seasonings: [ {name:"太白粉", amount:1, unit:"大匙"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"白胡椒粉", amount:0.3, unit:"小匙"} ],
+      tools: ["湯鍋"],
+      preparationSteps: ["玉米削粒，雞蛋打散，太白粉加水調成太白粉水"],
+      cookingSteps: [
+        {step:1, description:"湯鍋加水，放入玉米粒煮滾", heatLevel:"大火", time:5},
+        {step:2, description:"轉小火續煮至玉米軟", heatLevel:"小火", time:8},
+        {step:3, description:"倒入太白粉水勾芡", heatLevel:"中火", time:2},
+        {step:4, description:"湯滾後淋入蛋液攪出蛋花，加鹽、白胡椒粉調味即可起鍋", heatLevel:"中火", time:1, tip:"蛋液要用繞圈的方式慢慢淋入，蛋花才會細緻漂亮"}
+      ],
+      heatLevel: "勾芡後轉中火，蛋液才淋得出漂亮蛋花",
+      tips: ["喜歡口感細滑可以先打成玉米漿再煮","蛋液淋入前湯要先滾，蛋花才會成型不糊掉"],
+      commonMistakes: ["蛋液一次倒入沒有繞圈，蛋花結成一坨不細緻","勾芡前湯太稀，喝起來不夠濃郁"],
+      aliases: ["玉米濃湯","粟米濃湯"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish252", name: "蒜蓉炒地瓜葉", icon: "🥬", category: "蔬菜", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 8, cookTime: 5,
+      ingredients: [ {name:"地瓜葉", amount:1, unit:"把"} ],
+      seasonings: [ {name:"蒜頭", amount:3, unit:"瓣"}, {name:"鹽", amount:0.5, unit:"小匙"} ],
+      tools: ["炒鍋"],
+      preparationSteps: ["地瓜葉摘取嫩葉嫩莖部分，洗淨瀝乾，蒜頭切末"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，蒜末爆香", heatLevel:"中火", time:1},
+        {step:2, description:"地瓜葉下鍋大火快炒至軟", heatLevel:"大火", time:3, tip:"地瓜葉很快就會軟化出水，大火快炒縮短時間"},
+        {step:3, description:"加鹽調味炒勻即可起鍋", heatLevel:"大火", time:1}
+      ],
+      heatLevel: "全程大火快炒",
+      tips: ["地瓜葉只取嫩葉嫩莖，太老的梗口感會偏韌","大火快炒能保持翠綠色澤，不會炒黃"],
+      commonMistakes: ["用了太老的地瓜葉梗，口感偏韌不好咬","小火慢炒導致葉子出水變黃，賣相不佳"],
+      aliases: ["蒜蓉炒地瓜葉","地瓜葉"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish253", name: "木耳炒蛋", icon: "🍳", category: "蛋豆製品", difficulty: "簡單",
+      priority: 1,
+      servings: 2, prepTime: 10, cookTime: 6,
+      ingredients: [ {name:"木耳", amount:3, unit:"片"}, {name:"雞蛋", amount:3, unit:"顆"} ],
+      seasonings: [ {name:"青蔥", amount:1, unit:"根"}, {name:"鹽", amount:0.5, unit:"小匙"} ],
+      tools: ["炒鍋"],
+      preparationSteps: ["木耳洗淨切絲，蛋打散加少許鹽拌勻，蔥切蔥花"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，蛋液下鍋炒至半凝固盛起", heatLevel:"中火", time:2},
+        {step:2, description:"鍋中加少許油，木耳絲下鍋拌炒", heatLevel:"中火", time:3},
+        {step:3, description:"蛋回鍋一起拌炒均勻，撒蔥花即可起鍋", heatLevel:"中火", time:1}
+      ],
+      heatLevel: "中火快炒為主",
+      tips: ["蛋先炒至半凝固盛起，避免跟木耳一起炒過老","木耳切絲比較容易入口，也比較快熟"],
+      commonMistakes: ["蛋炒太久變老變硬，口感不滑嫩","木耳沒切絲，直接整片下鍋不易熟透入味"],
+      aliases: ["木耳炒蛋"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish254", name: "高麗菜炒肉絲", icon: "🥬", category: "肉類", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 10, cookTime: 8,
+      ingredients: [ {name:"高麗菜", amount:0.5, unit:"顆"}, {name:"豬肉絲", amount:150, unit:"g"} ],
+      seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"鹽", amount:0.3, unit:"小匙"} ],
+      tools: ["炒鍋"],
+      preparationSteps: ["高麗菜剝片切塊，豬肉絲用醬油、米酒醃10分鐘，蒜頭切片"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，蒜片爆香", heatLevel:"中火", time:1},
+        {step:2, description:"豬肉絲下鍋炒至變色", heatLevel:"中大火", time:3},
+        {step:3, description:"高麗菜下鍋大火快炒至微軟", heatLevel:"大火", time:4, tip:"高麗菜炒到微軟帶脆口感最好，不要炒過爛"},
+        {step:4, description:"加鹽調味炒勻即可起鍋", heatLevel:"大火", time:1}
+      ],
+      heatLevel: "大火快炒為主",
+      tips: ["肉絲先醃過再炒，比較入味也比較嫩","高麗菜不要炒太久，保留一點脆口感更好吃"],
+      commonMistakes: ["高麗菜炒過久變軟爛出水，口感不佳","肉絲沒醃過直接炒，風味比較淡"],
+      aliases: ["高麗菜炒肉絲"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish255", name: "蒜炒杏鮑菇", icon: "🍄", category: "菇類", difficulty: "簡單",
+      priority: 2,
+      servings: 2, prepTime: 8, cookTime: 6,
+      ingredients: [ {name:"杏鮑菇", amount:3, unit:"條"} ],
+      seasonings: [ {name:"蒜頭", amount:3, unit:"瓣"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"糖", amount:0.3, unit:"小匙"} ],
+      tools: ["炒鍋"],
+      preparationSteps: ["杏鮑菇切片或撕成條狀，蒜頭切末"],
+      cookingSteps: [
+        {step:1, description:"熱鍋不放油，杏鮑菇乾煎至兩面微焦", heatLevel:"中火", time:4, tip:"先乾煎逼出杏鮑菇的水分，香氣跟口感都會更好"},
+        {step:2, description:"加油、蒜末爆香拌炒", heatLevel:"中火", time:1},
+        {step:3, description:"加醬油、糖拌炒均勻即可起鍋", heatLevel:"中火", time:1}
+      ],
+      heatLevel: "先乾煎逼水，再下調味料快炒",
+      tips: ["杏鮑菇先乾煎逼出水分，吃起來會更有嚼勁跟菇香","撕成條狀比切片更容易吸附醬汁入味"],
+      commonMistakes: ["一開始就下油炒，杏鮑菇出水軟爛不夠香","調味太早下鍋，容易讓杏鮑菇還沒煎香就先軟掉"],
+      aliases: ["蒜炒杏鮑菇","杏鮑菇"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish256", name: "荷包蛋", icon: "🍳", category: "蛋豆製品", difficulty: "簡單",
+      priority: 1,
+      servings: 1, prepTime: 2, cookTime: 3,
+      ingredients: [ {name:"雞蛋", amount:1, unit:"顆"} ],
+      seasonings: [ {name:"鹽", amount:0.1, unit:"小匙"} ],
+      tools: ["平底鍋"],
+      preparationSteps: ["雞蛋先打入小碗，避免蛋殼掉入鍋中"],
+      cookingSteps: [
+        {step:1, description:"平底鍋加油燒熱，蛋輕輕滑入鍋中", heatLevel:"中小火", time:1, tip:"油要夠熱，蛋白才會馬上定型不散開"},
+        {step:2, description:"煎至蛋白邊緣微焦、蛋黃仍濃稠，撒鹽即可起鍋", heatLevel:"中小火", time:2, tip:"喜歡全熟可以翻面再煎，或加一點水蓋鍋燜"}
+      ],
+      heatLevel: "中小火煎至喜歡的熟度",
+      tips: ["油要熱但不要冒煙，蛋下鍋才不會沾黏","喜歡溏心蛋黃就不要翻面，喜歡全熟可以蓋鍋燜一下"],
+      commonMistakes: ["油不夠熱，蛋殼還沒定型就散開黏鍋","火太大導致蛋白邊緣焦黑但蛋黃還沒熟"],
+      aliases: ["荷包蛋","太陽蛋","煎蛋"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish257", name: "鬆餅", icon: "🥞", category: "主食", difficulty: "簡單",
+      priority: 1,
+      servings: 2, prepTime: 8, cookTime: 10,
+      ingredients: [ {name:"鬆餅粉", amount:200, unit:"g"}, {name:"雞蛋", amount:1, unit:"顆"}, {name:"鮮奶", amount:150, unit:"ml"} ],
+      seasonings: [ {name:"奶油", amount:1, unit:"大匙"} ],
+      tools: ["平底鍋"],
+      preparationSteps: ["鬆餅粉、雞蛋、鮮奶攪拌均勻成無顆粒麵糊，靜置5分鐘"],
+      cookingSteps: [
+        {step:1, description:"平底鍋刷薄油或奶油，小火預熱", heatLevel:"小火", time:2},
+        {step:2, description:"舀一勺麵糊倒入鍋中，煎至表面冒泡", heatLevel:"小火", time:3, tip:"看到表面冒出小泡泡再翻面，內部才會熟透"},
+        {step:3, description:"翻面續煎至兩面金黃即可起鍋，可疊起搭配奶油、蜂蜜享用", heatLevel:"小火", time:3}
+      ],
+      heatLevel: "全程小火慢煎，避免外焦內生",
+      tips: ["麵糊靜置一下再煎，口感會更鬆軟","看到表面冒泡再翻面是最準確的判斷時機"],
+      commonMistakes: ["火太大導致外皮焦黑但中心還是濕糊狀","太早翻面，鬆餅容易扁塌不蓬鬆"],
+      aliases: ["鬆餅","美式鬆餅"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish258", name: "洋蔥圈", icon: "🧅", category: "蔬菜", difficulty: "簡單",
+      priority: 2,
+      servings: 3, prepTime: 15, cookTime: 10,
+      ingredients: [ {name:"洋蔥", amount:1, unit:"顆"}, {name:"酥炸粉", amount:100, unit:"g"} ],
+      seasonings: [ {name:"胡椒鹽", amount:1, unit:"小匙"} ],
+      tools: ["炒鍋（油炸用）"],
+      preparationSteps: ["洋蔥切成1公分厚圈狀，剝成單圈","酥炸粉加水（依包裝比例）調成粉漿"],
+      cookingSteps: [
+        {step:1, description:"洋蔥圈裹上一層酥炸粉漿", heatLevel:"免加熱", time:5},
+        {step:2, description:"熱油鍋，洋蔥圈下鍋炸至金黃酥脆", heatLevel:"中火油炸", time:4, tip:"油溫要夠，下鍋後才會馬上定型不脫粉"},
+        {step:3, description:"撈起瀝油，撒上胡椒鹽即可享用", heatLevel:"免加熱", time:1}
+      ],
+      heatLevel: "中火油炸為主",
+      tips: ["洋蔥圈裹粉後盡快下鍋，放太久粉漿會脫落","炸到金黃酥脆撈起，避免久炸變苦"],
+      commonMistakes: ["油溫不夠，洋蔥圈吸油變得油膩","裹粉太厚，炸出來外皮過硬"],
+      aliases: ["洋蔥圈"],
+      status: "confirmed",
+      source: "official"
+    }
   ];
 
   function getAllDishes(){
@@ -7590,6 +7805,11 @@
     { id:"ing152", name:"蓮子", icon:"🌰", category:"其他", aliases:[], matchNames:["蓮子"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing153", name:"山藥", icon:"🍠", category:"蔬菜", aliases:[], matchNames:["山藥"], commonUnits:["段","g"], status:"confirmed", source:"official" },
     { id:"ing154", name:"西洋芹", icon:"🥬", category:"蔬菜", aliases:[], matchNames:["西洋芹"], commonUnits:["根"], status:"confirmed", source:"official" },
+    { id:"ing155", name:"太白粉", icon:"🥣", category:"調味料", aliases:[], matchNames:["太白粉"], commonUnits:["大匙","小匙","g"], status:"confirmed", source:"official" },
+    { id:"ing156", name:"低筋麵粉", icon:"🌾", category:"主食", aliases:[], matchNames:["低筋麵粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
+    { id:"ing157", name:"高筋麵粉", icon:"🌾", category:"主食", aliases:[], matchNames:["高筋麵粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
+    { id:"ing158", name:"鬆餅粉", icon:"🥞", category:"主食", aliases:[], matchNames:["鬆餅粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
+    { id:"ing159", name:"酥炸粉", icon:"🍤", category:"調味料", aliases:[], matchNames:["酥炸粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
     // 蛋／豆製品
     { id:"ing027", name:"雞蛋", icon:"🥚", category:"蛋豆製品", aliases:["蛋","雞子"], matchNames:["雞蛋"], commonUnits:["顆"], status:"confirmed", source:"official" },
     { id:"ing028", name:"豆腐", icon:"🫘", category:"蛋豆製品", aliases:[], matchNames:["板豆腐"], commonUnits:["盒"], status:"confirmed", source:"official" },
@@ -8080,7 +8300,7 @@
     html += '</div>';
 
     const inSignature = mySignatureDishIds.includes(dish.id);
-    const sigLocked = isSignatureLocked();
+    const sigLocked = isFreePlan();
     html += '<div class="start-cook-wrap">';
     html += '<button class="start-cook-btn' + (inSignature ? ' added' : '') + '" id="signatureToggleBtn">' + (sigLocked ? '🔒 我的菜單（付費功能）' : (inSignature ? '✓ 已加入我的拿手菜' : '⭐ 加入我的拿手菜')) + '</button>';
     html += '</div>';
@@ -8095,7 +8315,7 @@
       startSOP(currentDish, currentServings);
     });
     document.getElementById('signatureToggleBtn').addEventListener('click', () => {
-      if(isSignatureLocked()){
+      if(isFreePlan()){
         openUpgradeView();
         return;
       }
@@ -8353,12 +8573,14 @@
     saveMySignatureDishIds();
   }
 
-  // 「我的菜單」是付費功能，試用期間(trial)跟正式付費
-  // 方案(basic/full/family)都算解鎖；只有plan變成free
-  // （試用到期又沒升級，或本來就是免費方案）才鎖住。
-  // 找料理/我有食材/今日料理/採購清單這些完全不受影響，
-  // 一律免費使用。
-  function isSignatureLocked(){
+  // 判斷目前是不是「免費方案」——試用期間(trial)跟正式
+  // 付費方案(basic/full/family)都算解鎖；只有plan變成
+  // free（試用到期又沒升級，或本來就是免費方案）才算鎖住。
+  // 這個判斷目前用在：我的菜單、採購清單／我的庫存、
+  // 早中晚分類，這幾個付費功能的鎖定判斷上。
+  // 找料理/我有食材/今日料理（加菜、份量調整）這些完全
+  // 不受影響，一律免費使用。
+  function isFreePlan(){
     return state.plan === 'free';
   }
 
@@ -8460,7 +8682,7 @@
   function renderSopSignatureBtn(){
     const btn = document.getElementById('sopSignatureBtn');
     if(!btn || !sopDish) return;
-    if(isSignatureLocked()){
+    if(isFreePlan()){
       btn.textContent = '🔒 我的菜單（付費功能）';
       btn.classList.remove('added');
       return;
@@ -8512,7 +8734,7 @@
   });
   document.getElementById('sopSignatureBtn').addEventListener('click', () => {
     if(!sopDish) return;
-    if(isSignatureLocked()){
+    if(isFreePlan()){
       openUpgradeView();
       return;
     }
@@ -8827,6 +9049,7 @@
   function renderSelectedMenuCard(dish){
     const servings = getMenuServings(dish.id);
     const meal = getMealTime(dish.id);
+    const mealLocked = isFreePlan();
     return '<div class="menu-card" data-dish-id="' + dish.id + '">' +
       '<div class="menu-card-head">' +
         '<div class="menu-card-emoji">' + getDishIcon(dish) + '</div>' +
@@ -8840,10 +9063,12 @@
         '<span class="menu-serv-value">' + servings + ' 人份</span>' +
         '<button class="menu-serv-btn" data-serv-plus="' + dish.id + '">＋</button>' +
       '</div>' +
-      '<div class="meal-chip-row">' +
-        '<button class="meal-chip' + (meal === 'breakfast' ? ' active' : '') + '" data-meal-dish="' + dish.id + '" data-meal="breakfast">🌅 早餐</button>' +
-        '<button class="meal-chip' + (meal === 'lunch' ? ' active' : '') + '" data-meal-dish="' + dish.id + '" data-meal="lunch">☀️ 午餐</button>' +
-        '<button class="meal-chip' + (meal === 'dinner' ? ' active' : '') + '" data-meal-dish="' + dish.id + '" data-meal="dinner">🌙 晚餐</button>' +
+      '<div class="meal-chip-row' + (mealLocked ? ' locked' : '') + '">' +
+        (mealLocked
+          ? '<button class="meal-chip meal-chip-locked" data-meal-locked="1">🔒 分早中晚是付費功能，點這裡看方案</button>'
+          : '<button class="meal-chip' + (meal === 'breakfast' ? ' active' : '') + '" data-meal-dish="' + dish.id + '" data-meal="breakfast">🌅 早餐</button>' +
+            '<button class="meal-chip' + (meal === 'lunch' ? ' active' : '') + '" data-meal-dish="' + dish.id + '" data-meal="lunch">☀️ 午餐</button>' +
+            '<button class="meal-chip' + (meal === 'dinner' ? ' active' : '') + '" data-meal-dish="' + dish.id + '" data-meal="dinner">🌙 晚餐</button>') +
       '</div>' +
       '<button class="selected-menu-start-btn" data-start-cook="' + dish.id + '">📋 料理詳細說明</button>' +
       '<div class="selected-menu-card-actions">' +
@@ -8912,6 +9137,9 @@
         setMealTime(dishId, getMealTime(dishId) === meal ? null : meal);
         renderSelectedMenuView();
       });
+    });
+    document.querySelectorAll('#selectedMenuContent [data-meal-locked]').forEach(btn => {
+      btn.addEventListener('click', openUpgradeView);
     });
     document.querySelectorAll('#selectedMenuContent [data-serv-minus]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -9038,7 +9266,7 @@
     const tabList = document.getElementById('shoppingTabList');
     const tabInv = document.getElementById('shoppingTabInventory');
 
-    if(isSignatureLocked()){
+    if(isFreePlan()){
       if(tabRow) tabRow.style.display = 'none';
       document.getElementById('shoppingContent').innerHTML =
         '<div class="menu-empty-state">' +
@@ -9268,7 +9496,7 @@
   }
 
   function renderSignatureView(){
-    if(isSignatureLocked()){
+    if(isFreePlan()){
       document.getElementById('signatureContent').innerHTML =
         '<div class="menu-empty-state">' +
           '<p class="menu-empty-emoji">🔒</p>' +
