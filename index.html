@@ -619,11 +619,18 @@
   }
   .cook-log-row{
     padding:14px 16px; border-radius:var(--radius-lg); border:1px solid var(--color-border);
-    background:var(--color-surface); margin-bottom:10px;
+    background:var(--color-surface); margin-bottom:10px; cursor:pointer; -webkit-tap-highlight-color:transparent;
   }
-  .cook-log-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px;}
-  .cook-log-name{font-size:var(--fs-card-title); font-weight:var(--weight-bold); color:var(--color-text);}
+  .cook-log-row:active{transform:scale(0.99);}
+  .cook-log-head{display:flex; align-items:center; gap:8px;}
+  .cook-log-icon{font-size:20px; flex-shrink:0;}
+  .cook-log-name{font-size:var(--fs-card-title); font-weight:var(--weight-bold); color:var(--color-text); flex:1; min-width:0;}
   .cook-log-date{font-size:var(--fs-label); color:var(--color-text-soft); flex-shrink:0;}
+  .cook-log-delete{
+    flex-shrink:0; width:26px; height:26px; border-radius:50%;
+    border:1px solid var(--color-border); background:var(--color-bg); color:var(--color-text-soft);
+    font-size:13px; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
   .cook-log-stars{font-size:var(--fs-body); color:#E0A93B; margin:6px 0 0;}
   .cook-log-note{font-size:var(--fs-caption); color:var(--color-text-soft); margin:6px 0 0; line-height:var(--lh-base);}
   .menu-card-emoji{
@@ -8605,8 +8612,12 @@
     return state.plan === 'free';
   }
 
+  function generateCookLogId(){
+    return 'log_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+  }
   function logCook(dishId, servings, rating, note){
     cookLogs.push({
+      id: generateCookLogId(),
       dishId: dishId,
       cookedAt: new Date().toISOString().slice(0, 10),
       servings: servings,
@@ -9613,14 +9624,16 @@
         '<p class="menu-empty-desc">完成SOP並儲存評分後，會出現在這裡</p>' +
       '</div>';
     } else {
-      html = '<div class="menu-list">' + sorted.map(log => {
+      html = '<div class="menu-list">' + sorted.map((log, idx) => {
         const dish = getDishById(log.dishId);
         const dishName = dish ? dish.name : '（已刪除的料理）';
         const stars = log.rating ? '★'.repeat(log.rating) + '☆'.repeat(5 - log.rating) : '未評分';
-        return '<div class="cook-log-row">' +
+        return '<div class="cook-log-row"' + (dish ? ' data-dish-id="' + dish.id + '"' : '') + '>' +
           '<div class="cook-log-head">' +
+            '<span class="cook-log-icon">' + (dish ? getDishIcon(dish) : '🍽️') + '</span>' +
             '<span class="cook-log-name">' + dishName + '</span>' +
             '<span class="cook-log-date">' + (log.cookedAt || '') + '</span>' +
+            '<button class="cook-log-delete" data-log-index="' + idx + '" aria-label="刪除">✕</button>' +
           '</div>' +
           '<p class="cook-log-stars">' + stars + '</p>' +
           (log.note ? '<p class="cook-log-note">' + log.note + '</p>' : '') +
@@ -9628,6 +9641,19 @@
       }).join('') + '</div>';
     }
     document.getElementById('signatureContent').innerHTML = html;
+    document.querySelectorAll('#signatureContent .cook-log-delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.logIndex, 10);
+        const target = sorted[idx];
+        cookLogs = cookLogs.filter(l => l !== target);
+        saveCookLogs();
+        renderCookLogTab();
+      });
+    });
+    document.querySelectorAll('#signatureContent .cook-log-row[data-dish-id]').forEach(row => {
+      row.addEventListener('click', () => openDetail(row.dataset.dishId, 'signature'));
+    });
   }
   // App要先通過登入才會顯示，這裡不再直接renderChips/
   // renderResults——那兩行現在移到enterApp()裡，只有登入
