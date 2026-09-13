@@ -301,14 +301,15 @@
     font-size:var(--fs-caption); font-weight:var(--weight-regular); color:var(--color-text-soft);
     margin:-14px 0 22px; display:none;
   }
-  .sop-signature-btn{
-    width:100%; padding:14px; border:none; border-radius:var(--radius-lg); margin-bottom:22px;
-    background:var(--color-accent); color:#FBF3EE;
-    font-size:var(--fs-body); font-weight:var(--weight-semibold); font-family:var(--font-family);
+  .dish-action-btn{
+    width:100%; padding:15px; border:1px solid var(--color-border); border-radius:var(--radius-lg);
+    background:var(--color-surface); color:var(--color-text);
+    font-size:var(--fs-body); font-weight:var(--weight-bold); font-family:var(--font-family);
     cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .12s ease;
   }
-  .sop-signature-btn:active{transform:scale(0.98);}
-  .sop-signature-btn.added{background:var(--color-jade-soft); color:var(--color-jade);}
+  .dish-action-btn:active{transform:scale(0.98);}
+  .dish-action-btn.added{background:var(--color-jade-soft); color:var(--color-jade); border-color:var(--color-jade-soft);}
+
 
 
   /* ---------- Dish result cards ---------- */
@@ -814,34 +815,6 @@
   .note-item.mistake{background:var(--color-accent-soft); color:var(--color-text);}
 
   .start-cook-wrap{padding:28px 22px 8px;}
-  .start-cook-btn{
-    width:100%; padding:16px; border:none; border-radius:var(--radius-lg);
-    background:var(--color-accent); color:#FBF3EE;
-    font-size:var(--fs-body); font-weight:var(--weight-semibold); font-family:var(--font-family);
-    cursor:pointer; -webkit-tap-highlight-color:transparent;
-    transition:transform .12s ease;
-  }
-  .start-cook-btn:active{transform:scale(0.98);}
-  .start-cook-btn.added{background:var(--color-jade-soft); color:var(--color-jade);}
-
-  .add-to-menu-btn{
-    width:100%; padding:16px; border:none; border-radius:var(--radius-lg);
-    background:var(--color-jade); color:#FFFFFF;
-    font-size:var(--fs-body); font-weight:var(--weight-semibold); font-family:var(--font-family);
-    cursor:pointer; -webkit-tap-highlight-color:transparent;
-    transition:transform .12s ease;
-  }
-  .add-to-menu-btn:active{transform:scale(0.98);}
-  .add-to-menu-btn.added{background:var(--color-jade-soft); color:var(--color-jade);}
-
-  .sop-secondary-btn{
-    width:100%; padding:13px; border:1px solid var(--color-border); border-radius:var(--radius-lg);
-    background:var(--color-surface); color:var(--color-text-soft);
-    font-size:var(--fs-caption); font-weight:var(--weight-medium); font-family:var(--font-family);
-    cursor:pointer; -webkit-tap-highlight-color:transparent;
-    transition:transform .12s ease;
-  }
-  .sop-secondary-btn:active{transform:scale(0.98);}
 
   /* ---------- Bottom nav ---------- */
   .bottom-nav{
@@ -1134,8 +1107,8 @@
         <p class="sop-done-title">今天完成了！</p>
         <p class="sop-done-dish" id="sopDoneDishName">—</p>
         <p class="sop-done-menu-note" id="sopDoneMenuNote"></p>
-        <button class="sop-signature-btn" id="sopSignatureBtn">⭐ 加入我的菜單</button>
-        <button class="sop-secondary-btn" id="sopCookLogBtn" style="margin-bottom:22px;">📝 儲存料理紀錄</button>
+        <button class="dish-action-btn" id="sopSignatureBtn" style="margin-bottom:10px;">⭐ 加入我的菜單</button>
+        <button class="dish-action-btn" id="sopCookLogBtn" style="margin-bottom:22px;">📝 儲存料理紀錄</button>
 
         <button class="sop-done-exit" id="sopDoneExitBtn">返回料理</button>
       </div>
@@ -1470,7 +1443,7 @@
     try{
       await auth.signInWithEmailLink(email, window.location.href);
       try{ localStorage.removeItem("emailForSignIn"); }catch(e){}
-      try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+      try{ history.replaceState(null,'',location.pathname); }catch(e){}
       try{ codeInput.value=email; }catch(e){}
       // 驗證通過後直接接續完成登入、進入App，不用使用者
       // 再手動按一次「登入」——點信箱連結＝登入完成，
@@ -1486,7 +1459,7 @@
       return true;
     }catch(e){
       if(loginMsg) loginMsg.textContent="😕 驗證連結無效或已過期，請重新登入。";
-      try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+      try{ history.replaceState(null,'',location.pathname); }catch(e){}
       return false;
     }
   }
@@ -8222,15 +8195,14 @@
       html += '</div>';
     }
 
-    // 加入這次要煮／開始料理：上下堆疊、同樣大小，
-    // 用顏色區分（加入這次要煮＝jade綠色，開始料理＝主色），
-    // 避免小小的舊按鈕太不顯眼被漏掉
+    // 加入這次要煮／開始料理：上下堆疊、統一白底粗體樣式，
+    // 跟第二階段的按鈕一致，不用顏色堆疊份量感
     const inSelectedMenu = isInSelectedMenu(dish.id);
     html += '<div class="start-cook-wrap">';
-    html += '<button class="add-to-menu-btn' + (inSelectedMenu ? ' added' : '') + '" id="selectedMenuToggleBtn">' + (inSelectedMenu ? '✓ 已加入今日料理' : '🔥 加入這次要煮') + '</button>';
+    html += '<button class="dish-action-btn' + (inSelectedMenu ? ' added' : '') + '" id="selectedMenuToggleBtn">' + (inSelectedMenu ? '✓ 已加入今日料理' : '🔥 加入這次要煮') + '</button>';
     html += '</div>';
     html += '<div class="start-cook-wrap">';
-    html += '<button class="start-cook-btn" id="startCookBtn">開始料理</button>';
+    html += '<button class="dish-action-btn" id="startCookBtn">開始料理</button>';
     html += '</div>';
 
     document.getElementById('detailContent').innerHTML = html;
@@ -8305,16 +8277,16 @@
     // 前面備料／步驟都看過、心裡有底，就可以直接收藏拿手菜，
     // 不用強迫一定要開SOP才能決定喜不喜歡這道菜
     html += '<div class="start-cook-wrap">';
-    html += '<button class="sop-secondary-btn" id="startSopBtn">▶ 開始 SOP 逐步模式</button>';
+    html += '<button class="dish-action-btn" id="startSopBtn">▶ 開始 SOP 逐步模式</button>';
     html += '</div>';
 
     const inSignature = mySignatureDishIds.includes(dish.id);
     const sigLocked = isFreePlan();
     html += '<div class="start-cook-wrap">';
-    html += '<button class="start-cook-btn' + (inSignature ? ' added' : '') + '" id="signatureToggleBtn">' + (sigLocked ? '🔒 我的菜單（付費功能）' : (inSignature ? '✓ 已加入我的拿手菜' : '⭐ 加入我的拿手菜')) + '</button>';
+    html += '<button class="dish-action-btn' + (inSignature ? ' added' : '') + '" id="signatureToggleBtn">' + (sigLocked ? '🔒 我的菜單（付費功能）' : (inSignature ? '✓ 已加入我的拿手菜' : '⭐ 加入我的拿手菜')) + '</button>';
     html += '</div>';
     html += '<div class="start-cook-wrap">';
-    html += '<button class="sop-secondary-btn" id="cookLogBtn">' + (sigLocked ? '🔒 儲存料理紀錄（付費功能）' : '📝 儲存料理紀錄') + '</button>';
+    html += '<button class="dish-action-btn" id="cookLogBtn">' + (sigLocked ? '🔒 儲存料理紀錄（付費功能）' : '📝 儲存料理紀錄') + '</button>';
     html += '</div>';
 
     document.getElementById('detailContent').innerHTML = html;
