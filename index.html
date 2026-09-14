@@ -622,6 +622,11 @@
   .cook-log-icon{font-size:20px; flex-shrink:0;}
   .cook-log-name{font-size:var(--fs-card-title); font-weight:var(--weight-bold); color:var(--color-text); flex:1; min-width:0;}
   .cook-log-date{font-size:var(--fs-label); color:var(--color-text-soft); flex-shrink:0;}
+  .cook-log-edit{
+    flex-shrink:0; width:26px; height:26px; border-radius:50%;
+    border:1px solid var(--color-border); background:var(--color-bg);
+    font-size:12px; cursor:pointer; -webkit-tap-highlight-color:transparent; margin-right:4px;
+  }
   .cook-log-delete{
     flex-shrink:0; width:26px; height:26px; border-radius:50%;
     border:1px solid var(--color-border); background:var(--color-bg); color:var(--color-text-soft);
@@ -8601,25 +8606,36 @@
   // 綁定SOP流程，不管有沒有開過SOP、有沒有走完，只要
   // 使用者想記錄「這道菜我做過」，隨時都能記
   let logModalRating = 0;
-  function showCookLogModal(dish){
-    logModalRating = 0;
+  function showCookLogModal(dish, existingLog){
+    const isEdit = !!existingLog;
+    logModalRating = isEdit ? (existingLog.rating || 0) : 0;
     const root = document.getElementById('modalRoot');
     root.innerHTML =
       '<div class="overlay" id="ovl" style="align-items:center"><div class="sheet" id="sheet" style="border-radius:20px;max-width:400px;margin:0 16px;padding:24px 20px">' +
         '<div style="text-align:center;font-size:40px;line-height:1;margin-bottom:8px">📝</div>' +
         '<div style="text-align:center;font-size:18px;font-weight:900;color:#2E2E33;margin-bottom:4px">' + dish.name + '</div>' +
-        '<p style="text-align:center;font-size:13px;color:#8A8A93;margin:0 0 16px;">記錄這次做的感覺</p>' +
+        '<p style="text-align:center;font-size:13px;color:#8A8A93;margin:0 0 16px;">' + (isEdit ? '修改這次的紀錄' : '記錄這次做的感覺') + '</p>' +
         '<div class="sop-stars" id="logModalStars" style="justify-content:center;"></div>' +
         '<textarea id="logModalNote" class="sop-note-input" placeholder="備註（選填）" style="margin-top:14px;"></textarea>' +
-        '<button class="ai-generate-btn" id="logModalConfirmBtn" style="margin-top:16px;">儲存紀錄</button>' +
+        '<button class="ai-generate-btn" id="logModalConfirmBtn" style="margin-top:16px;">' + (isEdit ? '更新紀錄' : '儲存紀錄') + '</button>' +
         '<button id="logModalCancelBtn" style="width:100%;border:none;background:none;color:#8A8A93;font-size:13px;padding:12px;margin-top:6px">取消</button>' +
       '</div></div>';
     renderLogModalStars();
+    if(isEdit){ document.getElementById('logModalNote').value = existingLog.note || ''; }
     document.getElementById('logModalConfirmBtn').addEventListener('click', () => {
       const note = document.getElementById('logModalNote').value.trim();
-      logCook(dish.id, currentServings || dish.servings, logModalRating, note);
-      showToast('已儲存料理紀錄');
-      closeSheet();
+      if(isEdit){
+        existingLog.rating = logModalRating || null;
+        existingLog.note = note;
+        saveCookLogs();
+        showToast('已更新料理紀錄');
+        closeSheet();
+        renderSignatureView();
+      } else {
+        logCook(dish.id, currentServings || dish.servings, logModalRating, note);
+        showToast('已儲存料理紀錄');
+        closeSheet();
+      }
     });
     document.getElementById('logModalCancelBtn').addEventListener('click', closeSheet);
   }
@@ -9559,10 +9575,7 @@
     const items = mySignatureDishIds.map(id => {
       const dish = getDishById(id);
       if(!dish) return null;
-      const logs = cookLogs.filter(l => l.dishId === id);
-      const cookedCount = logs.length;
-      const lastCookedAt = logs.length ? logs.map(l => l.cookedAt).sort().slice(-1)[0] : null;
-      return { dish, cookedCount, lastCookedAt };
+      return { dish };
     }).filter(Boolean);
 
     let html;
@@ -9583,7 +9596,7 @@
             '<div class="menu-card-emoji">' + getDishIcon(it.dish) + '</div>' +
             '<div class="menu-card-body">' +
               '<p class="menu-card-name">' + it.dish.name + '</p>' +
-              '<p class="menu-card-meta">' + (it.cookedCount ? '做過 ' + it.cookedCount + ' 次' : '尚未記錄次數') + (it.lastCookedAt ? '｜上次 ' + it.lastCookedAt : '') + '</p>' +
+              '<p class="menu-card-meta">' + it.dish.difficulty + '｜' + (it.dish.prepTime + it.dish.cookTime) + ' 分鐘</p>' +
             '</div>' +
             '<button class="menu-card-remove-btn" data-remove-signature="' + it.dish.id + '" aria-label="移除">✕</button>' +
           '</div>' +
@@ -9635,6 +9648,7 @@
             '<span class="cook-log-icon">' + (dish ? getDishIcon(dish) : '🍽️') + '</span>' +
             '<span class="cook-log-name">' + dishName + '</span>' +
             '<span class="cook-log-date">' + (log.cookedAt || '') + '</span>' +
+            '<button class="cook-log-edit" data-log-edit="' + idx + '" aria-label="編輯">✏️</button>' +
             '<button class="cook-log-delete" data-log-index="' + idx + '" aria-label="刪除">✕</button>' +
           '</div>' +
           '<p class="cook-log-stars">' + stars + '</p>' +
@@ -9643,6 +9657,16 @@
       }).join('') + '</div>';
     }
     document.getElementById('signatureContent').innerHTML = html;
+    document.querySelectorAll('#signatureContent .cook-log-edit').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.logEdit, 10);
+        const target = sorted[idx];
+        const dish = getDishById(target.dishId);
+        if(!dish) return;
+        showCookLogModal(dish, target);
+      });
+    });
     document.querySelectorAll('#signatureContent .cook-log-delete').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
