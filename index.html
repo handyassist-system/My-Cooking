@@ -91,7 +91,6 @@
     -webkit-tap-highlight-color:transparent;
   }
   .back-btn:active{transform:scale(0.94);}
-  .page-logo{width:34px; height:34px; border-radius:10px; flex-shrink:0; object-fit:cover;}
   .header-upgrade-btn{
     margin-left:auto; flex-shrink:0;
     padding:0 14px; height:34px; border-radius:var(--radius-pill);
@@ -965,7 +964,6 @@
       <button class="back-btn" id="findBackBtn" aria-label="返回" style="display:none;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B241D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
       </button>
-      <img id="findHeaderLogo" class="page-logo" src="icon-192.png" alt="料理小幫手">
       <h2 class="page-title" id="findHeaderTitle">🏠 首頁</h2>
       <button class="header-upgrade-btn" data-open-upgrade>升級</button>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
@@ -1009,7 +1007,6 @@
   <!-- ============ SELECTED MENU VIEW（這次要煮）============ -->
   <section class="view" id="view-selected-menu">
     <div class="page-header no-back">
-      <img class="page-logo" src="icon-192.png" alt="料理小幫手">
       <h2 class="page-title">🍳 今日料理</h2>
       <button class="header-upgrade-btn" data-open-upgrade>升級</button>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
@@ -1020,7 +1017,6 @@
   <!-- ============ SHOPPING VIEW（採購）============ -->
   <section class="view" id="view-shopping">
     <div class="page-header no-back">
-      <img class="page-logo" src="icon-192.png" alt="料理小幫手">
       <h2 class="page-title">🛒 採購清單</h2>
       <button class="header-upgrade-btn" data-open-upgrade>升級</button>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
@@ -1035,7 +1031,6 @@
   <!-- ============ SIGNATURE VIEW（我的菜單）============ -->
   <section class="view" id="view-signature">
     <div class="page-header no-back">
-      <img class="page-logo" src="icon-192.png" alt="料理小幫手">
       <h2 class="page-title">📖 我的菜單</h2>
       <button class="header-upgrade-btn" data-open-upgrade>升級</button>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
@@ -8438,7 +8433,6 @@
 
     const isChoice = findMode === 'choice';
     document.getElementById('findBackBtn').style.display = isChoice ? 'none' : '';
-    document.getElementById('findHeaderLogo').style.display = isChoice ? '' : 'none';
     const titleEl = document.getElementById('findHeaderTitle');
     if(isChoice){ titleEl.textContent = '🏠 首頁'; }
     else if(findMode === 'recipe'){ titleEl.textContent = '依菜色找'; }
