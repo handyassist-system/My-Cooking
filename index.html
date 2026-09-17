@@ -531,29 +531,36 @@
   .ingredient-category-name{font-size:var(--fs-body); font-weight:var(--weight-semibold); color:var(--color-text);}
 
   /* 食材勾選清單（分類詳細頁／搜尋結果共用） */
-  .ing-check-list{display:flex; flex-wrap:wrap; gap:10px; padding:4px 22px 8px;}
+  .ing-check-list{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; padding:4px 22px 8px;}
   .ing-check-row{
-    display:inline-flex; align-items:center; gap:7px; width:auto;
-    padding:13px 16px; border-radius:var(--radius-pill);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    width:100%; min-height:64px; padding:10px 6px; border-radius:var(--radius-md);
     border:1px solid var(--color-border); background:var(--color-surface);
     cursor:pointer; -webkit-tap-highlight-color:transparent;
-    font-family:var(--font-family); text-align:left;
+    font-family:var(--font-family); text-align:center; position:relative;
     transition:background .12s ease, border-color .12s ease;
   }
   .ing-check-row.selected{background:var(--color-jade-soft); border-color:var(--color-jade);}
-  .ing-check-box{font-size:15px; flex-shrink:0; color:var(--color-text-soft);}
+  .ing-check-box{position:absolute; top:5px; right:7px; font-size:13px; color:var(--color-text-soft);}
   .ing-check-row.selected .ing-check-box{color:var(--color-jade);}
-  .ing-check-icon{font-size:17px; flex-shrink:0;}
-  .ing-check-name{font-size:var(--fs-caption); font-weight:var(--weight-medium); color:var(--color-text);}
+  .ing-check-icon{font-size:20px; line-height:1;}
+  .ing-check-name{font-size:var(--fs-label); font-weight:var(--weight-medium); color:var(--color-text); line-height:1.25; word-break:break-all;}
   .ing-stock-hint{
-    flex-shrink:0; font-size:10px; font-weight:var(--weight-medium);
-    color:var(--color-jade); background:rgba(255,255,255,0.6); padding:1px 6px; border-radius:var(--radius-pill);
+    position:absolute; top:4px; left:5px;
+    font-size:9px; font-weight:var(--weight-medium);
+    color:var(--color-jade); background:var(--color-jade-soft);
+    padding:1px 5px; border-radius:var(--radius-pill);
   }
 
   /* 固定於畫面底部的主要按鈕（各食材選擇畫面共用） */
-  .ingredients-cta-wrap{padding:24px 22px 8px;}
+  .ingredients-cta-wrap{
+    position:fixed; left:0; right:0; bottom:calc(58px + env(safe-area-inset-bottom));
+    max-width:480px; margin:0 auto; z-index:9;
+    padding:10px 22px; background:var(--color-bg);
+    border-top:1px solid var(--color-border);
+  }
   .ingredients-cta-btn{
-    width:100%; padding:16px; border:none; border-radius:var(--radius-lg);
+    width:100%; padding:15px; border:none; border-radius:var(--radius-lg);
     background:var(--color-accent); color:#FBF3EE;
     font-size:var(--fs-body); font-weight:var(--weight-semibold); font-family:var(--font-family);
     cursor:pointer; -webkit-tap-highlight-color:transparent;
@@ -1003,7 +1010,7 @@
       <div class="result-list" id="resultList"></div>
     </div>
 
-    <div id="findIngredientsContent" style="display:none;">
+    <div id="findIngredientsContent" style="display:none; padding-bottom:88px;">
       <div id="ingredientsContent"></div>
     </div>
   </section>
@@ -9892,9 +9899,14 @@
 
   let detailReturnView = 'find-recipe'; // 詳細頁返回鍵要回到哪個畫面，預設回到找食譜的「依菜色找」
 
+  // 進詳細頁前記住當下捲到哪，返回時捲回原位——搜尋結果滑很久
+  // 才點進某道菜，返回後不用重頭滑
+  let detailReturnScroll = 0;
+
   function openDetail(id, returnView, initialServings){
     const dish = findDishById(id);
     if(!dish) return;
+    detailReturnScroll = (typeof window.scrollY === 'number') ? window.scrollY : 0;
     currentDish = dish;
     currentServings = initialServings || dish.servings; // 若指定初始份量（例如來自這次要煮），優先使用
     currentDetailPhase = 1; // 每次重新進入詳細頁，都從規劃階段開始
@@ -9905,6 +9917,7 @@
   }
 
   function goBackFromDetail(){
+    const y = detailReturnScroll;
     if(detailReturnView === 'find-choice'){ findMode = 'choice'; renderFindView(); navigate('find'); }
     else if(detailReturnView === 'find-recipe'){ findMode = 'recipe'; renderFindView(); navigate('find'); }
     else if(detailReturnView === 'find-ingredients'){ findMode = 'ingredients'; renderFindView(); navigate('find'); }
@@ -9912,6 +9925,8 @@
     else if(detailReturnView === 'signature'){ renderSignatureView(); navigate('signature'); }
     else if(detailReturnView === 'shopping'){ renderShoppingView(); navigate('shopping'); }
     else { navigate(detailReturnView); }
+    // navigate() 會先捲到最上面，所以在它之後才還原位置
+    if(y > 0){ setTimeout(function(){ window.scrollTo(0, y); }, 0); }
   }
 
   /* =========================================================
@@ -10420,9 +10435,12 @@
   }
 
   function renderCtaButton(){
-    const disabled = selectedIngredients.length === 0;
+    const count = selectedIngredients.length;
+    const disabled = count === 0;
     return '<div class="ingredients-cta-wrap">' +
-      '<button class="ingredients-cta-btn" id="viewResultsBtn"' + (disabled ? ' disabled' : '') + '>看看我可以煮什麼</button>' +
+      '<button class="ingredients-cta-btn" id="viewResultsBtn"' + (disabled ? ' disabled' : '') + '>' +
+        (disabled ? '請先選擇食材' : '已選 ' + count + ' 項 ｜ 看看可以煮什麼 →') +
+      '</button>' +
     '</div>';
   }
 
