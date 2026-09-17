@@ -1,6 +1,6 @@
 {
-  "name": "煮意生活",
-  "short_name": "煮意生活",
+  "name": "食在料理",
+  "short_name": "食在料理",
   "description": "找食譜、排菜單、列採購清單的家庭料理規劃工具",
   "start_url": "./index.html",
   "display": "standalone",
