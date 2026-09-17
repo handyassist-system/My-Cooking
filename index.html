@@ -213,7 +213,7 @@
   .inventory-item-row{
     display:flex; align-items:center; gap:12px; width:100%;
     padding:12px 14px; border-radius:var(--radius-md);
-    border:1px solid var(--color-border); background:var(--color-surface); margin-bottom:8px;
+    border:1px solid var(--color-border); background:var(--color-surface);
   }
   .inventory-item-name{flex:1; font-size:var(--fs-body); font-weight:var(--weight-medium); color:var(--color-text);}
   .inventory-item-amount{font-size:var(--fs-caption); color:var(--color-text-soft); margin-right:4px;}
@@ -715,6 +715,24 @@
     display:flex; align-items:center; gap:8px;
   }
   .shopping-item-list{display:flex; flex-direction:column; gap:8px;}
+  .shopping-group .shopping-item-wrap + .shopping-item-wrap{margin-top:8px;}
+  .shopping-dish-links{display:flex; flex-wrap:wrap; gap:6px; padding:6px 0 0 14px;}
+  .shopping-dish-link{
+    padding:5px 10px; border-radius:var(--radius-pill);
+    border:1px solid var(--color-border); background:var(--color-bg); color:var(--color-text-soft);
+    font-size:var(--fs-label); font-family:var(--font-family);
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  .shopping-dish-link:active{transform:scale(0.96);}
+  .shopping-menu-bar{
+    margin:0 22px 14px; padding:12px 14px; border-radius:var(--radius-lg);
+    background:var(--color-surface); border:1px solid var(--color-border);
+  }
+  .shopping-menu-bar-label{
+    font-size:var(--fs-label); font-weight:var(--weight-semibold);
+    color:var(--color-text-soft); margin:0 0 8px;
+  }
+  .shopping-menu-bar .shopping-dish-links{padding:0;}
   .shopping-item-row{
     display:flex; align-items:center; gap:8px; width:100%;
     border-radius:var(--radius-md);
@@ -861,8 +879,7 @@
     padding:32px 26px; text-align:center;
   }
   .login-logo-img{width:84px; height:84px; border-radius:20px; display:block; margin:0 auto 14px; object-fit:cover;}
-  .login-title{font-size:var(--fs-title); font-weight:var(--weight-bold); color:var(--color-text); margin:0 0 6px;}
-  .login-desc{font-size:var(--fs-caption); font-weight:var(--weight-regular); color:var(--color-text-soft); margin:0 0 20px;}
+  .login-title{font-size:var(--fs-title); font-weight:var(--weight-bold); color:var(--color-text); margin:0 0 22px;}
   .code-input{
     width:100%; padding:14px 16px; border-radius:var(--radius-md);
     border:1px solid var(--color-border); background:var(--color-bg);
@@ -939,7 +956,6 @@
   <div class="login-card">
     <img class="login-logo-img" src="icon-192.png" alt="食在料理">
     <h1 class="login-title">食在料理</h1>
-    <p class="login-desc">請輸入 Email 登入</p>
     <input id="codeInput" class="code-input" type="email" inputmode="email" autocomplete="email" placeholder="請輸入 Email" maxlength="60">
     <div class="code-hint">🎁 首次登入即享 7 天全功能免費試用</div>
     <label class="login-consent"><input type="checkbox" id="agreeChk"> <span>我已閱讀並同意 <a id="termsLink" class="login-terms-link">《服務條款與隱私政策》</a></span></label>
@@ -1185,6 +1201,9 @@
   }
 
   const ADMIN_EMAIL = "mp65p@hotmail.com";
+  // LINE官方帳號——客服聯繫管道。付款流程之後改接藍新金流，
+  // LINE只負責問題諮詢，不再是升級付款的管道
+  const LINE_SUPPORT_URL = "https://line.me/R/ti/p/@373pfdee";
 
   const codeInput=document.getElementById("codeInput"), loginBtn=document.getElementById("loginBtn"), loginMsg=document.getElementById("loginMsg");
   loginBtn.addEventListener("click", doLogin);
@@ -1213,11 +1232,11 @@
         '<div style="text-align:center;font-size:19px;font-weight:900;color:#2E2E33">已達裝置上限</div>'+
         '<div style="text-align:center;font-size:13.5px;color:#8A8A93;margin-top:8px;line-height:1.7">您目前的方案可在 <b style="color:#E8735C">'+limit+' 台裝置</b>使用。<br>若要更換裝置或釋出名額，請透過官方 LINE 聯繫我們協助處理。</div>'+
         (isFull?'':'<div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #EFEAE2"><div style="font-size:13px;color:#8A8A93;margin-bottom:10px">想和家人一起使用？</div>'+
-        '<button id="dlUp" style="width:100%;border:none;background:#E8735C;color:#fff;border-radius:12px;padding:13px;font-size:15px;font-weight:800">升級家庭版，最多 3 人共用</button></div>')+
+        '<button id="dlUp" style="width:100%;border:none;background:#E8735C;color:#fff;border-radius:12px;padding:13px;font-size:15px;font-weight:800">💬 聯繫客服了解家庭版</button></div>')+
         '<button id="dlClose" style="width:100%;border:none;background:none;color:#8A8A93;font-size:13px;padding:12px;margin-top:6px">關閉</button>'+
       '</div></div>';
     var up=document.getElementById("dlUp");
-    if(up) up.addEventListener("click", function(){ window.open(LINE_UPGRADE_URL, "_blank"); closeSheet(); });
+    if(up) up.addEventListener("click", function(){ window.open(LINE_SUPPORT_URL, "_blank"); closeSheet(); });
     document.getElementById("dlClose").addEventListener("click", closeSheet);
   }
   function closeSheet(){ var r=document.getElementById("modalRoot"); if(r) r.innerHTML=""; }
@@ -1272,7 +1291,7 @@
     catch(e){ return { ok:true, plan: (localStorage.getItem("cal_plan")||"free") }; }
     var sub=snap.val();
     if(!sub){
-      var expTs=now+21*86400000;
+      var expTs=now+7*86400000;
       var rec={ email:email, plan:"trial", expiry:_ymdTs(expTs), status:"active", deviceLimit:2, createdAt:now, lastSeen:now, devices:{} };
       try{ await db.ref("jiachangzhu_subscribers/"+key).set(rec); }catch(e){}
       return { ok:true, plan:"trial", expiry:rec.expiry, newTrial:true };
@@ -1766,12 +1785,10 @@
     'jiachangzhu_user_created_dishes_v1','jiachangzhu_user_created_ingredients_v1'
   ];
 
-  // 升級方案比較畫面——整個App裡「唯一」會出現LINE官方
-  // 帳號連結的地方。其他各處的鎖定提示（試用到期、裝置
-  // 上限、我的菜單/採購清單鎖定）都只負責引導使用者點
-  // 這裡的「升級」按鈕過來，不再各自重複放LINE連結，
-  // 避免多套入口造成混亂
-  const LINE_UPGRADE_URL = "https://line.me/R/ti/p/@373pfdee";
+  // 升級方案比較畫面。付款流程之後會接藍新金流，屆時在
+  // 比較表下方加入「立即付款升級」按鈕；在那之前，這裡
+  // 先提供客服聯繫管道，讓有疑問的使用者當下就能問，
+  // 不用另外跑到設定頁找
   function openUpgradeView(){
     renderUpgradeView();
     navigate('upgrade');
@@ -1797,8 +1814,8 @@
       '</div>';
     });
     html += '</div>';
-    html += '<a href="' + LINE_UPGRADE_URL + '" target="_blank" rel="noopener" class="upgrade-line-btn">💬 加官方LINE升級</a>';
-    html += '<p class="upgrade-note">升級由專人透過LINE協助處理，付款方式與流程請以LINE對話為準</p>';
+    html += '<a href="' + LINE_SUPPORT_URL + '" target="_blank" rel="noopener" class="upgrade-line-btn">💬 聯繫客服</a>';
+    html += '<p class="upgrade-note">對方案有疑問，或想了解升級方式，都可以直接詢問客服</p>';
     document.getElementById('upgradeContent').innerHTML = html;
   }
 
@@ -1817,6 +1834,7 @@
     if(state.isAdmin){
       html += '<button class="settings-row admin" id="openAdminBtn"><span class="settings-row-icon">🔧</span><span class="settings-row-label">訂閱管理後台</span></button>';
     }
+    html += '<button class="settings-row" id="contactSupportBtn"><span class="settings-row-icon">💬</span><span class="settings-row-label">聯繫客服</span></button>';
     html += '<button class="settings-row danger" id="logoutBtn"><span class="settings-row-icon">🚪</span><span class="settings-row-label">登出</span></button>';
     html += '</div>';
     html += '<p class="app-version">v2026.09.09-1　登入優化與付費鎖定版</p>';
@@ -1826,6 +1844,9 @@
 
   function bindSettingsViewEvents(){
     document.getElementById('shareAppBtn').addEventListener('click', shareApp);
+    document.getElementById('contactSupportBtn').addEventListener('click', () => {
+      window.open(LINE_SUPPORT_URL, '_blank');
+    });
     document.getElementById('exportDataBtn').addEventListener('click', exportBackup);
     document.getElementById('importDataBtn').addEventListener('click', () => document.getElementById('importFileInput').click());
     document.getElementById('importFileInput').addEventListener('change', importBackup);
@@ -9889,6 +9910,7 @@
     else if(detailReturnView === 'find-ingredients'){ findMode = 'ingredients'; renderFindView(); navigate('find'); }
     else if(detailReturnView === 'selected-menu'){ renderSelectedMenuView(); navigate('selected-menu'); }
     else if(detailReturnView === 'signature'){ renderSignatureView(); navigate('signature'); }
+    else if(detailReturnView === 'shopping'){ renderShoppingView(); navigate('shopping'); }
     else { navigate(detailReturnView); }
   }
 
@@ -10821,6 +10843,20 @@
     navigate('shopping');
   }
 
+  // 每項食材下方列出「這是為了煮哪幾道菜」，可點擊直接跳到
+  // 料理頁——買完菜回家看著清單就能直接進去煮，不用再回
+  // 今日料理對照
+  function renderDishLinks(sourceDishIds){
+    if(!sourceDishIds || sourceDishIds.length === 0) return '';
+    const links = sourceDishIds.map(id => {
+      const d = getDishById(id);
+      if(!d) return '';
+      return '<button class="shopping-dish-link" data-link-dish="' + d.id + '">' + getDishIcon(d) + ' ' + d.name + '</button>';
+    }).filter(Boolean).join('');
+    if(!links) return '';
+    return '<div class="shopping-dish-links">' + links + '</div>';
+  }
+
   function renderShoppingRow(item){
     const key = item.name + '|' + item.unit;
     const isManual = item.source === 'manual';
@@ -10834,13 +10870,16 @@
           '<button class="shopping-stepper-btn" data-stepper-key="' + key + '" data-step="1" aria-label="增加">＋</button>' +
         '</span>'
       : '<span class="shopping-item-amount">' + (item.amount ? (item.unit ? item.amount + ' ' + item.unit : item.amount) : '') + '</span>';
-    return '<div class="shopping-item-row' + (item.type === 'seasoning' ? ' seasoning' : '') + (item.status === 'have' ? ' checked' : '') + '">' +
-      '<button class="shopping-item-toggle" data-item-key="' + key + '">' +
-        '<span class="shopping-item-box">' + (item.status === 'have' ? '🟢' : '🛒') + '</span>' +
-        '<span class="shopping-item-name">' + item.name + '</span>' +
-      '</button>' +
-      amountHtml +
-      deleteBtn +
+    return '<div class="shopping-item-wrap">' +
+      '<div class="shopping-item-row' + (item.type === 'seasoning' ? ' seasoning' : '') + (item.status === 'have' ? ' checked' : '') + '">' +
+        '<button class="shopping-item-toggle" data-item-key="' + key + '">' +
+          '<span class="shopping-item-box">' + (item.status === 'have' ? '🟢' : '🛒') + '</span>' +
+          '<span class="shopping-item-name">' + item.name + '</span>' +
+        '</button>' +
+        amountHtml +
+        deleteBtn +
+      '</div>' +
+      renderDishLinks(item.sourceDishIds) +
     '</div>';
   }
 
@@ -10890,6 +10929,18 @@
     const needItems = overview.filter(i => i.status === 'need');
 
     let html = '<p class="menu-subtitle">這次要煮需要準備的全部食材，點一下標記已買，會移到我的庫存</p>';
+
+    // 頂端固定列出這次要煮的菜（不受買完與否影響）——買完菜
+    // 回家後採購清單會變空，但這裡還看得到要煮什麼，點了直接進去
+    const menuDishes = getSelectedMenuDishes();
+    if(menuDishes.length > 0){
+      html += '<div class="shopping-menu-bar">' +
+        '<p class="shopping-menu-bar-label">🍳 這次要煮</p>' +
+        '<div class="shopping-dish-links">' +
+          menuDishes.map(d => '<button class="shopping-dish-link" data-link-dish="' + d.id + '">' + getDishIcon(d) + ' ' + d.name + '</button>').join('') +
+        '</div>' +
+      '</div>';
+    }
 
     html += '<div class="shopping-actions-row">';
     html += '<button class="shopping-action-link" id="addManualItemBtn">＋ 新增採購項目</button>';
@@ -10957,14 +11008,20 @@
         html += '<p class="shopping-group-title">' + ingredientCategoryIcon(cat) + ' ' + cat + '</p>';
         items.forEach(item => {
           const qty = parseInt(item.amount, 10) || 1;
-          html += '<div class="inventory-item-row">' +
-            '<span class="inventory-item-name">' + item.name + (item.unit ? '（' + item.unit + '）' : '') + '</span>' +
-            '<span class="shopping-stepper">' +
-              '<button class="shopping-stepper-btn" data-inv-step-id="' + item.id + '" data-step="-1" aria-label="減少">−</button>' +
-              '<span class="shopping-stepper-num">' + qty + '</span>' +
-              '<button class="shopping-stepper-btn" data-inv-step-id="' + item.id + '" data-step="1" aria-label="增加">＋</button>' +
-            '</span>' +
-            '<button class="inventory-item-used-btn" data-inv-id="' + item.id + '">用完了</button>' +
+          // 只顯示「還在今日料理裡」的菜色連結——那道菜被刪掉後，
+          // 庫存食材照樣留著，只是不再有連結
+          const activeDishIds = (item.sourceDishIds || []).filter(id => selectedMenuDishIds.includes(id));
+          html += '<div class="shopping-item-wrap">' +
+            '<div class="inventory-item-row">' +
+              '<span class="inventory-item-name">' + item.name + (item.unit ? '（' + item.unit + '）' : '') + '</span>' +
+              '<span class="shopping-stepper">' +
+                '<button class="shopping-stepper-btn" data-inv-step-id="' + item.id + '" data-step="-1" aria-label="減少">−</button>' +
+                '<span class="shopping-stepper-num">' + qty + '</span>' +
+                '<button class="shopping-stepper-btn" data-inv-step-id="' + item.id + '" data-step="1" aria-label="增加">＋</button>' +
+              '</span>' +
+              '<button class="inventory-item-used-btn" data-inv-id="' + item.id + '">用完了</button>' +
+            '</div>' +
+            renderDishLinks(activeDishIds) +
           '</div>';
         });
         html += '</div>';
@@ -10976,6 +11033,7 @@
   }
 
   function bindInventoryTabEvents(){
+    bindDishLinkEvents();
     document.querySelectorAll('#shoppingContent .inventory-item-used-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const item = inventory.find(i => i.id === btn.dataset.invId);
@@ -11020,7 +11078,19 @@
     }
   }
 
+  // 採購清單／庫存裡的菜色連結：點了直接進料理頁，返回時
+  // 回到採購清單（剛剛來的地方）
+  function bindDishLinkEvents(){
+    document.querySelectorAll('#shoppingContent [data-link-dish]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openDetail(btn.dataset.linkDish, 'shopping');
+      });
+    });
+  }
+
   function bindShoppingViewEvents(){
+    bindDishLinkEvents();
     document.querySelectorAll('#shoppingContent .shopping-item-toggle').forEach(row => {
       row.addEventListener('click', () => {
         const key = row.dataset.itemKey;
