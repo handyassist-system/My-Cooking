@@ -723,6 +723,39 @@
   }
   .shopping-item-list{display:flex; flex-direction:column; gap:8px;}
   .shopping-group .shopping-item-wrap + .shopping-item-wrap{margin-top:8px;}
+  .ing-suggest-box{margin-top:6px;}
+  .ing-suggest-list{
+    display:flex; flex-direction:column;
+    border:1px solid var(--color-border); border-radius:var(--radius-md);
+    background:var(--color-surface); overflow:hidden; max-height:230px; overflow-y:auto;
+  }
+  .ing-suggest-item{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:11px 13px; border:none; border-bottom:1px solid var(--color-border);
+    background:transparent; color:var(--color-text); text-align:left;
+    font-size:var(--fs-caption); font-family:var(--font-family);
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  .ing-suggest-item:last-child{border-bottom:none;}
+  .ing-suggest-item:active{background:var(--color-bg);}
+  .ing-suggest-cat{
+    flex-shrink:0; font-size:var(--fs-label); color:var(--color-text-soft);
+    background:var(--color-bg); padding:2px 8px; border-radius:var(--radius-pill);
+  }
+  .ing-suggest-empty{
+    margin:0; padding:10px 13px; font-size:var(--fs-label);
+    color:var(--color-text-soft); background:var(--color-bg);
+    border:1px dashed var(--color-border); border-radius:var(--radius-md);
+  }
+
+  .shopping-dish-toggle-wrap{padding:5px 0 0 14px;}
+  .shopping-dish-toggle-wrap .shopping-dish-links{padding:6px 0 0 0;}
+  .shopping-dish-toggle{
+    padding:3px 9px; border-radius:var(--radius-pill);
+    border:1px dashed var(--color-border); background:transparent; color:var(--color-text-soft);
+    font-size:var(--fs-label); font-family:var(--font-family);
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
   .shopping-dish-links{display:flex; flex-wrap:wrap; gap:6px; padding:6px 0 0 14px;}
   .shopping-dish-link{
     padding:5px 10px; border-radius:var(--radius-pill);
@@ -779,6 +812,23 @@
 
 
   .detail-section{padding:26px 22px 0;}
+  .detail-divider{height:1px; background:var(--color-border); margin:26px 22px 0;}
+  .preview-ing-box{
+    padding:13px 15px; border-radius:var(--radius-md);
+    border:1px solid var(--color-border); background:var(--color-surface);
+    font-size:var(--fs-caption); color:var(--color-text); line-height:1.8;
+  }
+  .preview-ing-box.seasoning{margin-top:8px; color:var(--color-text-soft);}
+  .preview-flow{
+    padding:14px 15px; border-radius:var(--radius-md);
+    border:1px solid var(--color-border); background:var(--color-surface);
+    font-size:var(--fs-caption); color:var(--color-text); line-height:1.9;
+  }
+  .preview-flow-step{display:inline;}
+  .preview-flow-arrow{color:var(--color-accent); margin:0 6px; font-weight:var(--weight-bold);}
+  .dish-action-btn.primary{
+    background:var(--color-accent); color:#FBF3EE; border-color:var(--color-accent);
+  }
   .detail-section-title{
     font-size:var(--fs-section); font-weight:var(--weight-bold); margin:0 0 12px;
     display:flex; align-items:center; gap:8px;
@@ -1942,7 +1992,7 @@
       priority: 1,
       servings: 2, prepTime: 5, cookTime: 8,
       ingredients: [ {name:"雞蛋", amount:3, unit:"顆"}, {name:"番茄", amount:2, unit:"顆"} ],
-      seasonings: [ {name:"鹽", amount:1, unit:"小匙"}, {name:"糖", amount:1, unit:"小匙"}, {name:"蔥花", amount:1, unit:"小把"} ],
+      seasonings: [ {name:"鹽", amount:1, unit:"小匙"}, {name:"糖", amount:1, unit:"小匙"}, {name:"蔥花", amount:1, unit:"根"} ],
       tools: ["炒鍋","鍋鏟","碗"],
       preparationSteps: ["番茄洗淨切塊","雞蛋打散並加少許鹽拌勻","蔥切末備用"],
       cookingSteps: [
@@ -2000,7 +2050,7 @@
       id: "dish004", name: "麻婆豆腐", icon: "🌶️", category: "家常菜", difficulty: "中等",
       priority: 1,
       servings: 3, prepTime: 10, cookTime: 12,
-      ingredients: [ {name:"板豆腐", amount:1, unit:"盒"}, {name:"豬絞肉", amount:150, unit:"g"}, {name:"蒜末", amount:1, unit:"大匙"}, {name:"蔥花", amount:1, unit:"小把"} ],
+      ingredients: [ {name:"板豆腐", amount:1, unit:"盒"}, {name:"豬絞肉", amount:150, unit:"g"}, {name:"蒜末", amount:3, unit:"瓣"}, {name:"蔥花", amount:1, unit:"根"} ],
       seasonings: [ {name:"豆瓣醬", amount:1.5, unit:"大匙"}, {name:"醬油", amount:1, unit:"小匙"}, {name:"太白粉水", amount:2, unit:"大匙"}, {name:"花椒粉", amount:0.5, unit:"小匙"} ],
       tools: ["炒鍋","鍋鏟","湯匙"],
       preparationSteps: ["豆腐切成2公分小塊，用鹽水汆燙備用","蒜末、蔥花切好備用","太白粉加水調成太白粉水"],
@@ -2021,7 +2071,7 @@
       id: "dish005", name: "三杯雞", icon: "🍗", category: "肉類", difficulty: "中等",
       priority: 1,
       servings: 3, prepTime: 10, cookTime: 20,
-      ingredients: [ {name:"雞腿肉", amount:500, unit:"g"}, {name:"老薑", amount:1, unit:"小塊"}, {name:"蒜頭", amount:6, unit:"瓣"}, {name:"九層塔", amount:1, unit:"把"} ],
+      ingredients: [ {name:"雞腿肉", amount:500, unit:"g"}, {name:"老薑", amount:1, unit:"塊"}, {name:"蒜頭", amount:6, unit:"瓣"}, {name:"九層塔", amount:1, unit:"把"} ],
       seasonings: [ {name:"麻油", amount:2, unit:"大匙"}, {name:"醬油", amount:3, unit:"大匙"}, {name:"米酒", amount:3, unit:"大匙"}, {name:"糖", amount:1, unit:"大匙"} ],
       tools: ["炒鍋或砂鍋","鍋鏟"],
       preparationSteps: ["雞腿肉切塊，用廚房紙巾擦乾水分","老薑切片，蒜頭拍過去皮"],
@@ -2041,7 +2091,7 @@
       id: "dish006", name: "宮保雞丁", icon: "🍗", category: "肉類", difficulty: "中等",
       priority: 1,
       servings: 2, prepTime: 15, cookTime: 10,
-      ingredients: [ {name:"雞胸肉", amount:300, unit:"g"}, {name:"乾辣椒", amount:8, unit:"支"}, {name:"花生", amount:50, unit:"g"}, {name:"蔥白", amount:1, unit:"段"} ],
+      ingredients: [ {name:"雞胸肉", amount:300, unit:"g"}, {name:"乾辣椒", amount:8, unit:"支"}, {name:"花生", amount:50, unit:"g"}, {name:"蔥白", amount:1, unit:"根"} ],
       seasonings: [ {name:"醬油", amount:1, unit:"大匙"}, {name:"醋", amount:1, unit:"大匙"}, {name:"糖", amount:1, unit:"大匙"}, {name:"太白粉", amount:1, unit:"小匙"}, {name:"米酒", amount:1, unit:"小匙"} ],
       tools: ["炒鍋","鍋鏟","碗"],
       preparationSteps: ["雞胸肉切丁，用醬油、太白粉抓醃10分鐘","蔥白切段，乾辣椒剪段去籽","調醬汁：醬油、醋、糖、米酒混合備用"],
@@ -2062,7 +2112,7 @@
       id: "dish007", name: "菜脯蛋", icon: "🥚", category: "蛋料理", difficulty: "簡單",
       priority: 1,
       servings: 2, prepTime: 5, cookTime: 8,
-      ingredients: [ {name:"雞蛋", amount:4, unit:"顆"}, {name:"菜脯", amount:50, unit:"g"} ],
+      ingredients: [ {name:"雞蛋", amount:4, unit:"顆"}, {name:"菜脯", amount:3, unit:"大匙"} ],
       seasonings: [ {name:"白胡椒粉", amount:0.5, unit:"小匙"}, {name:"糖", amount:0.5, unit:"小匙"} ],
       tools: ["炒鍋","鍋鏟","碗"],
       preparationSteps: ["菜脯用水稍微沖洗去除多餘鹹味，瀝乾切碎","雞蛋打散，加入菜脯碎、白胡椒粉、糖拌勻"],
@@ -2081,7 +2131,7 @@
       id: "dish008", name: "煎雞腿", icon: "🍗", category: "肉類", difficulty: "簡單",
       priority: 1,
       servings: 2, prepTime: 15, cookTime: 15,
-      ingredients: [ {name:"去骨雞腿排", amount:2, unit:"片"} ],
+      ingredients: [ {name:"去骨雞腿排", amount:300, unit:"g"} ],
       seasonings: [ {name:"鹽", amount:1, unit:"小匙"}, {name:"黑胡椒", amount:0.5, unit:"小匙"}, {name:"米酒", amount:1, unit:"大匙"} ],
       tools: ["平底鍋","鍋鏟","廚房紙巾"],
       preparationSteps: ["雞腿排用鹽、黑胡椒、米酒醃15分鐘","雞皮用廚房紙巾擦乾"],
@@ -2119,7 +2169,7 @@
       id: "dish010", name: "蛤蜊湯", icon: "🥣", category: "湯品", difficulty: "簡單",
       priority: 1,
       servings: 3, prepTime: 30, cookTime: 8,
-      ingredients: [ {name:"蛤蜊", amount:600, unit:"g"}, {name:"薑絲", amount:1, unit:"小把"}, {name:"蔥花", amount:1, unit:"小把"} ],
+      ingredients: [ {name:"蛤蜊", amount:600, unit:"g"}, {name:"薑絲", amount:1, unit:"塊"}, {name:"蔥花", amount:1, unit:"根"} ],
       seasonings: [ {name:"鹽", amount:0.5, unit:"小匙"}, {name:"米酒", amount:1, unit:"大匙"} ],
       tools: ["湯鍋"],
       preparationSteps: ["蛤蜊泡鹽水吐沙至少30分鐘，洗淨備用","薑切絲，蔥切花"],
@@ -2271,7 +2321,7 @@
       priority: 1,
       servings: 3, prepTime: 60, cookTime: 6,
       ingredients: [ {name:"蛤蜊", amount:600, unit:"g"} ],
-      seasonings: [ {name:"蒜頭", amount:4, unit:"瓣"}, {name:"薑", amount:2, unit:"片"}, {name:"米酒", amount:2, unit:"大匙"}, {name:"辣椒", amount:1, unit:"支"}, {name:"九層塔", amount:1, unit:"小把"} ],
+      seasonings: [ {name:"蒜頭", amount:4, unit:"瓣"}, {name:"薑", amount:2, unit:"片"}, {name:"米酒", amount:2, unit:"大匙"}, {name:"辣椒", amount:1, unit:"支"}, {name:"九層塔", amount:1, unit:"把"} ],
       tools: ["炒鍋（附蓋）"],
       preparationSteps: ["蛤蜊泡鹽水吐沙約1小時，洗淨瀝乾","蒜頭切片，薑切絲"],
       cookingSteps: [
@@ -2353,7 +2403,7 @@
       id: "dish021", name: "蛋炒飯", icon: "🍚", category: "主食", difficulty: "簡單",
       priority: 1,
       servings: 2, prepTime: 5, cookTime: 8,
-      ingredients: [ {name:"白米", amount:2, unit:"碗"}, {name:"雞蛋", amount:2, unit:"顆"}, {name:"紅蘿蔔", amount:0.5, unit:"條"} ],
+      ingredients: [ {name:"白米", amount:2, unit:"米杯"}, {name:"雞蛋", amount:2, unit:"顆"}, {name:"紅蘿蔔", amount:0.5, unit:"條"} ],
       seasonings: [ {name:"青蔥", amount:1, unit:"根"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"醬油", amount:1, unit:"小匙"}, {name:"白胡椒粉", amount:1, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["白飯放涼或用隔夜飯","紅蘿蔔切小丁，蔥切蔥花，雞蛋打散"],
@@ -2542,7 +2592,7 @@
       id: "dish030", name: "紅燒肉", icon: "🥩", category: "肉類", difficulty: "中等",
       priority: 1,
       servings: 4, prepTime: 15, cookTime: 60,
-      ingredients: [ {name:"五花肉", amount:600, unit:"g"}, {name:"薑", amount:1, unit:"小塊"} ],
+      ingredients: [ {name:"五花肉", amount:600, unit:"g"}, {name:"薑", amount:1, unit:"塊"} ],
       seasonings: [ {name:"醬油", amount:3, unit:"大匙"}, {name:"冰糖", amount:2, unit:"大匙"}, {name:"米酒", amount:3, unit:"大匙"}, {name:"八角", amount:1, unit:"顆"} ],
       tools: ["炒鍋或砂鍋"],
       preparationSteps: ["五花肉切塊，冷水下鍋汆燙去血水","薑切片備用"],
@@ -2891,7 +2941,7 @@
       id: "dish047", name: "涼拌木耳", icon: "🍄", category: "蔬菜", difficulty: "簡單",
       priority: 1,
       servings: 3, prepTime: 15, cookTime: 3,
-      ingredients: [ {name:"木耳", amount:150, unit:"g"} ],
+      ingredients: [ {name:"木耳", amount:5, unit:"片"} ],
       seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"白醋", amount:1, unit:"大匙"}, {name:"糖", amount:0.5, unit:"小匙"}, {name:"香油", amount:1, unit:"小匙"} ],
       tools: ["湯鍋","調理盆"],
       preparationSteps: ["木耳洗淨切絲","蒜頭切末"],
@@ -2912,7 +2962,7 @@
       id: "dish049", name: "木耳炒肉片", icon: "🍄", category: "肉類", difficulty: "簡單",
       priority: 1,
       servings: 3, prepTime: 15, cookTime: 8,
-      ingredients: [ {name:"豬肉", amount:200, unit:"g"}, {name:"木耳", amount:100, unit:"g"} ],
+      ingredients: [ {name:"豬肉", amount:200, unit:"g"}, {name:"木耳", amount:3, unit:"片"} ],
       seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"太白粉", amount:1, unit:"小匙"}, {name:"米酒", amount:1, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["豬肉切片，加醬油、太白粉抓醃10分鐘","木耳切片，蒜頭切末"],
@@ -3621,7 +3671,7 @@
       id: "dish085", name: "滷雞腿", icon: "🍗", category: "肉類", difficulty: "簡單",
       priority: 1,
       servings: 3, prepTime: 10, cookTime: 35,
-      ingredients: [ {name:"雞腿肉", amount:3, unit:"支"} ],
+      ingredients: [ {name:"雞腿肉", amount:450, unit:"g"} ],
       seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"醬油", amount:4, unit:"大匙"}, {name:"冰糖", amount:1, unit:"大匙"}, {name:"八角", amount:1, unit:"顆"}, {name:"米酒", amount:2, unit:"大匙"} ],
       tools: ["湯鍋"],
       preparationSteps: ["雞腿肉洗淨，薑切片"],
@@ -3663,7 +3713,7 @@
       id: "dish087", name: "筍乾扣肉", icon: "🥩", category: "肉類", difficulty: "困難",
       priority: 1,
       servings: 4, prepTime: 30, cookTime: 90,
-      ingredients: [ {name:"五花肉", amount:600, unit:"g"}, {name:"筍", amount:200, unit:"g"} ],
+      ingredients: [ {name:"五花肉", amount:600, unit:"g"}, {name:"筍", amount:1, unit:"支"} ],
       seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"醬油", amount:4, unit:"大匙"}, {name:"冰糖", amount:1, unit:"大匙"}, {name:"米酒", amount:2, unit:"大匙"} ],
       tools: ["炒鍋","電鍋或蒸鍋","扣碗"],
       preparationSteps: ["五花肉整塊冷水下鍋汆燙後撈起，用醬油抹勻上色","筍乾（筍絲）泡水軟化，切段瀝乾"],
@@ -3685,7 +3735,7 @@
       priority: 1,
       servings: 4, prepTime: 25, cookTime: 40,
       ingredients: [ {name:"豬絞肉", amount:500, unit:"g"}, {name:"大白菜", amount:0.5, unit:"顆"} ],
-      seasonings: [ {name:"薑", amount:1, unit:"小塊"}, {name:"太白粉", amount:2, unit:"大匙"}, {name:"醬油", amount:2, unit:"大匙"}, {name:"米酒", amount:1, unit:"大匙"}, {name:"鹽", amount:0.5, unit:"小匙"} ],
+      seasonings: [ {name:"薑", amount:1, unit:"塊"}, {name:"太白粉", amount:2, unit:"大匙"}, {name:"醬油", amount:2, unit:"大匙"}, {name:"米酒", amount:1, unit:"大匙"}, {name:"鹽", amount:0.5, unit:"小匙"} ],
       tools: ["湯鍋","調理盆"],
       preparationSteps: ["薑磨成泥，絞肉加薑泥、太白粉、醬油、米酒，用力摔打至有黏性","肉餡捏成大丸子，大白菜切大片"],
       cookingSteps: [
@@ -3727,7 +3777,7 @@
       priority: 1,
       servings: 3, prepTime: 15, cookTime: 10,
       ingredients: [ {name:"豬肉", amount:250, unit:"g"}, {name:"木耳", amount:2, unit:"片"}, {name:"紅蘿蔔", amount:0.5, unit:"條"} ],
-      seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"薑", amount:1, unit:"小塊"}, {name:"豆瓣醬", amount:1, unit:"大匙"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"白醋", amount:1, unit:"大匙"}, {name:"糖", amount:1, unit:"大匙"}, {name:"太白粉", amount:1, unit:"小匙"} ],
+      seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"薑", amount:1, unit:"塊"}, {name:"豆瓣醬", amount:1, unit:"大匙"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"白醋", amount:1, unit:"大匙"}, {name:"糖", amount:1, unit:"大匙"}, {name:"太白粉", amount:1, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["豬肉切絲，加太白粉抓醃10分鐘","木耳、紅蘿蔔切絲，蒜薑切末"],
       cookingSteps: [
@@ -4017,7 +4067,7 @@
       id: "dish105", name: "花枝炒芹菜", icon: "🦑", category: "海鮮", difficulty: "簡單",
       priority: 1,
       servings: 3, prepTime: 15, cookTime: 8,
-      ingredients: [ {name:"花枝", amount:2, unit:"隻"}, {name:"芹菜", amount:1, unit:"把"} ],
+      ingredients: [ {name:"花枝", amount:600, unit:"g"}, {name:"芹菜", amount:1, unit:"把"} ],
       seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"薑", amount:2, unit:"片"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"鹽", amount:0.5, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["花枝切花刀後切段，芹菜切段","蒜頭切片，薑切絲"],
@@ -4428,7 +4478,7 @@
       id: "dish126", name: "炒花枝", icon: "🦑", category: "海鮮", difficulty: "簡單",
       priority: 1,
       servings: 3, prepTime: 15, cookTime: 6,
-      ingredients: [ {name:"花枝", amount:2, unit:"隻"}, {name:"洋蔥", amount:0.5, unit:"顆"}, {name:"青椒", amount:1, unit:"顆"} ],
+      ingredients: [ {name:"花枝", amount:600, unit:"g"}, {name:"洋蔥", amount:0.5, unit:"顆"}, {name:"青椒", amount:1, unit:"顆"} ],
       seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"鹽", amount:0.5, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["花枝切花刀後切段，洋蔥、青椒切塊，蒜頭切片"],
@@ -4574,7 +4624,7 @@
       priority: 2,
       servings: 3, prepTime: 20, cookTime: 15,
       ingredients: [ {name:"雞腿肉", amount:500, unit:"g"}, {name:"小黃瓜", amount:1, unit:"條"} ],
-      seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"香菜", amount:1, unit:"把"}, {name:"花椒粒", amount:1, unit:"小匙"}, {name:"醬油", amount:2, unit:"大匙"}, {name:"糖", amount:1, unit:"大匙"}, {name:"白醋", amount:1, unit:"大匙"} ],
+      seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"香菜", amount:1, unit:"小把"}, {name:"花椒粒", amount:1, unit:"小匙"}, {name:"醬油", amount:2, unit:"大匙"}, {name:"糖", amount:1, unit:"大匙"}, {name:"白醋", amount:1, unit:"大匙"} ],
       tools: ["炒鍋（油炸用）","刀具"],
       preparationSteps: ["雞腿肉用鹽米酒醃過後裹粉，小黃瓜切片鋪盤","蒜頭、香菜切末"],
       cookingSteps: [
@@ -4656,7 +4706,7 @@
       id: "dish137", name: "雞肉絲炒飯", icon: "🍚", category: "主食", difficulty: "簡單",
       priority: 2,
       servings: 2, prepTime: 15, cookTime: 10,
-      ingredients: [ {name:"白米", amount:2, unit:"碗"}, {name:"雞胸肉", amount:150, unit:"g"}, {name:"雞蛋", amount:2, unit:"顆"} ],
+      ingredients: [ {name:"白米", amount:2, unit:"米杯"}, {name:"雞胸肉", amount:150, unit:"g"}, {name:"雞蛋", amount:2, unit:"顆"} ],
       seasonings: [ {name:"青蔥", amount:1, unit:"根"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"鹽", amount:0.5, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["雞胸肉切絲，用少許醬油抓醃，白飯放涼或用隔夜飯","雞蛋打散，蔥切蔥花"],
@@ -4758,7 +4808,7 @@
       id: "dish142", name: "炸豬排", icon: "🍖", category: "肉類", difficulty: "中等",
       priority: 2,
       servings: 2, prepTime: 20, cookTime: 10,
-      ingredients: [ {name:"豬肉", amount:2, unit:"片"} ],
+      ingredients: [ {name:"豬肉", amount:60, unit:"g"} ],
       seasonings: [ {name:"鹽", amount:0.5, unit:"小匙"}, {name:"太白粉", amount:2, unit:"大匙"}, {name:"雞蛋", amount:1, unit:"顆"}, {name:"麵包粉", amount:1, unit:"杯"} ],
       tools: ["炒鍋（油炸用）"],
       preparationSteps: ["豬排用刀背拍鬆，撒鹽稍微醃過","依序沾裹太白粉、蛋液、麵包粉"],
@@ -4798,7 +4848,7 @@
       id: "dish144", name: "肉羹", icon: "🍲", category: "湯品", difficulty: "中等",
       priority: 2,
       servings: 4, prepTime: 20, cookTime: 15,
-      ingredients: [ {name:"豬肉", amount:300, unit:"g"}, {name:"筍", amount:100, unit:"g"} ],
+      ingredients: [ {name:"豬肉", amount:300, unit:"g"}, {name:"筍", amount:1, unit:"支"} ],
       seasonings: [ {name:"太白粉", amount:4, unit:"大匙"}, {name:"醬油", amount:2, unit:"大匙"}, {name:"白胡椒粉", amount:0.5, unit:"小匙"}, {name:"烏醋", amount:1, unit:"大匙"}, {name:"香菜", amount:1, unit:"小把"} ],
       tools: ["湯鍋"],
       preparationSteps: ["豬肉切條，用醬油、白胡椒粉抓醃後裹上太白粉","筍切絲，香菜切末"],
@@ -4982,7 +5032,7 @@
       id: "dish153", name: "牛肉炒飯", icon: "🍚", category: "主食", difficulty: "簡單",
       priority: 2,
       servings: 2, prepTime: 15, cookTime: 10,
-      ingredients: [ {name:"白米", amount:2, unit:"碗"}, {name:"牛肉", amount:150, unit:"g"}, {name:"雞蛋", amount:2, unit:"顆"} ],
+      ingredients: [ {name:"白米", amount:2, unit:"米杯"}, {name:"牛肉", amount:150, unit:"g"}, {name:"雞蛋", amount:2, unit:"顆"} ],
       seasonings: [ {name:"青蔥", amount:1, unit:"根"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"黑胡椒粒", amount:0.5, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["牛肉切碎丁，白飯放涼或用隔夜飯","雞蛋打散，蔥切蔥花"],
@@ -5128,7 +5178,7 @@
       id: "dish160", name: "蝦仁炒飯", icon: "🦐", category: "主食", difficulty: "簡單",
       priority: 2,
       servings: 2, prepTime: 15, cookTime: 10,
-      ingredients: [ {name:"白米", amount:2, unit:"碗"}, {name:"蝦", amount:150, unit:"g"}, {name:"雞蛋", amount:2, unit:"顆"} ],
+      ingredients: [ {name:"白米", amount:2, unit:"米杯"}, {name:"蝦", amount:150, unit:"g"}, {name:"雞蛋", amount:2, unit:"顆"} ],
       seasonings: [ {name:"青蔥", amount:1, unit:"根"}, {name:"鹽", amount:0.5, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["蝦仁去腸泥，白飯放涼或用隔夜飯","雞蛋打散，蔥切蔥花"],
@@ -5170,7 +5220,7 @@
       id: "dish162", name: "海鮮炒飯", icon: "🍚", category: "主食", difficulty: "簡單",
       priority: 2,
       servings: 3, prepTime: 15, cookTime: 10,
-      ingredients: [ {name:"白米", amount:3, unit:"碗"}, {name:"蝦", amount:100, unit:"g"}, {name:"透抽", amount:1, unit:"隻"}, {name:"雞蛋", amount:2, unit:"顆"} ],
+      ingredients: [ {name:"白米", amount:3, unit:"米杯"}, {name:"蝦", amount:100, unit:"g"}, {name:"透抽", amount:1, unit:"隻"}, {name:"雞蛋", amount:2, unit:"顆"} ],
       seasonings: [ {name:"青蔥", amount:1, unit:"根"}, {name:"鹽", amount:0.5, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["蝦仁去腸泥，透抽切圈，白飯放涼或用隔夜飯","雞蛋打散，蔥切蔥花"],
@@ -5255,7 +5305,7 @@
       priority: 2,
       servings: 2, prepTime: 10, cookTime: 6,
       ingredients: [ {name:"鮮蚵", amount:250, unit:"g"}, {name:"韭菜", amount:0.5, unit:"把"} ],
-      seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"薑", amount:1, unit:"小塊"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"太白粉", amount:1, unit:"大匙"} ],
+      seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"薑", amount:1, unit:"塊"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"太白粉", amount:1, unit:"大匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["鮮蚵用太白粉輕輕抓洗後沖淨瀝乾，韭菜切段，蒜薑切末"],
       cookingSteps: [
@@ -5294,7 +5344,7 @@
       priority: 2,
       servings: 3, prepTime: 15, cookTime: 10,
       ingredients: [ {name:"茄子", amount:2, unit:"條"}, {name:"豬絞肉", amount:100, unit:"g"} ],
-      seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"薑", amount:1, unit:"小塊"}, {name:"豆瓣醬", amount:1, unit:"大匙"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"白醋", amount:1, unit:"大匙"}, {name:"糖", amount:1, unit:"大匙"} ],
+      seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"薑", amount:1, unit:"塊"}, {name:"豆瓣醬", amount:1, unit:"大匙"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"白醋", amount:1, unit:"大匙"}, {name:"糖", amount:1, unit:"大匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["茄子切段泡鹽水防氧化，蒜薑切末"],
       cookingSteps: [
@@ -5456,7 +5506,7 @@
       id: "dish176", name: "火腿蛋炒飯", icon: "🍚", category: "主食", difficulty: "簡單",
       priority: 2,
       servings: 2, prepTime: 10, cookTime: 8,
-      ingredients: [ {name:"白米", amount:2, unit:"碗"}, {name:"火腿", amount:3, unit:"片"}, {name:"雞蛋", amount:2, unit:"顆"} ],
+      ingredients: [ {name:"白米", amount:2, unit:"米杯"}, {name:"火腿", amount:3, unit:"片"}, {name:"雞蛋", amount:2, unit:"顆"} ],
       seasonings: [ {name:"青蔥", amount:1, unit:"根"}, {name:"鹽", amount:0.5, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["火腿切丁，白飯放涼或用隔夜飯","雞蛋打散，蔥切蔥花"],
@@ -5826,7 +5876,7 @@
       priority: 3,
       servings: 3, prepTime: 15, cookTime: 10,
       ingredients: [ {name:"蝦", amount:400, unit:"g"} ],
-      seasonings: [ {name:"蒜頭", amount:3, unit:"瓣"}, {name:"薑", amount:1, unit:"小塊"}, {name:"辣豆瓣醬", amount:1.5, unit:"大匙"}, {name:"番茄醬", amount:2, unit:"大匙"}, {name:"糖", amount:1, unit:"大匙"}, {name:"米酒", amount:1, unit:"大匙"} ],
+      seasonings: [ {name:"蒜頭", amount:3, unit:"瓣"}, {name:"薑", amount:1, unit:"塊"}, {name:"辣豆瓣醬", amount:1.5, unit:"大匙"}, {name:"番茄醬", amount:2, unit:"大匙"}, {name:"糖", amount:1, unit:"大匙"}, {name:"米酒", amount:1, unit:"大匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["蝦剪去鬚腳，開背去腸泥，蒜薑切末"],
       cookingSteps: [
@@ -5950,8 +6000,8 @@
       id: "dish200", name: "台南擔仔麵", icon: "🍜", category: "主食", difficulty: "中等",
       priority: 3,
       servings: 2, prepTime: 15, cookTime: 30,
-      ingredients: [ {name:"豬絞肉", amount:150, unit:"g"}, {name:"麵", amount:2, unit:"把"}, {name:"蝦", amount:6, unit:"隻"} ],
-      seasonings: [ {name:"紅蔥頭", amount:3, unit:"顆"}, {name:"醬油", amount:2, unit:"大匙"}, {name:"糖", amount:0.5, unit:"小匙"}, {name:"豆芽菜", amount:1, unit:"把"}, {name:"香菜", amount:1, unit:"小把"} ],
+      ingredients: [ {name:"豬絞肉", amount:150, unit:"g"}, {name:"麵", amount:2, unit:"把"}, {name:"蝦", amount:150, unit:"g"} ],
+      seasonings: [ {name:"紅蔥頭", amount:3, unit:"顆"}, {name:"醬油", amount:2, unit:"大匙"}, {name:"糖", amount:0.5, unit:"小匙"}, {name:"豆芽菜", amount:100, unit:"g"}, {name:"香菜", amount:1, unit:"小把"} ],
       tools: ["炒鍋","湯鍋"],
       preparationSteps: ["紅蔥頭切碎，蝦子去殼留尾煮熟備用"],
       cookingSteps: [
@@ -6199,7 +6249,7 @@
       priority: 3,
       servings: 3, prepTime: 40, cookTime: 15,
       ingredients: [ {name:"中筋麵粉", amount:300, unit:"g"}, {name:"豬絞肉", amount:300, unit:"g"} ],
-      seasonings: [ {name:"酵母", amount:1, unit:"小匙"}, {name:"醬油", amount:1.5, unit:"大匙"}, {name:"薑", amount:1, unit:"小塊"}, {name:"青蔥", amount:1, unit:"根"}, {name:"白芝麻", amount:1, unit:"大匙"} ],
+      seasonings: [ {name:"酵母", amount:1, unit:"小匙"}, {name:"醬油", amount:1.5, unit:"大匙"}, {name:"薑", amount:1, unit:"塊"}, {name:"青蔥", amount:1, unit:"根"}, {name:"白芝麻", amount:1, unit:"大匙"} ],
       tools: ["調理盆","平底鍋（附蓋）"],
       preparationSteps: ["麵粉加酵母、溫水（粉:水約1:0.5）揉成麵團，可依麵團狀況微調水量，靜置發酵1小時至兩倍大","絞肉加醬油、薑末、蔥花拌勻摔打出黏性成內餡"],
       cookingSteps: [
@@ -6220,7 +6270,7 @@
       priority: 3,
       servings: 3, prepTime: 25, cookTime: 10,
       ingredients: [ {name:"水餃皮", amount:20, unit:"片"}, {name:"豬絞肉", amount:250, unit:"g"}, {name:"高麗菜", amount:0.3, unit:"顆"} ],
-      seasonings: [ {name:"薑", amount:1, unit:"小塊"}, {name:"醬油", amount:1.5, unit:"大匙"}, {name:"香油", amount:1, unit:"小匙"} ],
+      seasonings: [ {name:"薑", amount:1, unit:"塊"}, {name:"醬油", amount:1.5, unit:"大匙"}, {name:"香油", amount:1, unit:"小匙"} ],
       tools: ["調理盆","平底鍋（附蓋）"],
       preparationSteps: ["高麗菜切碎用鹽抓出水分擠乾，與絞肉、薑末、醬油、香油拌勻摔打成內餡"],
       cookingSteps: [
@@ -6241,7 +6291,7 @@
       priority: 3,
       servings: 4, prepTime: 25, cookTime: 10,
       ingredients: [ {name:"水餃皮", amount:30, unit:"片"}, {name:"豬絞肉", amount:300, unit:"g"}, {name:"高麗菜", amount:0.4, unit:"顆"} ],
-      seasonings: [ {name:"薑", amount:1, unit:"小塊"}, {name:"醬油", amount:2, unit:"大匙"}, {name:"香油", amount:1, unit:"小匙"} ],
+      seasonings: [ {name:"薑", amount:1, unit:"塊"}, {name:"醬油", amount:2, unit:"大匙"}, {name:"香油", amount:1, unit:"小匙"} ],
       tools: ["調理盆","湯鍋"],
       preparationSteps: ["高麗菜切碎用鹽抓出水分擠乾，與絞肉、薑末、醬油、香油拌勻摔打成內餡"],
       cookingSteps: [
@@ -6262,7 +6312,7 @@
       priority: 3,
       servings: 4, prepTime: 25, cookTime: 12,
       ingredients: [ {name:"水餃皮", amount:20, unit:"片"}, {name:"豬絞肉", amount:250, unit:"g"}, {name:"高麗菜", amount:0.3, unit:"顆"} ],
-      seasonings: [ {name:"薑", amount:1, unit:"小塊"}, {name:"醬油", amount:1.5, unit:"大匙"}, {name:"香油", amount:1, unit:"小匙"} ],
+      seasonings: [ {name:"薑", amount:1, unit:"塊"}, {name:"醬油", amount:1.5, unit:"大匙"}, {name:"香油", amount:1, unit:"小匙"} ],
       tools: ["調理盆","電鍋或蒸鍋"],
       preparationSteps: ["高麗菜切碎用鹽抓出水分擠乾，與絞肉、薑末、醬油、香油拌勻摔打成內餡"],
       cookingSteps: [
@@ -6343,7 +6393,7 @@
       id: "dish219", name: "飯糰", icon: "🍙", category: "主食", difficulty: "簡單",
       priority: 3,
       servings: 2, prepTime: 15, cookTime: 0,
-      ingredients: [ {name:"白米", amount:2, unit:"碗"}, {name:"肉鬆", amount:3, unit:"大匙"}, {name:"油條", amount:1, unit:"條"} ],
+      ingredients: [ {name:"白米", amount:2, unit:"米杯"}, {name:"肉鬆", amount:3, unit:"大匙"}, {name:"油條", amount:1, unit:"條"} ],
       seasonings: [ {name:"菜脯", amount:2, unit:"大匙"} ],
       tools: ["保鮮膜"],
       preparationSteps: ["油條切段稍微烘烤回脆，白飯保溫維持溫熱"],
@@ -6587,7 +6637,7 @@
       priority: 3,
       servings: 2, prepTime: 10, cookTime: 8,
       ingredients: [ {name:"鮮蚵", amount:250, unit:"g"}, {name:"豆豉", amount:1, unit:"大匙"} ],
-      seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"薑", amount:1, unit:"小塊"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"辣椒", amount:0.5, unit:"支"} ],
+      seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"薑", amount:1, unit:"塊"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"辣椒", amount:0.5, unit:"支"} ],
       tools: ["炒鍋"],
       preparationSteps: ["鮮蚵用太白粉輕輕抓洗後沖淨瀝乾，蒜薑切末，豆豉稍微剁碎"],
       cookingSteps: [
@@ -6728,7 +6778,7 @@
       priority: 3,
       servings: 3, prepTime: 20, cookTime: 15,
       ingredients: [ {name:"鴨血", amount:1, unit:"塊"}, {name:"大腸", amount:200, unit:"g"} ],
-      seasonings: [ {name:"蒜頭", amount:3, unit:"瓣"}, {name:"薑", amount:1, unit:"小塊"}, {name:"辣豆瓣醬", amount:2, unit:"大匙"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"糖", amount:1, unit:"小匙"}, {name:"太白粉", amount:1, unit:"小匙"} ],
+      seasonings: [ {name:"蒜頭", amount:3, unit:"瓣"}, {name:"薑", amount:1, unit:"塊"}, {name:"辣豆瓣醬", amount:2, unit:"大匙"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"糖", amount:1, unit:"小匙"}, {name:"太白粉", amount:1, unit:"小匙"} ],
       tools: ["炒鍋（附蓋）"],
       preparationSteps: ["鴨血切塊，滾水汆燙備用","大腸洗淨切段，冷水下鍋加薑片汆燙去腥味"],
       cookingSteps: [
@@ -7291,7 +7341,7 @@
       priority: 2,
       servings: 3, prepTime: 8, cookTime: 5,
       ingredients: [ {name:"水蓮", amount:1, unit:"把"} ],
-      seasonings: [ {name:"薑", amount:1, unit:"小塊"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"米酒", amount:1, unit:"小匙"} ],
+      seasonings: [ {name:"薑", amount:1, unit:"塊"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"米酒", amount:1, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["水蓮洗淨切段（約5公分），薑切細絲"],
       cookingSteps: [
@@ -7310,7 +7360,7 @@
       id: "dish265", name: "照燒雞腿", icon: "🍗", category: "肉類", difficulty: "簡單",
       priority: 1,
       servings: 2, prepTime: 10, cookTime: 15,
-      ingredients: [ {name:"雞腿肉", amount:2, unit:"片"} ],
+      ingredients: [ {name:"雞腿肉", amount:300, unit:"g"} ],
       seasonings: [ {name:"醬油", amount:2, unit:"大匙"}, {name:"味醂", amount:2, unit:"大匙"}, {name:"糖", amount:1, unit:"小匙"}, {name:"米酒", amount:1, unit:"大匙"} ],
       tools: ["平底鍋"],
       preparationSteps: ["雞腿肉擦乾，用叉子在皮上戳幾個洞","醬油、味醂、糖、米酒調成照燒醬"],
@@ -7865,7 +7915,7 @@
       priority: 2,
       servings: 3, prepTime: 25, cookTime: 12,
       ingredients: [ {name:"水餃皮", amount:25, unit:"片"}, {name:"豬絞肉", amount:250, unit:"g"}, {name:"高麗菜", amount:0.3, unit:"顆"} ],
-      seasonings: [ {name:"薑", amount:1, unit:"小塊"}, {name:"醬油", amount:1.5, unit:"大匙"}, {name:"香油", amount:1, unit:"小匙"}, {name:"白胡椒粉", amount:0.3, unit:"小匙"} ],
+      seasonings: [ {name:"薑", amount:1, unit:"塊"}, {name:"醬油", amount:1.5, unit:"大匙"}, {name:"香油", amount:1, unit:"小匙"}, {name:"白胡椒粉", amount:0.3, unit:"小匙"} ],
       tools: ["調理盆","平底鍋（附蓋）"],
       preparationSteps: ["高麗菜切碎用鹽抓出水分擠乾，與絞肉、薑末、醬油、香油、白胡椒粉拌勻摔打成內餡"],
       cookingSteps: [
@@ -7927,7 +7977,7 @@
       id: "dish294", name: "醬燒雞腿", icon: "🍗", category: "肉類", difficulty: "簡單",
       priority: 1,
       servings: 3, prepTime: 10, cookTime: 25,
-      ingredients: [ {name:"雞腿肉", amount:3, unit:"片"} ],
+      ingredients: [ {name:"雞腿肉", amount:450, unit:"g"} ],
       seasonings: [ {name:"醬油", amount:3, unit:"大匙"}, {name:"糖", amount:1, unit:"大匙"}, {name:"米酒", amount:2, unit:"大匙"}, {name:"蒜頭", amount:3, unit:"瓣"}, {name:"薑", amount:2, unit:"片"} ],
       tools: ["平底鍋（附蓋）"],
       preparationSteps: ["雞腿肉擦乾，用叉子在皮上戳幾個洞，蒜頭拍裂"],
@@ -8469,7 +8519,7 @@
       id: "dish320", name: "鍋燒意麵", icon: "🍜", category: "主食", difficulty: "簡單",
       priority: 1,
       servings: 1, prepTime: 10, cookTime: 10,
-      ingredients: [ {name:"意麵", amount:1, unit:"份"}, {name:"雞蛋", amount:1, unit:"顆"}, {name:"蝦", amount:3, unit:"尾"}, {name:"高麗菜", amount:0.2, unit:"顆"} ],
+      ingredients: [ {name:"意麵", amount:1, unit:"份"}, {name:"雞蛋", amount:1, unit:"顆"}, {name:"蝦", amount:80, unit:"g"}, {name:"高麗菜", amount:0.2, unit:"顆"} ],
       seasonings: [ {name:"柴魚片", amount:1, unit:"小把"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"青蔥", amount:1, unit:"根"} ],
       tools: ["湯鍋"],
       preparationSteps: ["高麗菜切片，蔥切蔥花，蝦洗淨去腸泥"],
@@ -8739,7 +8789,7 @@
       priority: 2,
       servings: 2, prepTime: 8, cookTime: 8,
       ingredients: [ {name:"秀珍菇", amount:1, unit:"包"} ],
-      seasonings: [ {name:"蒜頭", amount:3, unit:"瓣"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"九層塔", amount:1, unit:"小把"} ],
+      seasonings: [ {name:"蒜頭", amount:3, unit:"瓣"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"九層塔", amount:1, unit:"把"} ],
       tools: ["炒鍋"],
       preparationSteps: ["秀珍菇切除根部撕成條狀（用紙巾擦淨不要水洗），蒜頭切末"],
       cookingSteps: [
@@ -8759,7 +8809,7 @@
       priority: 2,
       servings: 3, prepTime: 15, cookTime: 30,
       ingredients: [ {name:"通心粉", amount:200, unit:"g"}, {name:"起司", amount:4, unit:"片"}, {name:"火腿", amount:3, unit:"片"}, {name:"洋蔥", amount:0.5, unit:"顆"} ],
-      seasonings: [ {name:"奶油", amount:2, unit:"大匙"}, {name:"低筋麵粉", amount:2, unit:"大匙"}, {name:"鮮奶", amount:300, unit:"ml"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"黑胡椒粒", amount:0.3, unit:"小匙"} ],
+      seasonings: [ {name:"奶油", amount:2, unit:"大匙"}, {name:"低筋麵粉", amount:20, unit:"g"}, {name:"鮮奶", amount:300, unit:"ml"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"黑胡椒粒", amount:0.3, unit:"小匙"} ],
       tools: ["湯鍋","平底鍋","烤箱"],
       preparationSteps: ["通心粉依包裝時間煮至8分熟撈起瀝乾","洋蔥切碎，火腿切丁，烤箱預熱200度"],
       cookingSteps: [
@@ -9719,31 +9769,19 @@
     updateServingsUI();
   }
 
-  let currentDetailPhase = 1;
 
+  // 詳細頁只有一頁，但依「有沒有加入這次要煮」顯示不同深度：
+  //   還沒加入 → 只給判斷要不要煮的資訊（食材名稱、三行大致做法）
+  //   已經加入 → 展開完整份量、備料、火侯時間、技巧與常見錯誤
+  // 這樣搜尋比較多道菜時畫面乾淨好比較，決定要煮了細節才出現
   function renderDetail(dish){
-    if(currentDetailPhase === 2){
-      renderDetailPhase2(dish);
-    } else {
-      renderDetailPhase1(dish);
-    }
-  }
-
-  // 階段一：規劃——份量、需要準備的食材／調味料／工具，
-  // 可以直接點＋把缺的食材加入採購總管。這是進入詳細頁
-  // 的預設畫面，不論從找料理或「這次要煮」進來都一樣。
-  function renderDetailPhase1(dish){
-    let html = '';
+    const planned = isInSelectedMenu(dish.id);
     const ratio = currentServings / dish.servings;
+    let html = '';
 
     html += '<div class="detail-hero">';
     html += '<h1 class="detail-name">' + dish.name + '</h1>';
-    html += '<div class="detail-tags"><span class="tag">' + dish.category + '</span><span class="tag">' + dish.difficulty + '</span></div>';
-    html += '</div>';
-
-    html += '<div class="stat-grid">';
-    html += '<div class="stat-cell"><p class="stat-value">' + dish.prepTime + ' 分</p><p class="stat-label">準備時間</p></div>';
-    html += '<div class="stat-cell"><p class="stat-value">' + dish.cookTime + ' 分</p><p class="stat-label">烹調時間</p></div>';
+    html += '<div class="detail-tags"><span class="tag">' + dish.category + '</span><span class="tag">' + dish.difficulty + '</span><span class="tag">' + (dish.prepTime + dish.cookTime) + ' 分鐘</span></div>';
     html += '</div>';
 
     // 份量調整
@@ -9757,8 +9795,39 @@
     html += '<div class="servings-quick" id="servingsQuick">' + renderServingsQuickChips() + '</div>';
     html += '</div>';
 
-    // 需要準備（食材＋特殊調味料都可以直接加入採購總管；
-    // 常備調味料鹽/糖/醬油/米酒不會有＋按鈕）
+    if(!planned){
+      // ── 挑菜階段：資訊收斂，只給「要不要煮」的判斷依據 ──
+      html += '<div class="detail-section">';
+      html += '<p class="detail-section-title">🧺 需要準備</p>';
+      html += '<div class="preview-ing-box">' + dish.ingredients.map(i => i.name).join('、') + '</div>';
+      const specialSeasonings = dish.seasonings.filter(s => ALWAYS_STOCKED_SEASONINGS.indexOf(normalizeIngredientName(s.name)) === -1);
+      if(specialSeasonings.length){
+        html += '<div class="preview-ing-box seasoning">' + specialSeasonings.map(i => i.name).join('、') + '</div>';
+      }
+      html += '</div>';
+
+      html += '<div class="detail-section">';
+      html += '<p class="detail-section-title">🔥 大致怎麼煮</p>';
+      html += '<div class="preview-flow">' + renderCookingFlow(dish) + '</div>';
+      html += '</div>';
+
+      html += '<div class="start-cook-wrap">';
+      html += '<button class="dish-action-btn primary" id="selectedMenuToggleBtn">🔥 加入這次要煮</button>';
+      html += '</div>';
+
+      document.getElementById('detailContent').innerHTML = html;
+      bindServingsEvents();
+      bindSelectedMenuToggle(dish);
+      return;
+    }
+
+    // ── 已加入：展開完整細節 ──
+    html += '<div class="start-cook-wrap">';
+    html += '<button class="dish-action-btn added" id="selectedMenuToggleBtn">✓ 已加入這次要煮</button>';
+    html += '</div>';
+
+    html += '<div class="detail-divider"></div>';
+
     html += '<div class="detail-section">';
     html += '<p class="detail-section-title">🧺 需要準備</p>';
     html += '<p class="subgroup-label">主要食材</p><div id="ingredientListContainer">' + renderIngredientList(dish.ingredients.map(i => scaleItem(i, ratio))) + '</div>';
@@ -9766,7 +9835,6 @@
     html += '<p class="subgroup-label">工具</p><div class="tool-tags">' + dish.tools.map(t => '<span class="tool-tag">' + t + '</span>').join('') + '</div>';
     html += '</div>';
 
-    // 米飯資訊（只有米飯類料理才會有 riceInfo）
     if(dish.riceInfo){
       html += '<div class="detail-section">';
       html += '<p class="detail-section-title">🍚 米飯資訊</p>';
@@ -9776,51 +9844,6 @@
       }
       html += '</div>';
     }
-
-    // 加入這次要煮／開始料理：上下堆疊、統一白底粗體樣式，
-    // 跟第二階段的按鈕一致，不用顏色堆疊份量感
-    const inSelectedMenu = isInSelectedMenu(dish.id);
-    html += '<div class="start-cook-wrap">';
-    html += '<button class="dish-action-btn' + (inSelectedMenu ? ' added' : '') + '" id="selectedMenuToggleBtn">' + (inSelectedMenu ? '✓ 已加入今日料理' : '🔥 加入這次要煮') + '</button>';
-    html += '</div>';
-    html += '<div class="start-cook-wrap">';
-    html += '<button class="dish-action-btn" id="startCookBtn">開始料理</button>';
-    html += '</div>';
-
-    document.getElementById('detailContent').innerHTML = html;
-    document.getElementById('selectedMenuToggleBtn').addEventListener('click', () => {
-      const wasIn = isInSelectedMenu(dish.id);
-      toggleSelectedMenu(dish.id);
-      renderDetail(dish);
-      if(!wasIn){
-        showToast('已加入這次要煮・目前共 ' + selectedMenuDishIds.length + ' 道');
-      } else {
-        showToast('已從這次要煮移除');
-      }
-    });
-    document.getElementById('startCookBtn').addEventListener('click', () => {
-      currentDetailPhase = 2;
-      renderDetail(dish);
-      window.scrollTo(0, 0);
-    });
-    document.getElementById('servMinus').addEventListener('click', () => adjustServings(-1));
-    document.getElementById('servPlus').addEventListener('click', () => adjustServings(1));
-    document.querySelectorAll('#servingsQuick .serv-chip').forEach(chip => {
-      chip.addEventListener('click', () => setServings(parseInt(chip.dataset.servings, 10)));
-    });
-  }
-
-  // 階段二：備料／烹調步驟／小技巧／常見錯誤，一次全部
-  // 列出來（不是逐步STEP模式），讓使用者食材備好後，
-  // 心裡有底再按「開始SOP」進入真正逐步的料理模式。
-  function renderDetailPhase2(dish){
-    let html = '';
-
-    html += '<button class="detail-phase-back" id="detailPhaseBackBtn">← 返回準備</button>';
-    html += '<div class="detail-hero" style="padding-top:0;">';
-    html += '<h1 class="detail-name">' + dish.name + '</h1>';
-    html += '<div class="detail-tags"><span class="tag">' + currentServings + ' 人份</span></div>';
-    html += '</div>';
 
     html += '<div class="detail-section">';
     html += '<p class="detail-section-title">🔪 備料</p>';
@@ -9855,13 +9878,6 @@
     html += '<ul class="note-list">' + dish.commonMistakes.map(m => '<li class="note-item mistake">' + m + '</li>').join('') + '</ul>';
     html += '</div>';
 
-    // SOP逐步模式現在只是小功能鈕：不一定要真的逐步照做，
-    // 前面備料／步驟都看過、心裡有底，就可以直接收藏拿手菜，
-    // 不用強迫一定要開SOP才能決定喜不喜歡這道菜
-    html += '<div class="start-cook-wrap">';
-    html += '<button class="dish-action-btn" id="startSopBtn">▶ 開始 SOP 逐步模式</button>';
-    html += '</div>';
-
     const inSignature = mySignatureDishIds.includes(dish.id);
     const sigLocked = isFreePlan();
     html += '<div class="start-cook-wrap">';
@@ -9870,30 +9886,57 @@
     html += '<div class="start-cook-wrap">';
     html += '<button class="dish-action-btn" id="cookLogBtn">' + (sigLocked ? '🔒 儲存料理紀錄（付費功能）' : '📝 儲存料理紀錄') + '</button>';
     html += '</div>';
+    html += '<div class="start-cook-wrap">';
+    html += '<button class="dish-action-btn primary" id="startSopBtn">▶ 開始 SOP 逐步模式</button>';
+    html += '</div>';
 
     document.getElementById('detailContent').innerHTML = html;
-    document.getElementById('detailPhaseBackBtn').addEventListener('click', () => {
-      currentDetailPhase = 1;
-      renderDetail(dish);
-      window.scrollTo(0, 0);
-    });
+    bindServingsEvents();
+    bindSelectedMenuToggle(dish);
     document.getElementById('startSopBtn').addEventListener('click', () => {
       startSOP(currentDish, currentServings);
     });
     document.getElementById('signatureToggleBtn').addEventListener('click', () => {
-      if(isFreePlan()){
-        openUpgradeView();
-        return;
-      }
+      if(isFreePlan()){ openUpgradeView(); return; }
       toggleSignatureDish(dish.id);
       renderDetail(dish);
     });
     document.getElementById('cookLogBtn').addEventListener('click', () => {
-      if(isFreePlan()){
-        openUpgradeView();
-        return;
-      }
+      if(isFreePlan()){ openUpgradeView(); return; }
       showCookLogModal(dish);
+    });
+  }
+
+  // 挑菜階段的「大致怎麼煮」：直接從烹調步驟濃縮，不用另外
+  // 為331道菜寫簡介。取每步描述的第一個子句，最多三段
+  function renderCookingFlow(dish){
+    const parts = dish.cookingSteps
+      .map(s => String(s.description).split(/[，,。；;]/)[0].trim())
+      .filter(Boolean);
+    if(parts.length === 0) return '';
+    let picks;
+    if(parts.length <= 3){ picks = parts; }
+    else { picks = [parts[0], parts[Math.floor(parts.length / 2)], parts[parts.length - 1]]; }
+    return picks.map((p, i) =>
+      '<span class="preview-flow-step">' + (i > 0 ? '<span class="preview-flow-arrow">→</span>' : '') + p + '</span>'
+    ).join('');
+  }
+
+  function bindServingsEvents(){
+    document.getElementById('servMinus').addEventListener('click', () => adjustServings(-1));
+    document.getElementById('servPlus').addEventListener('click', () => adjustServings(1));
+    document.querySelectorAll('#servingsQuick .serv-chip').forEach(chip => {
+      chip.addEventListener('click', () => setServings(parseInt(chip.dataset.servings, 10)));
+    });
+  }
+
+  function bindSelectedMenuToggle(dish){
+    document.getElementById('selectedMenuToggleBtn').addEventListener('click', () => {
+      const wasIn = isInSelectedMenu(dish.id);
+      toggleSelectedMenu(dish.id);
+      renderDetail(dish);
+      window.scrollTo(0, 0);
+      showToast(wasIn ? '已從這次要煮移除' : '已加入這次要煮・目前共 ' + selectedMenuDishIds.length + ' 道');
     });
   }
 
@@ -9909,7 +9952,6 @@
     detailReturnScroll = (typeof window.scrollY === 'number') ? window.scrollY : 0;
     currentDish = dish;
     currentServings = initialServings || dish.servings; // 若指定初始份量（例如來自這次要煮），優先使用
-    currentDetailPhase = 1; // 每次重新進入詳細頁，都從規劃階段開始
     detailReturnView = returnView || 'find-recipe';
     document.querySelector('#view-detail .page-title').textContent = dish.name;
     renderDetail(dish);
@@ -10861,18 +10903,67 @@
     navigate('shopping');
   }
 
-  // 每項食材下方列出「這是為了煮哪幾道菜」，可點擊直接跳到
-  // 料理頁——買完菜回家看著清單就能直接進去煮，不用再回
-  // 今日料理對照
-  function renderDishLinks(sourceDishIds){
-    if(!sourceDishIds || sourceDishIds.length === 0) return '';
-    const links = sourceDishIds.map(id => {
-      const d = getDishById(id);
-      if(!d) return '';
-      return '<button class="shopping-dish-link" data-link-dish="' + d.id + '">' + getDishIcon(d) + ' ' + d.name + '</button>';
-    }).filter(Boolean).join('');
-    if(!links) return '';
-    return '<div class="shopping-dish-links">' + links + '</div>';
+  // 菜色連結：只有「多道菜共用」的食材才顯示——單一道菜用的
+  // 食材不需要提示，多道共用的才是容易搞混、需要知道買來幹嘛的。
+  // 預設收合成「(3道) ▸」，點了才展開列出菜名，避免整頁都是標籤
+  const expandedDishLinks = {};
+  function renderDishLinks(sourceDishIds, rowKey){
+    if(!sourceDishIds || sourceDishIds.length < 2) return '';
+    const dishes = sourceDishIds.map(id => getDishById(id)).filter(Boolean);
+    if(dishes.length < 2) return '';
+    const open = !!expandedDishLinks[rowKey];
+    let html = '<div class="shopping-dish-toggle-wrap">';
+    html += '<button class="shopping-dish-toggle" data-toggle-links="' + rowKey + '">' +
+      dishes.length + ' 道菜共用 ' + (open ? '▾' : '▸') + '</button>';
+    if(open){
+      html += '<div class="shopping-dish-links">' +
+        dishes.map(d => '<button class="shopping-dish-link" data-link-dish="' + d.id + '">' + getDishIcon(d) + ' ' + d.name + '</button>').join('') +
+      '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  // 新增採購／庫存項目時的食材建議清單——輸入時從食材庫（179種）
+  // 即時過濾，點選帶入名稱與分類，避免使用者打了「洋蔥」卻跟
+  // 食材庫的洋蔥對不起來。找不到的還是可以直接打字新增
+  function renderIngredientSuggestions(query, listId){
+    const q = (query || '').trim().toLowerCase();
+    if(!q) return '';
+    const matches = getAllIngredients().filter(e =>
+      e.name.toLowerCase().includes(q) ||
+      (e.aliases || []).some(a => a.toLowerCase().includes(q)) ||
+      (e.matchNames || []).some(a => a.toLowerCase().includes(q))
+    ).slice(0, 8);
+    if(matches.length === 0){
+      return '<p class="ing-suggest-empty">食材庫沒有「' + query + '」，可直接新增</p>';
+    }
+    return '<div class="ing-suggest-list" id="' + listId + '">' +
+      matches.map(e =>
+        '<button class="ing-suggest-item" data-suggest-name="' + e.name + '" data-suggest-cat="' + e.category + '">' +
+          '<span>' + e.icon + ' ' + e.name + '</span>' +
+          '<span class="ing-suggest-cat">' + e.category + '</span>' +
+        '</button>'
+      ).join('') +
+    '</div>';
+  }
+
+  // 把建議清單接到某個輸入框上：打字即時更新、點選帶入名稱與分類
+  function bindIngredientSuggest(inputId, containerId, onPick){
+    const input = document.getElementById(inputId);
+    const box = document.getElementById(containerId);
+    if(!input || !box) return;
+    function refresh(){
+      box.innerHTML = renderIngredientSuggestions(input.value, containerId + 'List');
+      box.querySelectorAll('[data-suggest-name]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          input.value = btn.dataset.suggestName;
+          box.innerHTML = '';
+          onPick(btn.dataset.suggestName, btn.dataset.suggestCat);
+        });
+      });
+    }
+    input.addEventListener('input', refresh);
   }
 
   function renderShoppingRow(item){
@@ -10897,7 +10988,7 @@
         amountHtml +
         deleteBtn +
       '</div>' +
-      renderDishLinks(item.sourceDishIds) +
+      renderDishLinks(item.sourceDishIds, key) +
     '</div>';
   }
 
@@ -10965,7 +11056,8 @@
     html += '</div>';
 
     html += '<div class="manual-add-form" id="manualAddForm" style="display:none;">' +
-      '<input type="text" id="manualItemInput" class="ai-name-input" placeholder="想買什麼？例如：牛奶">' +
+      '<input type="text" id="manualItemInput" class="ai-name-input" placeholder="想買什麼？打字會從食材庫找" autocomplete="off">' +
+      '<div class="ing-suggest-box" id="manualItemSuggest"></div>' +
       '<input type="number" id="manualItemAmountInput" class="ai-name-input" placeholder="數量" value="1" min="1" style="margin-top:8px;">' +
       '<p class="manual-category-label">分類</p>' +
       '<div class="chip-row manual-category-row" id="manualCategoryRow">' +
@@ -11001,7 +11093,8 @@
     html += '</div>';
 
     html += '<div class="manual-add-form" id="manualInventoryForm" style="display:none;">' +
-      '<input type="text" id="manualInventoryInput" class="ai-name-input" placeholder="例如：牛奶、衛生紙">' +
+      '<input type="text" id="manualInventoryInput" class="ai-name-input" placeholder="手邊有什麼？打字會從食材庫找" autocomplete="off">' +
+      '<div class="ing-suggest-box" id="manualInventorySuggest"></div>' +
       '<p class="manual-category-label">分類</p>' +
       '<div class="chip-row manual-category-row" id="manualInventoryCategoryRow">' +
         MANUAL_ITEM_CATEGORIES.map(cat =>
@@ -11039,7 +11132,7 @@
               '</span>' +
               '<button class="inventory-item-used-btn" data-inv-id="' + item.id + '">用完了</button>' +
             '</div>' +
-            renderDishLinks(activeDishIds) +
+            renderDishLinks(activeDishIds, item.id) +
           '</div>';
         });
         html += '</div>';
@@ -11078,6 +11171,14 @@
         document.getElementById('manualInventoryInput').focus();
       });
     }
+    bindIngredientSuggest('manualInventoryInput', 'manualInventorySuggest', (name, cat) => {
+      if(MANUAL_ITEM_CATEGORIES.indexOf(cat) !== -1){
+        manualInventoryCategory = cat;
+        document.querySelectorAll('#manualInventoryCategoryRow .chip').forEach(c => {
+          c.classList.toggle('active', c.dataset.manualCategory === cat);
+        });
+      }
+    });
     document.querySelectorAll('#manualInventoryCategoryRow .chip').forEach(chip => {
       chip.addEventListener('click', () => {
         manualInventoryCategory = chip.dataset.manualCategory;
@@ -11099,6 +11200,14 @@
   // 採購清單／庫存裡的菜色連結：點了直接進料理頁，返回時
   // 回到採購清單（剛剛來的地方）
   function bindDishLinkEvents(){
+    document.querySelectorAll('#shoppingContent [data-toggle-links]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const k = btn.dataset.toggleLinks;
+        expandedDishLinks[k] = !expandedDishLinks[k];
+        if(shoppingTab === 'inventory'){ renderInventoryTab(); } else { renderShoppingView(); }
+      });
+    });
     document.querySelectorAll('#shoppingContent [data-link-dish]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -11153,6 +11262,14 @@
         document.getElementById('manualItemInput').focus();
       });
     }
+    bindIngredientSuggest('manualItemInput', 'manualItemSuggest', (name, cat) => {
+      if(MANUAL_ITEM_CATEGORIES.indexOf(cat) !== -1){
+        manualItemCategory = cat;
+        document.querySelectorAll('#manualCategoryRow .chip').forEach(c => {
+          c.classList.toggle('active', c.dataset.manualCategory === cat);
+        });
+      }
+    });
     document.querySelectorAll('#manualCategoryRow .chip').forEach(chip => {
       chip.addEventListener('click', () => {
         manualItemCategory = chip.dataset.manualCategory;
