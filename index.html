@@ -9048,6 +9048,16 @@
     saveMealTimeMap();
   }
 
+  /* 整罐／整包買的東西（醬油、米酒、太白粉、蝦米…）：
+     食譜寫 2 大匙，但採購時不可能只買 2 大匙，顯示數量沒有意義，
+     只要提醒「看家裡還有沒有」。蔥薑蒜這類雖然也歸在調味辛香，
+     但採購是真的照量買，所以用食材上的 buyByPack 標記判斷，
+     不是用分類判斷。料理詳細頁不受影響，該寫幾大匙還是寫幾大匙。 */
+  function isBuyByPack(name){
+    const found = getAllIngredients().find(e => e.name === name);
+    return !!(found && found.buyByPack);
+  }
+
   function findIngredientCategoryByName(name){
     const found = getAllIngredients().find(e => e.name === name);
     return found ? found.category : "其他";
@@ -9196,7 +9206,25 @@
 
   // 這幾樣視為「家中一定有」的常備調味料，永遠不會出現在
   // 「採購」頁裡（不管有沒有標記）
-  const ALWAYS_STOCKED_SEASONINGS = ["鹽","糖","醬油","油"];
+  const ALWAYS_STOCKED_SEASONINGS = ["鹽","糖","醬油","沙拉油"];
+
+  /* 採購清單的單位整併。
+     同一樣東西在不同料理裡會用小匙／大匙／ml 記（1大匙=3小匙=15ml），
+     如果照字面當成不同單位，米酒就會在清單上裂成三筆。
+     解法：液體量詞一律換算成 ml 當合併基準（key 也用 ml，庫存比對才穩定），
+     顯示時再依總量挑一個好讀的單位。重量(g)與個數(片、顆、把)不換算。 */
+  const VOLUME_UNIT_ML = { "ml":1, "cc":1, "小匙":5, "大匙":15 };
+  function toMergeUnit(unit){
+    return VOLUME_UNIT_ML[unit] ? "ml" : unit;
+  }
+  function toMergeAmount(amount, unit){
+    return VOLUME_UNIT_ML[unit] ? amount * VOLUME_UNIT_ML[unit] : amount;
+  }
+  function formatVolumeDisplay(ml){
+    if(ml >= 100) return { amount: String(Math.round(ml)), unit: "ml" };
+    if(ml >= 15) return { amount: formatAmount(ml / 15, "大匙", 1), unit: "大匙" };
+    return { amount: formatAmount(ml / 5, "小匙", 1), unit: "小匙" };
+  }
 
   // 「採購」頁的完整內容：這次要煮全部需要的食材＋特殊調味料
   // （已排除常備調味料），加上使用者自己手動新增的項目，
@@ -9208,13 +9236,16 @@
     const dishes = getSelectedMenuDishes();
     const groups = {};
 
+    // type 不進 key：同一樣東西在A菜是食材、B菜是調味料時，
+    // 也要合併成一筆，不然清單上會看到兩個米酒
     function addToGroups(name, unit, amount, dishId, type){
       const canonicalName = normalizeIngredientName(name);
-      const key = canonicalName + '|' + unit + '|' + type;
+      const mUnit = toMergeUnit(unit);
+      const key = canonicalName + '|' + mUnit;
       if(!groups[key]){
-        groups[key] = { name: canonicalName, unit: unit, rawAmount: 0, sourceDishIds: [], type: type };
+        groups[key] = { name: canonicalName, unit: mUnit, rawAmount: 0, sourceDishIds: [], type: type };
       }
-      groups[key].rawAmount += amount;
+      groups[key].rawAmount += toMergeAmount(amount, unit);
       if(groups[key].sourceDishIds.indexOf(dishId) === -1){
         groups[key].sourceDishIds.push(dishId);
       }
@@ -9227,19 +9258,29 @@
         addToGroups(ing.name, ing.unit, ing.amount * ratio, dish.id, 'ingredient');
       });
       dish.seasonings.forEach(s => {
-        if(ALWAYS_STOCKED_SEASONINGS.indexOf(s.name) !== -1) return; // 常備調味料，永遠不列入
+        // 用標準名稱判斷常備，別名（例如「油」→沙拉油）才不會漏掉
+        if(ALWAYS_STOCKED_SEASONINGS.indexOf(normalizeIngredientName(s.name)) !== -1) return;
         addToGroups(s.name, s.unit, s.amount * ratio, dish.id, 'seasoning');
       });
     });
 
     const dishItems = Object.keys(groups).map(key => {
       const g = groups[key];
+      // unit 固定用合併單位（庫存比對的 key 要穩定），
+      // 畫面另外給一組好讀的數字
+      const disp = isBuyByPack(g.name)
+        ? { amount: '補貨', unit: '' }
+        : (g.unit === 'ml')
+          ? formatVolumeDisplay(g.rawAmount)
+          : { amount: formatAmount(g.rawAmount, g.unit, 1), unit: g.unit };
       return {
         name: g.name,
         amount: formatAmount(g.rawAmount, g.unit, 1),
         unit: g.unit,
+        displayAmount: disp.amount,
+        displayUnit: disp.unit,
         type: g.type,
-        category: g.type === 'seasoning' ? '調味料' : findIngredientCategoryByName(g.name),
+        category: findIngredientCategoryByName(g.name),
         sourceDishIds: g.sourceDishIds,
         source: 'dish'
       };
@@ -9373,7 +9414,7 @@
     { id:"ing115", name:"蘿蔔糕", icon:"🍘", category:"主食", aliases:[], matchNames:["蘿蔔糕"], commonUnits:["塊","片"], status:"confirmed", source:"official" },
     { id:"ing116", name:"酸菜", icon:"🥬", category:"蔬菜", aliases:[], matchNames:["酸菜"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing117", name:"鱈魚", icon:"🐟", category:"海鮮", aliases:[], matchNames:["鱈魚"], commonUnits:["片"], status:"confirmed", source:"official" },
-    { id:"ing118", name:"豆酥", icon:"🫘", category:"乾貨", aliases:[], matchNames:["豆酥"], commonUnits:["大匙","g"], status:"confirmed", source:"official" },
+    { id:"ing118", name:"豆酥", icon:"🫘", category:"乾貨", aliases:[], matchNames:["豆酥"], commonUnits:["大匙","g"], buyByPack:true, status:"confirmed", source:"official" },
     { id:"ing119", name:"南瓜", icon:"🎃", category:"蔬菜", aliases:[], matchNames:["南瓜"], commonUnits:["顆","g"], status:"confirmed", source:"official" },
     { id:"ing120", name:"秋葵", icon:"🥒", category:"蔬菜", aliases:[], matchNames:["秋葵"], commonUnits:["條"], status:"confirmed", source:"official" },
     { id:"ing121", name:"當歸", icon:"🌿", category:"調味辛香", aliases:[], matchNames:["當歸"], commonUnits:["片"], status:"confirmed", source:"official" },
@@ -9410,16 +9451,16 @@
     { id:"ing152", name:"蓮子", icon:"🌰", category:"乾貨", aliases:[], matchNames:["蓮子"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing153", name:"山藥", icon:"🍠", category:"蔬菜", aliases:[], matchNames:["山藥"], commonUnits:["段","g"], status:"confirmed", source:"official" },
     { id:"ing154", name:"西洋芹", icon:"🥬", category:"蔬菜", aliases:[], matchNames:["西洋芹"], commonUnits:["根"], status:"confirmed", source:"official" },
-    { id:"ing155", name:"太白粉", icon:"🥣", category:"調味辛香", aliases:[], matchNames:["太白粉"], commonUnits:["大匙","小匙","g"], status:"confirmed", source:"official" },
+    { id:"ing155", name:"太白粉", icon:"🥣", category:"調味辛香", aliases:[], matchNames:["太白粉"], commonUnits:["大匙","小匙","g"], buyByPack:true, status:"confirmed", source:"official" },
     { id:"ing156", name:"低筋麵粉", icon:"🌾", category:"調味辛香", aliases:[], matchNames:["低筋麵粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
     { id:"ing157", name:"高筋麵粉", icon:"🌾", category:"調味辛香", aliases:[], matchNames:["高筋麵粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
     { id:"ing158", name:"鬆餅粉", icon:"🥞", category:"調味辛香", aliases:[], matchNames:["鬆餅粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
-    { id:"ing159", name:"酥炸粉", icon:"🍤", category:"調味辛香", aliases:[], matchNames:["酥炸粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
+    { id:"ing159", name:"酥炸粉", icon:"🍤", category:"調味辛香", aliases:[], matchNames:["酥炸粉"], commonUnits:["g","杯"], buyByPack:true, status:"confirmed", source:"official" },
     { id:"ing160", name:"水蓮", icon:"🥬", category:"蔬菜", aliases:[], matchNames:["水蓮"], commonUnits:["把"], status:"confirmed", source:"official" },
     { id:"ing161", name:"鮭魚", icon:"🐟", category:"海鮮", aliases:[], matchNames:["鮭魚"], commonUnits:["片","g"], status:"confirmed", source:"official" },
     { id:"ing162", name:"秋刀魚", icon:"🐟", category:"海鮮", aliases:[], matchNames:["秋刀魚"], commonUnits:["尾"], status:"confirmed", source:"official" },
     { id:"ing163", name:"吐司", icon:"🍞", category:"主食", aliases:[], matchNames:["吐司"], commonUnits:["片"], status:"confirmed", source:"official" },
-    { id:"ing164", name:"咖哩塊", icon:"🍛", category:"調味辛香", aliases:[], matchNames:["咖哩塊"], commonUnits:["塊","盒"], status:"confirmed", source:"official" },
+    { id:"ing164", name:"咖哩塊", icon:"🍛", category:"調味辛香", aliases:[], matchNames:["咖哩塊"], commonUnits:["塊","盒"], buyByPack:true, status:"confirmed", source:"official" },
     { id:"ing165", name:"麵條", icon:"🍜", category:"主食", aliases:["油麵","拉麵"], matchNames:["麵條","油麵","拉麵"], commonUnits:["份","g"], status:"confirmed", source:"official" },
     { id:"ing166", name:"豬排", icon:"🍖", category:"肉類", aliases:["里肌肉排"], matchNames:["豬排","里肌肉排"], commonUnits:["片"], status:"confirmed", source:"official" },
     { id:"ing167", name:"香魚", icon:"🐟", category:"海鮮", aliases:[], matchNames:["香魚"], commonUnits:["尾"], status:"confirmed", source:"official" },
@@ -9471,17 +9512,64 @@
     { id:"ing076", name:"烏龍麵", icon:"🍜", category:"主食", aliases:[], matchNames:["烏龍麵"], commonUnits:["包"], status:"confirmed", source:"official" },
     { id:"ing077", name:"通心粉", icon:"🍝", category:"主食", aliases:[], matchNames:["通心粉"], commonUnits:["g"], status:"confirmed", source:"official" },
     // 乾貨
-    { id:"ing082", name:"蝦米", icon:"🦐", category:"乾貨", aliases:["開陽"], matchNames:["蝦米","開陽"], commonUnits:["g"], status:"confirmed", source:"official" },
-    { id:"ing083", name:"小魚乾", icon:"🐟", category:"乾貨", aliases:[], matchNames:["小魚乾"], commonUnits:["g"], status:"confirmed", source:"official" },
-    { id:"ing084", name:"豆豉", icon:"🫘", category:"乾貨", aliases:[], matchNames:["豆豉"], commonUnits:["大匙"], status:"confirmed", source:"official" },
-    { id:"ing085", name:"榨菜", icon:"🥬", category:"乾貨", aliases:[], matchNames:["榨菜"], commonUnits:["g"], status:"confirmed", source:"official" },
-    { id:"ing086", name:"冬菜", icon:"🥬", category:"乾貨", aliases:[], matchNames:["冬菜"], commonUnits:["大匙"], status:"confirmed", source:"official" },
+    { id:"ing082", name:"蝦米", icon:"🦐", category:"乾貨", aliases:["開陽"], matchNames:["蝦米","開陽"], commonUnits:["g"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing083", name:"小魚乾", icon:"🐟", category:"乾貨", aliases:[], matchNames:["小魚乾"], commonUnits:["g"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing084", name:"豆豉", icon:"🫘", category:"乾貨", aliases:[], matchNames:["豆豉"], commonUnits:["大匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing085", name:"榨菜", icon:"🥬", category:"乾貨", aliases:[], matchNames:["榨菜"], commonUnits:["g"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing086", name:"冬菜", icon:"🥬", category:"乾貨", aliases:[], matchNames:["冬菜"], commonUnits:["大匙"], buyByPack:true, status:"confirmed", source:"official" },
     // 其他
     { id:"ing042", name:"花生", icon:"🥜", category:"乾貨", aliases:[], matchNames:["花生"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing078", name:"檸檬", icon:"🍋", category:"水果", aliases:[], matchNames:["檸檬"], commonUnits:["顆"], status:"confirmed", source:"official" },
     { id:"ing079", name:"蘋果", icon:"🍎", category:"水果", aliases:[], matchNames:["蘋果"], commonUnits:["顆"], status:"confirmed", source:"official" },
     { id:"ing080", name:"鮮奶", icon:"🥛", category:"乳製品", aliases:[], matchNames:["鮮奶","牛奶"], commonUnits:["ml"], status:"confirmed", source:"official" },
-    { id:"ing081", name:"起司", icon:"🧀", category:"乳製品", aliases:["乳酪","起司片"], matchNames:["起司"], commonUnits:["片"], status:"confirmed", source:"official" }
+    { id:"ing081", name:"起司", icon:"🧀", category:"乳製品", aliases:["乳酪","起司片"], matchNames:["起司"], commonUnits:["片"], status:"confirmed", source:"official" },
+
+    // ---- 調味料：原本只存在各道菜的 seasonings 裡，沒有登錄成食材，
+    // 導致分類查不到（全歸「其他」）、新增項目的分類選單也找不到 ----
+    { id:"ing181", name:"鹽", icon:"🧂", category:"調味辛香", aliases:[], matchNames:["鹽"], commonUnits:["小匙","大匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing182", name:"糖", icon:"🍬", category:"調味辛香", aliases:[], matchNames:["糖"], commonUnits:["小匙","大匙","g"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing183", name:"醬油", icon:"🍶", category:"調味辛香", aliases:[], matchNames:["醬油"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing184", name:"米酒", icon:"🍶", category:"調味辛香", aliases:[], matchNames:["米酒"], commonUnits:["大匙","小匙","ml"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing185", name:"香油", icon:"🫗", category:"調味辛香", aliases:[], matchNames:["香油"], commonUnits:["小匙","大匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing186", name:"黑麻油", icon:"🫗", category:"調味辛香", aliases:["麻油"], matchNames:["黑麻油","麻油"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing187", name:"沙拉油", icon:"🫗", category:"調味辛香", aliases:["油"], matchNames:["沙拉油","油"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing188", name:"豬油", icon:"🫗", category:"調味辛香", aliases:[], matchNames:["豬油"], commonUnits:["小匙","大匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing189", name:"雞油", icon:"🫗", category:"調味辛香", aliases:[], matchNames:["雞油"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing190", name:"奶油", icon:"🧈", category:"調味辛香", aliases:[], matchNames:["奶油"], commonUnits:["大匙","g"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing191", name:"冰糖", icon:"🍬", category:"調味辛香", aliases:[], matchNames:["冰糖"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing192", name:"蜂蜜", icon:"🍯", category:"調味辛香", aliases:[], matchNames:["蜂蜜"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing193", name:"煉乳", icon:"🥛", category:"調味辛香", aliases:[], matchNames:["煉乳"], commonUnits:["大匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing194", name:"味醂", icon:"🍶", category:"調味辛香", aliases:[], matchNames:["味醂"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing195", name:"白醋", icon:"🧴", category:"調味辛香", aliases:["醋"], matchNames:["白醋","醋"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing196", name:"烏醋", icon:"🧴", category:"調味辛香", aliases:[], matchNames:["烏醋"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing197", name:"白胡椒粉", icon:"🧂", category:"調味辛香", aliases:[], matchNames:["白胡椒粉"], commonUnits:["小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing198", name:"黑胡椒粒", icon:"🧂", category:"調味辛香", aliases:["黑胡椒"], matchNames:["黑胡椒粒","黑胡椒"], commonUnits:["小匙","大匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing199", name:"五香粉", icon:"🧂", category:"調味辛香", aliases:[], matchNames:["五香粉"], commonUnits:["小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing200", name:"花椒粉", icon:"🧂", category:"調味辛香", aliases:[], matchNames:["花椒粉"], commonUnits:["小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing201", name:"胡椒鹽", icon:"🧂", category:"調味辛香", aliases:[], matchNames:["胡椒鹽"], commonUnits:["小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing202", name:"豆瓣醬", icon:"🥫", category:"調味辛香", aliases:[], matchNames:["豆瓣醬"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing203", name:"辣豆瓣醬", icon:"🥫", category:"調味辛香", aliases:[], matchNames:["辣豆瓣醬"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing204", name:"甜麵醬", icon:"🥫", category:"調味辛香", aliases:[], matchNames:["甜麵醬"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing205", name:"番茄醬", icon:"🥫", category:"調味辛香", aliases:[], matchNames:["番茄醬"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing206", name:"甜辣醬", icon:"🥫", category:"調味辛香", aliases:[], matchNames:["甜辣醬"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing207", name:"沙茶醬", icon:"🥫", category:"調味辛香", aliases:[], matchNames:["沙茶醬"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing208", name:"蠔油", icon:"🥫", category:"調味辛香", aliases:[], matchNames:["蠔油"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing209", name:"醬油膏", icon:"🥫", category:"調味辛香", aliases:[], matchNames:["醬油膏"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing210", name:"味噌", icon:"🥫", category:"調味辛香", aliases:[], matchNames:["味噌"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing211", name:"叉燒醬", icon:"🥫", category:"調味辛香", aliases:[], matchNames:["叉燒醬"], commonUnits:["大匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing212", name:"XO醬", icon:"🥫", category:"調味辛香", aliases:[], matchNames:["XO醬"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing213", name:"韭菜花醬", icon:"🥫", category:"調味辛香", aliases:[], matchNames:["韭菜花醬"], commonUnits:["大匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing214", name:"芝麻醬", icon:"🥫", category:"調味辛香", aliases:["胡麻醬"], matchNames:["芝麻醬","胡麻醬"], commonUnits:["大匙","小匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing215", name:"美乃滋", icon:"🥫", category:"調味辛香", aliases:[], matchNames:["美乃滋"], commonUnits:["大匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing216", name:"地瓜粉", icon:"🥣", category:"調味辛香", aliases:[], matchNames:["地瓜粉"], commonUnits:["大匙","g"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing217", name:"麵包粉", icon:"🥣", category:"調味辛香", aliases:[], matchNames:["麵包粉"], commonUnits:["杯","g"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing218", name:"花生粉", icon:"🥣", category:"調味辛香", aliases:[], matchNames:["花生粉"], commonUnits:["大匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing219", name:"白芝麻", icon:"🌰", category:"調味辛香", aliases:[], matchNames:["白芝麻"], commonUnits:["小匙","大匙"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing220", name:"柴魚片", icon:"🐟", category:"調味辛香", aliases:[], matchNames:["柴魚片"], commonUnits:["小把","g"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing221", name:"紫蘇葉", icon:"🌿", category:"調味辛香", aliases:[], matchNames:["紫蘇葉"], commonUnits:["片"], status:"confirmed", source:"official" },
+    { id:"ing222", name:"可樂", icon:"🥤", category:"其他", aliases:[], matchNames:["可樂"], commonUnits:["ml","罐"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing223", name:"紅茶包", icon:"🍵", category:"其他", aliases:[], matchNames:["紅茶包"], commonUnits:["包"], buyByPack:true, status:"confirmed", source:"official" },
+    { id:"ing224", name:"荸薺", icon:"🥔", category:"蔬菜", aliases:[], matchNames:["荸薺"], commonUnits:["顆"], status:"confirmed", source:"official" },
   ];
 
   const USER_CREATED_INGREDIENTS_KEY = 'jiachangzhu_user_created_ingredients_v1';
@@ -11046,7 +11134,11 @@
           '<span class="shopping-stepper-num">' + (parseInt(item.amount, 10) || 1) + '</span>' +
           '<button class="shopping-stepper-btn" data-stepper-key="' + key + '" data-step="1" aria-label="增加">＋</button>' +
         '</span>'
-      : '<span class="shopping-item-amount">' + (item.amount ? (item.unit ? item.amount + ' ' + item.unit : item.amount) : '') + '</span>';
+      : (function(){
+          const a = item.displayAmount != null ? item.displayAmount : item.amount;
+          const u = item.displayUnit != null ? item.displayUnit : item.unit;
+          return '<span class="shopping-item-amount">' + (a ? (u ? a + ' ' + u : a) : '') + '</span>';
+        })();
     return '<div class="shopping-item-wrap">' +
       '<div class="shopping-item-row' + (item.type === 'seasoning' ? ' seasoning' : '') + (item.status === 'have' ? ' checked' : '') + '">' +
         '<button class="shopping-item-toggle" data-item-key="' + key + '">' +
@@ -11185,7 +11277,7 @@
           const activeDishIds = (item.sourceDishIds || []).filter(id => selectedMenuDishIds.includes(id));
           html += '<div class="shopping-item-wrap">' +
             '<div class="inventory-item-row">' +
-              '<span class="inventory-item-name">' + item.name + (item.unit ? '（' + item.unit + '）' : '') + '</span>' +
+              '<span class="inventory-item-name">' + item.name + ((item.unit && !isBuyByPack(item.name)) ? '（' + item.unit + '）' : '') + '</span>' +
               '<span class="shopping-stepper">' +
                 '<button class="shopping-stepper-btn" data-inv-step-id="' + item.id + '" data-step="-1" aria-label="減少">−</button>' +
                 '<span class="shopping-stepper-num">' + qty + '</span>' +
