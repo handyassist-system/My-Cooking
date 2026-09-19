@@ -716,6 +716,13 @@
   .manual-add-form{padding:0 22px 18px; display:flex; flex-direction:column; gap:10px;}
   .manual-category-label{font-size:var(--fs-caption); font-weight:var(--weight-regular); color:var(--color-text-soft); margin:0;}
   .manual-category-row{padding:0; flex-wrap:wrap; overflow-x:visible;}
+  /* 分類帶出來的食材：三欄，跟「我有食材」的排版一致 */
+  .manual-ing-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;}
+  .manual-ing-pick{width:100%; min-height:44px; padding:8px 4px; font-size:var(--fs-caption);
+    font-weight:var(--weight-medium); color:var(--color-text); background:var(--color-surface);
+    border:1px solid var(--color-border); border-radius:10px; cursor:pointer; line-height:1.3;}
+  .manual-ing-pick:active{background:var(--color-accent-soft); border-color:var(--color-accent);}
+  .manual-ing-empty{font-size:var(--fs-caption); color:var(--color-text-soft); margin:0;}
   .shopping-group{padding:0 22px 20px;}
   .shopping-group-title{
     font-size:var(--fs-section); font-weight:var(--weight-bold); margin:0 0 10px;
@@ -8982,13 +8989,16 @@
   function isInSelectedMenu(id){
     return selectedMenuDishIds.includes(id);
   }
-  function addToSelectedMenu(id){
+  // servings：加入當下使用者在詳細頁調好的份量。沒帶就用食譜預設，
+  // 不能無視使用者剛調的人數直接套預設值
+  function addToSelectedMenu(id, servings){
     if(selectedMenuDishIds.includes(id)) return;
     selectedMenuDishIds.push(id);
-    if(!menuServingsMap[id]){
-      const dish = getDishById(id);
-      if(dish) menuServingsMap[id] = dish.servings;
-    }
+    const dish = getDishById(id);
+    const s = (typeof servings === 'number' && servings > 0)
+      ? servings
+      : (dish ? dish.servings : 1);
+    menuServingsMap[id] = Math.max(1, s);
     saveSelectedMenu();
     saveMenuServingsMap();
   }
@@ -9003,9 +9013,9 @@
       saveMealTimeMap();
     }
   }
-  function toggleSelectedMenu(id){
+  function toggleSelectedMenu(id, servings){
     if(isInSelectedMenu(id)){ removeFromSelectedMenu(id); }
-    else { addToSelectedMenu(id); }
+    else { addToSelectedMenu(id, servings); }
   }
   function getSelectedMenuDishes(){
     return selectedMenuDishIds.map(id => getDishById(id)).filter(Boolean);
@@ -9255,11 +9265,13 @@
   /* =========================================================
      分類清單：從資料動態取得，不寫死道數或分類數量
      ========================================================= */
-  const CATEGORY_ORDER = ["全部","家常菜","肉類","蛋料理","蔬菜","湯品"];
+  // 「全部」放最後：先看得到具體分類，最後才是不篩選
+  const CATEGORY_ORDER = ["家常菜","肉類","蛋料理","蔬菜","湯品"];
   function getCategoryChips(){
     const found = new Set(getSearchableDishes().map(d => d.category));
-    const ordered = CATEGORY_ORDER.filter(c => c === "全部" || found.has(c));
+    const ordered = CATEGORY_ORDER.filter(c => found.has(c));
     found.forEach(c => { if(!ordered.includes(c)) ordered.push(c); });
+    ordered.push("全部");
     return ordered;
   }
 
@@ -9341,10 +9353,10 @@
     { id:"ing095", name:"蜆仔", icon:"🐚", category:"海鮮", aliases:["蜊仔"], matchNames:["蜆仔"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing096", name:"芋頭", icon:"🍠", category:"蔬菜", aliases:[], matchNames:["芋頭"], commonUnits:["顆","g"], status:"confirmed", source:"official" },
     { id:"ing097", name:"筍", icon:"🎍", category:"蔬菜", aliases:["竹筍","筍絲"], matchNames:["筍","筍絲","竹筍"], commonUnits:["支","g"], status:"confirmed", source:"official" },
-    { id:"ing098", name:"栗子", icon:"🌰", category:"其他", aliases:[], matchNames:["栗子"], commonUnits:["顆","g"], status:"confirmed", source:"official" },
-    { id:"ing099", name:"鳳梨", icon:"🍍", category:"其他", aliases:[], matchNames:["鳳梨"], commonUnits:["片","g"], status:"confirmed", source:"official" },
+    { id:"ing098", name:"栗子", icon:"🌰", category:"乾貨", aliases:[], matchNames:["栗子"], commonUnits:["顆","g"], status:"confirmed", source:"official" },
+    { id:"ing099", name:"鳳梨", icon:"🍍", category:"水果", aliases:[], matchNames:["鳳梨"], commonUnits:["片","g"], status:"confirmed", source:"official" },
     { id:"ing100", name:"蹄膀", icon:"🍖", category:"肉類", aliases:["豬腳"], matchNames:["蹄膀","豬腳"], commonUnits:["個","g"], status:"confirmed", source:"official" },
-    { id:"ing101", name:"剝皮辣椒", icon:"🌶️", category:"辛香料", aliases:[], matchNames:["剝皮辣椒"], commonUnits:["條","g"], status:"confirmed", source:"official" },
+    { id:"ing101", name:"剝皮辣椒", icon:"🌶️", category:"調味辛香", aliases:[], matchNames:["剝皮辣椒"], commonUnits:["條","g"], status:"confirmed", source:"official" },
     { id:"ing102", name:"梅干菜", icon:"🥬", category:"蔬菜", aliases:["梅乾菜"], matchNames:["梅干菜","梅乾菜"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing103", name:"大腸", icon:"🍖", category:"肉類", aliases:[], matchNames:["大腸"], commonUnits:["g","條"], status:"confirmed", source:"official" },
     { id:"ing104", name:"芥蘭", icon:"🥬", category:"蔬菜", aliases:["芥蘭菜"], matchNames:["芥蘭"], commonUnits:["把"], status:"confirmed", source:"official" },
@@ -9356,16 +9368,16 @@
     { id:"ing110", name:"貢丸", icon:"🍖", category:"肉類", aliases:[], matchNames:["貢丸"], commonUnits:["顆","g"], status:"confirmed", source:"official" },
     { id:"ing111", name:"魚頭", icon:"🐟", category:"海鮮", aliases:[], matchNames:["魚頭"], commonUnits:["個"], status:"confirmed", source:"official" },
     { id:"ing112", name:"中卷", icon:"🦑", category:"海鮮", aliases:[], matchNames:["中卷"], commonUnits:["隻"], status:"confirmed", source:"official" },
-    { id:"ing113", name:"腰果", icon:"🥜", category:"其他", aliases:[], matchNames:["腰果"], commonUnits:["g"], status:"confirmed", source:"official" },
-    { id:"ing114", name:"枸杞", icon:"🍒", category:"其他", aliases:[], matchNames:["枸杞"], commonUnits:["大匙","g"], status:"confirmed", source:"official" },
+    { id:"ing113", name:"腰果", icon:"🥜", category:"乾貨", aliases:[], matchNames:["腰果"], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing114", name:"枸杞", icon:"🍒", category:"乾貨", aliases:[], matchNames:["枸杞"], commonUnits:["大匙","g"], status:"confirmed", source:"official" },
     { id:"ing115", name:"蘿蔔糕", icon:"🍘", category:"主食", aliases:[], matchNames:["蘿蔔糕"], commonUnits:["塊","片"], status:"confirmed", source:"official" },
     { id:"ing116", name:"酸菜", icon:"🥬", category:"蔬菜", aliases:[], matchNames:["酸菜"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing117", name:"鱈魚", icon:"🐟", category:"海鮮", aliases:[], matchNames:["鱈魚"], commonUnits:["片"], status:"confirmed", source:"official" },
     { id:"ing118", name:"豆酥", icon:"🫘", category:"乾貨", aliases:[], matchNames:["豆酥"], commonUnits:["大匙","g"], status:"confirmed", source:"official" },
     { id:"ing119", name:"南瓜", icon:"🎃", category:"蔬菜", aliases:[], matchNames:["南瓜"], commonUnits:["顆","g"], status:"confirmed", source:"official" },
     { id:"ing120", name:"秋葵", icon:"🥒", category:"蔬菜", aliases:[], matchNames:["秋葵"], commonUnits:["條"], status:"confirmed", source:"official" },
-    { id:"ing121", name:"當歸", icon:"🌿", category:"辛香料", aliases:[], matchNames:["當歸"], commonUnits:["片"], status:"confirmed", source:"official" },
-    { id:"ing122", name:"紅糟", icon:"🍷", category:"辛香料", aliases:[], matchNames:["紅糟"], commonUnits:["大匙"], status:"confirmed", source:"official" },
+    { id:"ing121", name:"當歸", icon:"🌿", category:"調味辛香", aliases:[], matchNames:["當歸"], commonUnits:["片"], status:"confirmed", source:"official" },
+    { id:"ing122", name:"紅糟", icon:"🍷", category:"調味辛香", aliases:[], matchNames:["紅糟"], commonUnits:["大匙"], status:"confirmed", source:"official" },
     { id:"ing123", name:"茶葉", icon:"🍵", category:"其他", aliases:["龍井茶葉"], matchNames:["茶葉","龍井茶葉"], commonUnits:["大匙"], status:"confirmed", source:"official" },
     { id:"ing124", name:"蟹肉棒", icon:"🦀", category:"海鮮", aliases:[], matchNames:["蟹肉棒"], commonUnits:["條"], status:"confirmed", source:"official" },
     { id:"ing125", name:"干貝", icon:"🦪", category:"海鮮", aliases:[], matchNames:["干貝"], commonUnits:["顆","g"], status:"confirmed", source:"official" },
@@ -9374,16 +9386,16 @@
     { id:"ing128", name:"麵線", icon:"🍜", category:"主食", aliases:[], matchNames:["麵線"], commonUnits:["把"], status:"confirmed", source:"official" },
     { id:"ing129", name:"泡麵", icon:"🍜", category:"主食", aliases:[], matchNames:["泡麵"], commonUnits:["包"], status:"confirmed", source:"official" },
     { id:"ing130", name:"蛋餅皮", icon:"🌯", category:"主食", aliases:[], matchNames:["蛋餅皮"], commonUnits:["片"], status:"confirmed", source:"official" },
-    { id:"ing131", name:"中筋麵粉", icon:"🌾", category:"主食", aliases:["麵粉"], matchNames:["中筋麵粉","麵粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
+    { id:"ing131", name:"中筋麵粉", icon:"🌾", category:"調味辛香", aliases:["麵粉"], matchNames:["中筋麵粉","麵粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
     { id:"ing132", name:"水餃皮", icon:"🥟", category:"主食", aliases:["餃子皮"], matchNames:["水餃皮","餃子皮"], commonUnits:["片"], status:"confirmed", source:"official" },
     { id:"ing133", name:"酵母", icon:"🍞", category:"其他", aliases:["酵母粉"], matchNames:["酵母","酵母粉"], commonUnits:["小匙"], status:"confirmed", source:"official" },
-    { id:"ing134", name:"在來米粉", icon:"🌾", category:"主食", aliases:[], matchNames:["在來米粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
+    { id:"ing134", name:"在來米粉", icon:"🌾", category:"調味辛香", aliases:[], matchNames:["在來米粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
     { id:"ing135", name:"肉鬆", icon:"🍖", category:"其他", aliases:[], matchNames:["肉鬆"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing136", name:"油條", icon:"🥖", category:"主食", aliases:[], matchNames:["油條"], commonUnits:["條"], status:"confirmed", source:"official" },
     { id:"ing137", name:"大閘蟹", icon:"🦀", category:"海鮮", aliases:[], matchNames:["大閘蟹"], commonUnits:["隻"], status:"confirmed", source:"official" },
     { id:"ing138", name:"羊肉", icon:"🐑", category:"肉類", aliases:[], matchNames:["羊肉","羊肉片"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing139", name:"糯米", icon:"🍚", category:"主食", aliases:["圓糯米"], matchNames:["糯米","圓糯米"], commonUnits:["米杯"], status:"confirmed", source:"official" },
-    { id:"ing140", name:"紅棗", icon:"🍒", category:"其他", aliases:[], matchNames:["紅棗"], commonUnits:["顆"], status:"confirmed", source:"official" },
+    { id:"ing140", name:"紅棗", icon:"🍒", category:"乾貨", aliases:[], matchNames:["紅棗"], commonUnits:["顆"], status:"confirmed", source:"official" },
     { id:"ing141", name:"蜜餞", icon:"🍬", category:"其他", aliases:["果乾"], matchNames:["蜜餞","果乾"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing142", name:"豆皮", icon:"🫘", category:"蛋豆製品", aliases:["腐皮"], matchNames:["豆皮","腐皮"], commonUnits:["片"], status:"confirmed", source:"official" },
     { id:"ing143", name:"醬瓜", icon:"🥒", category:"其他", aliases:["蔭瓜"], matchNames:["醬瓜","蔭瓜"], commonUnits:["大匙","罐"], status:"confirmed", source:"official" },
@@ -9393,21 +9405,21 @@
     { id:"ing147", name:"鴨血", icon:"🩸", category:"肉類", aliases:[], matchNames:["鴨血"], commonUnits:["塊","g"], status:"confirmed", source:"official" },
     { id:"ing148", name:"螺肉罐頭", icon:"🐚", category:"海鮮", aliases:["螺肉"], matchNames:["螺肉罐頭","螺肉"], commonUnits:["罐"], status:"confirmed", source:"official" },
     { id:"ing149", name:"青龍椒", icon:"🫑", category:"蔬菜", aliases:[], matchNames:["青龍椒"], commonUnits:["條","把"], status:"confirmed", source:"official" },
-    { id:"ing150", name:"茯苓", icon:"🌿", category:"其他", aliases:[], matchNames:["茯苓"], commonUnits:["g"], status:"confirmed", source:"official" },
-    { id:"ing151", name:"芡實", icon:"🌿", category:"其他", aliases:[], matchNames:["芡實"], commonUnits:["g"], status:"confirmed", source:"official" },
-    { id:"ing152", name:"蓮子", icon:"🌰", category:"其他", aliases:[], matchNames:["蓮子"], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing150", name:"茯苓", icon:"🌿", category:"乾貨", aliases:[], matchNames:["茯苓"], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing151", name:"芡實", icon:"🌿", category:"乾貨", aliases:[], matchNames:["芡實"], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing152", name:"蓮子", icon:"🌰", category:"乾貨", aliases:[], matchNames:["蓮子"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing153", name:"山藥", icon:"🍠", category:"蔬菜", aliases:[], matchNames:["山藥"], commonUnits:["段","g"], status:"confirmed", source:"official" },
     { id:"ing154", name:"西洋芹", icon:"🥬", category:"蔬菜", aliases:[], matchNames:["西洋芹"], commonUnits:["根"], status:"confirmed", source:"official" },
-    { id:"ing155", name:"太白粉", icon:"🥣", category:"調味料", aliases:[], matchNames:["太白粉"], commonUnits:["大匙","小匙","g"], status:"confirmed", source:"official" },
-    { id:"ing156", name:"低筋麵粉", icon:"🌾", category:"主食", aliases:[], matchNames:["低筋麵粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
-    { id:"ing157", name:"高筋麵粉", icon:"🌾", category:"主食", aliases:[], matchNames:["高筋麵粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
-    { id:"ing158", name:"鬆餅粉", icon:"🥞", category:"主食", aliases:[], matchNames:["鬆餅粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
-    { id:"ing159", name:"酥炸粉", icon:"🍤", category:"調味料", aliases:[], matchNames:["酥炸粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
+    { id:"ing155", name:"太白粉", icon:"🥣", category:"調味辛香", aliases:[], matchNames:["太白粉"], commonUnits:["大匙","小匙","g"], status:"confirmed", source:"official" },
+    { id:"ing156", name:"低筋麵粉", icon:"🌾", category:"調味辛香", aliases:[], matchNames:["低筋麵粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
+    { id:"ing157", name:"高筋麵粉", icon:"🌾", category:"調味辛香", aliases:[], matchNames:["高筋麵粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
+    { id:"ing158", name:"鬆餅粉", icon:"🥞", category:"調味辛香", aliases:[], matchNames:["鬆餅粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
+    { id:"ing159", name:"酥炸粉", icon:"🍤", category:"調味辛香", aliases:[], matchNames:["酥炸粉"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
     { id:"ing160", name:"水蓮", icon:"🥬", category:"蔬菜", aliases:[], matchNames:["水蓮"], commonUnits:["把"], status:"confirmed", source:"official" },
     { id:"ing161", name:"鮭魚", icon:"🐟", category:"海鮮", aliases:[], matchNames:["鮭魚"], commonUnits:["片","g"], status:"confirmed", source:"official" },
     { id:"ing162", name:"秋刀魚", icon:"🐟", category:"海鮮", aliases:[], matchNames:["秋刀魚"], commonUnits:["尾"], status:"confirmed", source:"official" },
     { id:"ing163", name:"吐司", icon:"🍞", category:"主食", aliases:[], matchNames:["吐司"], commonUnits:["片"], status:"confirmed", source:"official" },
-    { id:"ing164", name:"咖哩塊", icon:"🍛", category:"調味料", aliases:[], matchNames:["咖哩塊"], commonUnits:["塊","盒"], status:"confirmed", source:"official" },
+    { id:"ing164", name:"咖哩塊", icon:"🍛", category:"調味辛香", aliases:[], matchNames:["咖哩塊"], commonUnits:["塊","盒"], status:"confirmed", source:"official" },
     { id:"ing165", name:"麵條", icon:"🍜", category:"主食", aliases:["油麵","拉麵"], matchNames:["麵條","油麵","拉麵"], commonUnits:["份","g"], status:"confirmed", source:"official" },
     { id:"ing166", name:"豬排", icon:"🍖", category:"肉類", aliases:["里肌肉排"], matchNames:["豬排","里肌肉排"], commonUnits:["片"], status:"confirmed", source:"official" },
     { id:"ing167", name:"香魚", icon:"🐟", category:"海鮮", aliases:[], matchNames:["香魚"], commonUnits:["尾"], status:"confirmed", source:"official" },
@@ -9420,8 +9432,8 @@
     { id:"ing174", name:"梅花肉", icon:"🍖", category:"肉類", aliases:[], matchNames:["梅花肉"], commonUnits:["g","片"], status:"confirmed", source:"official" },
     { id:"ing175", name:"牛小排", icon:"🥩", category:"肉類", aliases:[], matchNames:["牛小排"], commonUnits:["片","g"], status:"confirmed", source:"official" },
     { id:"ing176", name:"魷魚", icon:"🦑", category:"海鮮", aliases:[], matchNames:["魷魚"], commonUnits:["尾","g"], status:"confirmed", source:"official" },
-    { id:"ing177", name:"紅豆", icon:"🫘", category:"其他", aliases:[], matchNames:["紅豆"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
-    { id:"ing178", name:"綠豆", icon:"🫘", category:"其他", aliases:[], matchNames:["綠豆"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
+    { id:"ing177", name:"紅豆", icon:"🫘", category:"乾貨", aliases:[], matchNames:["紅豆"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
+    { id:"ing178", name:"綠豆", icon:"🫘", category:"乾貨", aliases:[], matchNames:["綠豆"], commonUnits:["g","杯"], status:"confirmed", source:"official" },
     { id:"ing179", name:"金針", icon:"🌼", category:"蔬菜", aliases:["金針花","乾金針"], matchNames:["金針","金針花","乾金針"], commonUnits:["把","g"], status:"confirmed", source:"official" },
     { id:"ing180", name:"粉絲", icon:"🍜", category:"主食", aliases:[], matchNames:["粉絲"], commonUnits:["把","g"], status:"confirmed", source:"official" },
     // 蛋／豆製品
@@ -9440,17 +9452,17 @@
     { id:"ing067", name:"秀珍菇", icon:"🍄", category:"菇類", aliases:[], matchNames:["秀珍菇"], commonUnits:["包"], status:"confirmed", source:"official" },
     { id:"ing068", name:"木耳", icon:"🍄", category:"菇類", aliases:["黑木耳"], matchNames:["木耳","黑木耳"], commonUnits:["片","g"], status:"confirmed", source:"official" },
     // 辛香料
-    { id:"ing034", name:"蒜頭", icon:"🧄", category:"辛香料", aliases:["大蒜"], matchNames:["蒜頭","蒜末"], commonUnits:["瓣"], status:"confirmed", source:"official" },
-    { id:"ing035", name:"青蔥", icon:"🌿", category:"辛香料", aliases:["蔥"], matchNames:["蔥白","蔥花"], commonUnits:["根"], status:"confirmed", source:"official" },
-    { id:"ing036", name:"辣椒", icon:"🌶️", category:"辛香料", aliases:["乾辣椒"], matchNames:["乾辣椒"], commonUnits:["支"], status:"confirmed", source:"official" },
-    { id:"ing037", name:"薑", icon:"🫚", category:"辛香料", aliases:["生薑"], matchNames:["老薑","薑絲"], commonUnits:["塊"], status:"confirmed", source:"official" },
-    { id:"ing038", name:"九層塔", icon:"🌱", category:"辛香料", aliases:[], matchNames:["九層塔"], commonUnits:["把"], status:"confirmed", source:"official" },
-    { id:"ing069", name:"蒜苗", icon:"🧄", category:"辛香料", aliases:["蒜白"], matchNames:["蒜苗"], commonUnits:["支"], status:"confirmed", source:"official" },
-    { id:"ing070", name:"紅蔥頭", icon:"🧅", category:"辛香料", aliases:[], matchNames:["紅蔥頭","油蔥酥"], commonUnits:["顆"], status:"confirmed", source:"official" },
-    { id:"ing071", name:"香菜", icon:"🌿", category:"辛香料", aliases:["芫荽"], matchNames:["香菜"], commonUnits:["把"], status:"confirmed", source:"official" },
-    { id:"ing072", name:"月桂葉", icon:"🍃", category:"辛香料", aliases:[], matchNames:["月桂葉"], commonUnits:["片"], status:"confirmed", source:"official" },
-    { id:"ing073", name:"八角", icon:"⭐", category:"辛香料", aliases:[], matchNames:["八角"], commonUnits:["顆"], status:"confirmed", source:"official" },
-    { id:"ing074", name:"花椒粒", icon:"🌶️", category:"辛香料", aliases:[], matchNames:["花椒粒","花椒"], commonUnits:["小匙"], status:"confirmed", source:"official" },
+    { id:"ing034", name:"蒜頭", icon:"🧄", category:"調味辛香", aliases:["大蒜"], matchNames:["蒜頭","蒜末"], commonUnits:["瓣"], status:"confirmed", source:"official" },
+    { id:"ing035", name:"青蔥", icon:"🌿", category:"調味辛香", aliases:["蔥"], matchNames:["蔥白","蔥花"], commonUnits:["根"], status:"confirmed", source:"official" },
+    { id:"ing036", name:"辣椒", icon:"🌶️", category:"調味辛香", aliases:["乾辣椒"], matchNames:["乾辣椒"], commonUnits:["支"], status:"confirmed", source:"official" },
+    { id:"ing037", name:"薑", icon:"🫚", category:"調味辛香", aliases:["生薑"], matchNames:["老薑","薑絲"], commonUnits:["塊"], status:"confirmed", source:"official" },
+    { id:"ing038", name:"九層塔", icon:"🌱", category:"調味辛香", aliases:[], matchNames:["九層塔"], commonUnits:["把"], status:"confirmed", source:"official" },
+    { id:"ing069", name:"蒜苗", icon:"🧄", category:"調味辛香", aliases:["蒜白"], matchNames:["蒜苗"], commonUnits:["支"], status:"confirmed", source:"official" },
+    { id:"ing070", name:"紅蔥頭", icon:"🧅", category:"調味辛香", aliases:[], matchNames:["紅蔥頭","油蔥酥"], commonUnits:["顆"], status:"confirmed", source:"official" },
+    { id:"ing071", name:"香菜", icon:"🌿", category:"調味辛香", aliases:["芫荽"], matchNames:["香菜"], commonUnits:["把"], status:"confirmed", source:"official" },
+    { id:"ing072", name:"月桂葉", icon:"🍃", category:"調味辛香", aliases:[], matchNames:["月桂葉"], commonUnits:["片"], status:"confirmed", source:"official" },
+    { id:"ing073", name:"八角", icon:"⭐", category:"調味辛香", aliases:[], matchNames:["八角"], commonUnits:["顆"], status:"confirmed", source:"official" },
+    { id:"ing074", name:"花椒粒", icon:"🌶️", category:"調味辛香", aliases:[], matchNames:["花椒粒","花椒"], commonUnits:["小匙"], status:"confirmed", source:"official" },
     // 主食
     { id:"ing039", name:"白米", icon:"🍚", category:"主食", aliases:[], matchNames:["白米"], commonUnits:["米杯"], status:"confirmed", source:"official" },
     { id:"ing040", name:"麵", icon:"🍜", category:"主食", aliases:[], matchNames:[], commonUnits:["把"], status:"confirmed", source:"official" },
@@ -9465,11 +9477,11 @@
     { id:"ing085", name:"榨菜", icon:"🥬", category:"乾貨", aliases:[], matchNames:["榨菜"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing086", name:"冬菜", icon:"🥬", category:"乾貨", aliases:[], matchNames:["冬菜"], commonUnits:["大匙"], status:"confirmed", source:"official" },
     // 其他
-    { id:"ing042", name:"花生", icon:"🥜", category:"其他", aliases:[], matchNames:["花生"], commonUnits:["g"], status:"confirmed", source:"official" },
-    { id:"ing078", name:"檸檬", icon:"🍋", category:"其他", aliases:[], matchNames:["檸檬"], commonUnits:["顆"], status:"confirmed", source:"official" },
-    { id:"ing079", name:"蘋果", icon:"🍎", category:"其他", aliases:[], matchNames:["蘋果"], commonUnits:["顆"], status:"confirmed", source:"official" },
-    { id:"ing080", name:"鮮奶", icon:"🥛", category:"其他", aliases:[], matchNames:["鮮奶","牛奶"], commonUnits:["ml"], status:"confirmed", source:"official" },
-    { id:"ing081", name:"起司", icon:"🧀", category:"其他", aliases:["乳酪","起司片"], matchNames:["起司"], commonUnits:["片"], status:"confirmed", source:"official" }
+    { id:"ing042", name:"花生", icon:"🥜", category:"乾貨", aliases:[], matchNames:["花生"], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing078", name:"檸檬", icon:"🍋", category:"水果", aliases:[], matchNames:["檸檬"], commonUnits:["顆"], status:"confirmed", source:"official" },
+    { id:"ing079", name:"蘋果", icon:"🍎", category:"水果", aliases:[], matchNames:["蘋果"], commonUnits:["顆"], status:"confirmed", source:"official" },
+    { id:"ing080", name:"鮮奶", icon:"🥛", category:"乳製品", aliases:[], matchNames:["鮮奶","牛奶"], commonUnits:["ml"], status:"confirmed", source:"official" },
+    { id:"ing081", name:"起司", icon:"🧀", category:"乳製品", aliases:["乳酪","起司片"], matchNames:["起司"], commonUnits:["片"], status:"confirmed", source:"official" }
   ];
 
   const USER_CREATED_INGREDIENTS_KEY = 'jiachangzhu_user_created_ingredients_v1';
@@ -9517,14 +9529,16 @@
     return rawName;
   }
 
-  const INGREDIENT_CATEGORY_ORDER = ["蔬菜","肉類","雞肉","海鮮","蛋豆製品","菇類","辛香料","主食"];
+  // 「其他」永遠排最後——真的分不出來的才放那裡，不該擋在前面
+  const INGREDIENT_CATEGORY_ORDER = ["蔬菜","水果","肉類","雞肉","海鮮","蛋豆製品","乳製品","菇類","主食","調味辛香","乾貨"];
   function getIngredientCategories(){
     const found = new Set(getAllIngredients().map(e => e.category));
     const ordered = INGREDIENT_CATEGORY_ORDER.filter(c => found.has(c));
-    found.forEach(c => { if(!ordered.includes(c)) ordered.push(c); });
+    found.forEach(c => { if(!ordered.includes(c) && c !== "其他") ordered.push(c); });
+    if(found.has("其他")) ordered.push("其他");
     return ordered;
   }
-  const INGREDIENT_CATEGORY_ICON = { "蔬菜":"🥬", "肉類":"🥩", "雞肉":"🐔", "海鮮":"🐟", "蛋豆製品":"🥚", "菇類":"🍄", "辛香料":"🧅", "主食":"🍚" };
+  const INGREDIENT_CATEGORY_ICON = { "蔬菜":"🥬", "水果":"🍎", "肉類":"🥩", "雞肉":"🐔", "海鮮":"🐟", "蛋豆製品":"🥚", "乳製品":"🥛", "菇類":"🍄", "主食":"🍚", "調味辛香":"🧂", "乾貨":"🫘", "其他":"📦" };
   function ingredientCategoryIcon(cat){
     return INGREDIENT_CATEGORY_ICON[cat] || "🍽️";
   }
@@ -9759,13 +9773,23 @@
     }
   }
 
+  // 已經在「這次要煮」裡的菜，詳細頁調份量要即時寫回，
+  // 否則回今日料理／採購算的還是舊人數
+  function syncServingsToMenu(){
+    if(currentDish && isInSelectedMenu(currentDish.id)){
+      setMenuServings(currentDish.id, currentServings);
+    }
+  }
+
   function adjustServings(delta){
     currentServings = Math.max(1, currentServings + delta);
+    syncServingsToMenu();
     updateServingsUI();
   }
 
   function setServings(n){
     currentServings = Math.max(1, n);
+    syncServingsToMenu();
     updateServingsUI();
   }
 
@@ -9933,7 +9957,7 @@
   function bindSelectedMenuToggle(dish){
     document.getElementById('selectedMenuToggleBtn').addEventListener('click', () => {
       const wasIn = isInSelectedMenu(dish.id);
-      toggleSelectedMenu(dish.id);
+      toggleSelectedMenu(dish.id, currentServings);
       renderDetail(dish);
       window.scrollTo(0, 0);
       showToast(wasIn ? '已從這次要煮移除' : '已加入這次要煮・目前共 ' + selectedMenuDishIds.length + ' 道');
@@ -10864,12 +10888,56 @@
      在這裡，狀態（要買／已有）點一下就能切換，畫面永遠是
      computeShoppingOverview() 當下算出來的最新結果。
      ========================================================= */
-  const SHOPPING_CATEGORY_ORDER = ["肉類","雞肉","海鮮","蔬菜","蛋豆製品","菇類","辛香料","主食","調味料"];
-  const MANUAL_ITEM_CATEGORIES = ["蔬菜","肉類","雞肉","海鮮","蛋豆製品","菇類","辛香料","主食","調味料","其他"];
-  let manualItemCategory = "其他";
+  const SHOPPING_CATEGORY_ORDER = ["肉類","雞肉","海鮮","蔬菜","水果","蛋豆製品","乳製品","菇類","主食","調味辛香","乾貨","其他"];
+  const MANUAL_ITEM_CATEGORIES = ["蔬菜","水果","肉類","雞肉","海鮮","蛋豆製品","乳製品","菇類","主食","調味辛香","乾貨","其他"];
+  // 新增項目改成「先選分類 → 由分類帶出食材 → 點一下就加入」。
+  // 分類切換要重畫整個分頁，所以展開狀態與打到一半的字要存在
+  // 外面，不然一換分類表單就收起來、輸入的字也沒了
+  let manualItemCategory = "蔬菜";
+  let manualItemFormOpen = false;
+  let manualItemDraftName = "";
   let shoppingTab = "list"; // list=採購清單, inventory=我的庫存
   let signatureTab = "menu"; // menu=我的菜單, log=料理紀錄
-  let manualInventoryCategory = "其他";
+  let manualInventoryCategory = "蔬菜";
+  let manualInventoryFormOpen = false;
+  let manualInventoryDraftName = "";
+
+  // 分類底下實際有哪些食材，直接從食材庫撈，不另外維護一份名單
+  function getIngredientsByCategory(cat){
+    return getAllIngredients()
+      .filter(e => e.category === cat)
+      .map(e => e.name);
+  }
+
+  /* 新增表單的共用版型。shopping 版多一個數量欄位，inventory 版沒有。
+     cfg = { formId, catRowId, gridId, inputId, suggestId, confirmId,
+             activeCat, draft, withAmount, placeholder } */
+  function renderManualAddForm(cfg){
+    const names = getIngredientsByCategory(cfg.activeCat);
+    let html = '<div class="manual-add-form" id="' + cfg.formId + '">';
+    html += '<p class="manual-category-label">① 選分類</p>';
+    html += '<div class="chip-row manual-category-row" id="' + cfg.catRowId + '">' +
+      MANUAL_ITEM_CATEGORIES.map(cat =>
+        '<button class="chip' + (cat === cfg.activeCat ? ' active' : '') + '" data-manual-category="' + cat + '">' + cat + '</button>'
+      ).join('') + '</div>';
+    html += '<p class="manual-category-label">② 點一下加入</p>';
+    if(names.length > 0){
+      html += '<div class="manual-ing-grid" id="' + cfg.gridId + '">' +
+        names.map(n => '<button class="manual-ing-pick" data-pick-ing="' + n + '">' + n + '</button>').join('') +
+      '</div>';
+    } else {
+      html += '<p class="manual-ing-empty">這個分類目前沒有食材，請用下面的欄位自己輸入</p>';
+    }
+    html += '<p class="manual-category-label">找不到？自己輸入（會歸到上面選的分類）</p>';
+    html += '<input type="text" id="' + cfg.inputId + '" class="ai-name-input" placeholder="' + cfg.placeholder + '" autocomplete="off" value="' + cfg.draft.replace(/"/g, '&quot;') + '">';
+    html += '<div class="ing-suggest-box" id="' + cfg.suggestId + '"></div>';
+    if(cfg.withAmount){
+      html += '<input type="number" id="manualItemAmountInput" class="ai-name-input" placeholder="數量" value="1" min="1" style="margin-top:8px;">';
+    }
+    html += '<button class="ai-generate-btn" id="' + cfg.confirmId + '">加入</button>';
+    html += '</div>';
+    return html;
+  }
   // 我的庫存分頁專用：直接新增一筆到inventory，不透過
   // 採購清單勾選這條路徑，適合「朋友送的」「家裡本來就有」
   // 這種沒有經過採購流程的東西
@@ -11052,21 +11120,17 @@
     }
 
     html += '<div class="shopping-actions-row">';
-    html += '<button class="shopping-action-link" id="addManualItemBtn">＋ 新增採購項目</button>';
+    html += '<button class="shopping-action-link" id="addManualItemBtn">' + (manualItemFormOpen ? '✕ 收起' : '＋ 新增採購項目') + '</button>';
     html += '</div>';
 
-    html += '<div class="manual-add-form" id="manualAddForm" style="display:none;">' +
-      '<input type="text" id="manualItemInput" class="ai-name-input" placeholder="想買什麼？打字會從食材庫找" autocomplete="off">' +
-      '<div class="ing-suggest-box" id="manualItemSuggest"></div>' +
-      '<input type="number" id="manualItemAmountInput" class="ai-name-input" placeholder="數量" value="1" min="1" style="margin-top:8px;">' +
-      '<p class="manual-category-label">分類</p>' +
-      '<div class="chip-row manual-category-row" id="manualCategoryRow">' +
-        MANUAL_ITEM_CATEGORIES.map(cat =>
-          '<button class="chip' + (cat === manualItemCategory ? ' active' : '') + '" data-manual-category="' + cat + '">' + cat + '</button>'
-        ).join('') +
-      '</div>' +
-      '<button class="ai-generate-btn" id="confirmManualAddBtn">加入</button>' +
-    '</div>';
+    if(manualItemFormOpen){
+      html += renderManualAddForm({
+        formId:'manualAddForm', catRowId:'manualCategoryRow', gridId:'manualIngGrid',
+        inputId:'manualItemInput', suggestId:'manualItemSuggest', confirmId:'confirmManualAddBtn',
+        activeCat: manualItemCategory, draft: manualItemDraftName,
+        withAmount: true, placeholder:'例如 衛生紙、洗衣精'
+      });
+    }
 
     if(needItems.length === 0){
       html += '<div class="shopping-empty-state">' +
@@ -11089,20 +11153,17 @@
     let html = '<p class="menu-subtitle">手邊現有的食材／用品，跟今日料理是否用到無關</p>';
 
     html += '<div class="shopping-actions-row">';
-    html += '<button class="shopping-action-link" id="addInventoryItemBtn">＋ 新增庫存項目</button>';
+    html += '<button class="shopping-action-link" id="addInventoryItemBtn">' + (manualInventoryFormOpen ? '✕ 收起' : '＋ 新增庫存項目') + '</button>';
     html += '</div>';
 
-    html += '<div class="manual-add-form" id="manualInventoryForm" style="display:none;">' +
-      '<input type="text" id="manualInventoryInput" class="ai-name-input" placeholder="手邊有什麼？打字會從食材庫找" autocomplete="off">' +
-      '<div class="ing-suggest-box" id="manualInventorySuggest"></div>' +
-      '<p class="manual-category-label">分類</p>' +
-      '<div class="chip-row manual-category-row" id="manualInventoryCategoryRow">' +
-        MANUAL_ITEM_CATEGORIES.map(cat =>
-          '<button class="chip' + (cat === manualInventoryCategory ? ' active' : '') + '" data-manual-category="' + cat + '">' + cat + '</button>'
-        ).join('') +
-      '</div>' +
-      '<button class="ai-generate-btn" id="confirmManualInventoryBtn">加入</button>' +
-    '</div>';
+    if(manualInventoryFormOpen){
+      html += renderManualAddForm({
+        formId:'manualInventoryForm', catRowId:'manualInventoryCategoryRow', gridId:'manualInventoryIngGrid',
+        inputId:'manualInventoryInput', suggestId:'manualInventorySuggest', confirmId:'confirmManualInventoryBtn',
+        activeCat: manualInventoryCategory, draft: manualInventoryDraftName,
+        withAmount: false, placeholder:'例如 保鮮膜、家裡本來就有的東西'
+      });
+    }
 
     if(inventory.length === 0){
       html += '<div class="shopping-empty-state">' +
@@ -11165,12 +11226,25 @@
     const addBtn = document.getElementById('addInventoryItemBtn');
     if(addBtn){
       addBtn.addEventListener('click', () => {
-        manualInventoryCategory = '其他';
-        const form = document.getElementById('manualInventoryForm');
-        form.style.display = 'block';
-        document.getElementById('manualInventoryInput').focus();
+        manualInventoryFormOpen = !manualInventoryFormOpen;
+        manualInventoryDraftName = '';
+        renderInventoryTab();
       });
     }
+    document.querySelectorAll('#manualInventoryCategoryRow .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        manualInventoryCategory = chip.dataset.manualCategory;
+        manualInventoryDraftName = document.getElementById('manualInventoryInput').value;
+        renderInventoryTab();
+      });
+    });
+    document.querySelectorAll('#manualInventoryIngGrid [data-pick-ing]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        addManualInventoryItem(btn.dataset.pickIng, manualInventoryCategory);
+        showToast('已加入庫存・' + btn.dataset.pickIng);
+        renderInventoryTab();
+      });
+    });
     bindIngredientSuggest('manualInventoryInput', 'manualInventorySuggest', (name, cat) => {
       if(MANUAL_ITEM_CATEGORIES.indexOf(cat) !== -1){
         manualInventoryCategory = cat;
@@ -11179,19 +11253,14 @@
         });
       }
     });
-    document.querySelectorAll('#manualInventoryCategoryRow .chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        manualInventoryCategory = chip.dataset.manualCategory;
-        document.querySelectorAll('#manualInventoryCategoryRow .chip').forEach(c => {
-          c.classList.toggle('active', c.dataset.manualCategory === manualInventoryCategory);
-        });
-      });
-    });
     const confirmBtn = document.getElementById('confirmManualInventoryBtn');
     if(confirmBtn){
       confirmBtn.addEventListener('click', () => {
         const input = document.getElementById('manualInventoryInput');
+        if(!input.value.trim()) return;
         addManualInventoryItem(input.value, manualInventoryCategory);
+        manualInventoryDraftName = '';
+        showToast('已加入庫存');
         renderInventoryTab();
       });
     }
@@ -11254,14 +11323,27 @@
     const addBtn = document.getElementById('addManualItemBtn');
     if(addBtn){
       addBtn.addEventListener('click', () => {
-        manualItemCategory = '其他';
-        const form = document.getElementById('manualAddForm');
-        form.style.display = 'block';
-        const amountInput = document.getElementById('manualItemAmountInput');
-        if(amountInput) amountInput.value = '1';
-        document.getElementById('manualItemInput').focus();
+        manualItemFormOpen = !manualItemFormOpen;
+        manualItemDraftName = '';
+        renderShoppingView();
       });
     }
+    // 分類切換：重畫分頁把該分類的食材帶出來，表單保持展開
+    document.querySelectorAll('#manualCategoryRow .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        manualItemCategory = chip.dataset.manualCategory;
+        manualItemDraftName = document.getElementById('manualItemInput').value;
+        renderShoppingView();
+      });
+    });
+    // 點分類底下的食材＝直接加入，不用再按一次「加入」
+    document.querySelectorAll('#manualIngGrid [data-pick-ing]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        addManualShoppingItem(btn.dataset.pickIng, manualItemCategory, 1);
+        showToast('已加入採購・' + btn.dataset.pickIng);
+        renderShoppingView();
+      });
+    });
     bindIngredientSuggest('manualItemInput', 'manualItemSuggest', (name, cat) => {
       if(MANUAL_ITEM_CATEGORIES.indexOf(cat) !== -1){
         manualItemCategory = cat;
@@ -11270,20 +11352,15 @@
         });
       }
     });
-    document.querySelectorAll('#manualCategoryRow .chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        manualItemCategory = chip.dataset.manualCategory;
-        document.querySelectorAll('#manualCategoryRow .chip').forEach(c => {
-          c.classList.toggle('active', c.dataset.manualCategory === manualItemCategory);
-        });
-      });
-    });
     const confirmAddBtn = document.getElementById('confirmManualAddBtn');
     if(confirmAddBtn){
       confirmAddBtn.addEventListener('click', () => {
         const input = document.getElementById('manualItemInput');
+        if(!input.value.trim()) return;
         const amountInput = document.getElementById('manualItemAmountInput');
         addManualShoppingItem(input.value, manualItemCategory, amountInput ? amountInput.value : '');
+        manualItemDraftName = '';
+        showToast('已加入採購');
         renderShoppingView();
       });
     }
