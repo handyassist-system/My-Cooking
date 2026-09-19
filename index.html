@@ -707,7 +707,8 @@
   .menu-cta-hint{padding:0 22px 20px; font-size:var(--fs-caption); font-weight:var(--weight-regular); color:var(--color-text-soft); text-align:center;}
 
   /* ---------- 購物清單 ---------- */
-  .shopping-actions-row{display:flex; flex-wrap:wrap; gap:16px; padding:0 22px 14px;}
+  /* 新增鈕靠右上——是次要動作，不該擋在清單正上方 */
+  .shopping-actions-row{display:flex; flex-wrap:wrap; gap:16px; padding:0 22px 14px; justify-content:flex-end;}
   .shopping-action-link{
     background:none; border:none; padding:0;
     color:var(--color-accent-dark); font-size:var(--fs-caption); font-weight:var(--weight-semibold);
@@ -11197,7 +11198,20 @@
     const overview = computeShoppingOverview();
     const needItems = overview.filter(i => i.status === 'need');
 
-    let html = '<p class="menu-subtitle">這次要煮需要準備的全部食材，點一下標記已買，會移到我的庫存</p>';
+    let html = '<div class="shopping-actions-row">' +
+      '<button class="shopping-action-link" id="addManualItemBtn">' + (manualItemFormOpen ? '✕ 收起' : '＋ 新增項目') + '</button>' +
+    '</div>';
+
+    if(manualItemFormOpen){
+      html += renderManualAddForm({
+        formId:'manualAddForm', catRowId:'manualCategoryRow', gridId:'manualIngGrid',
+        inputId:'manualItemInput', suggestId:'manualItemSuggest', confirmId:'confirmManualAddBtn',
+        activeCat: manualItemCategory, draft: manualItemDraftName,
+        withAmount: true, placeholder:'例如 衛生紙、洗衣精'
+      });
+    }
+
+    html += '<p class="menu-subtitle">這次要煮需要準備的全部食材，點一下標記已買，會移到我的庫存</p>';
 
     // 頂端固定列出這次要煮的菜（不受買完與否影響）——買完菜
     // 回家後採購清單會變空，但這裡還看得到要煮什麼，點了直接進去
@@ -11209,19 +11223,6 @@
           menuDishes.map(d => '<button class="shopping-dish-link" data-link-dish="' + d.id + '">' + getDishIcon(d) + ' ' + d.name + '</button>').join('') +
         '</div>' +
       '</div>';
-    }
-
-    html += '<div class="shopping-actions-row">';
-    html += '<button class="shopping-action-link" id="addManualItemBtn">' + (manualItemFormOpen ? '✕ 收起' : '＋ 新增採購項目') + '</button>';
-    html += '</div>';
-
-    if(manualItemFormOpen){
-      html += renderManualAddForm({
-        formId:'manualAddForm', catRowId:'manualCategoryRow', gridId:'manualIngGrid',
-        inputId:'manualItemInput', suggestId:'manualItemSuggest', confirmId:'confirmManualAddBtn',
-        activeCat: manualItemCategory, draft: manualItemDraftName,
-        withAmount: true, placeholder:'例如 衛生紙、洗衣精'
-      });
     }
 
     if(needItems.length === 0){
@@ -11242,11 +11243,9 @@
   // 今日料理目前有沒有相關的菜影響，避免菜被移除後，已經
   // 標記「有」的東西就從畫面上完全消失、感覺像被刪除 ----------
   function renderInventoryTab(){
-    let html = '<p class="menu-subtitle">手邊現有的食材／用品，跟今日料理是否用到無關</p>';
-
-    html += '<div class="shopping-actions-row">';
-    html += '<button class="shopping-action-link" id="addInventoryItemBtn">' + (manualInventoryFormOpen ? '✕ 收起' : '＋ 新增庫存項目') + '</button>';
-    html += '</div>';
+    let html = '<div class="shopping-actions-row">' +
+      '<button class="shopping-action-link" id="addInventoryItemBtn">' + (manualInventoryFormOpen ? '✕ 收起' : '＋ 新增項目') + '</button>' +
+    '</div>';
 
     if(manualInventoryFormOpen){
       html += renderManualAddForm({
@@ -11256,6 +11255,8 @@
         withAmount: false, placeholder:'例如 保鮮膜、家裡本來就有的東西'
       });
     }
+
+    html += '<p class="menu-subtitle">手邊現有的食材／用品，跟今日料理是否用到無關</p>';
 
     if(inventory.length === 0){
       html += '<div class="shopping-empty-state">' +
@@ -11333,6 +11334,8 @@
     document.querySelectorAll('#manualInventoryIngGrid [data-pick-ing]').forEach(btn => {
       btn.addEventListener('click', () => {
         addManualInventoryItem(btn.dataset.pickIng, manualInventoryCategory);
+        manualInventoryFormOpen = false;
+        manualInventoryDraftName = '';
         showToast('已加入庫存・' + btn.dataset.pickIng);
         renderInventoryTab();
       });
@@ -11351,6 +11354,7 @@
         const input = document.getElementById('manualInventoryInput');
         if(!input.value.trim()) return;
         addManualInventoryItem(input.value, manualInventoryCategory);
+        manualInventoryFormOpen = false;
         manualInventoryDraftName = '';
         showToast('已加入庫存');
         renderInventoryTab();
@@ -11432,6 +11436,8 @@
     document.querySelectorAll('#manualIngGrid [data-pick-ing]').forEach(btn => {
       btn.addEventListener('click', () => {
         addManualShoppingItem(btn.dataset.pickIng, manualItemCategory, 1);
+        manualItemFormOpen = false; // 加完就收起，不用再按一次收回
+        manualItemDraftName = '';
         showToast('已加入採購・' + btn.dataset.pickIng);
         renderShoppingView();
       });
@@ -11451,6 +11457,7 @@
         if(!input.value.trim()) return;
         const amountInput = document.getElementById('manualItemAmountInput');
         addManualShoppingItem(input.value, manualItemCategory, amountInput ? amountInput.value : '');
+        manualItemFormOpen = false;
         manualItemDraftName = '';
         showToast('已加入採購');
         renderShoppingView();
