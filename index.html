@@ -717,14 +717,6 @@
   .manual-add-form{padding:0 22px 18px; display:flex; flex-direction:column; gap:10px;}
   .manual-category-label{font-size:var(--fs-caption); font-weight:var(--weight-regular); color:var(--color-text-soft); margin:0;}
   .manual-category-row{padding:0; flex-wrap:wrap; overflow-x:visible;}
-  /* 分類帶出來的食材：三欄，跟「我有食材」的排版一致 */
-  .manual-ing-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;}
-  .manual-ing-pick{width:100%; min-height:44px; padding:8px 4px; font-size:var(--fs-caption);
-    font-weight:var(--weight-medium); color:var(--color-text); background:var(--color-surface);
-    border:1px solid var(--color-border); border-radius:10px; cursor:pointer; line-height:1.3;}
-  .manual-ing-pick:active{background:var(--color-accent-soft); border-color:var(--color-accent);}
-  .manual-ing-pick.selected{background:var(--color-accent); border-color:var(--color-accent); color:#fff;}
-  .manual-ing-empty{font-size:var(--fs-caption); color:var(--color-text-soft); margin:0;}
   .manual-form-actions{display:flex; gap:10px; align-items:stretch;}
   .manual-form-actions .ai-generate-btn{flex:1; margin:0;}
   .manual-form-cancel{padding:12px 18px; font-size:var(--fs-body); font-weight:var(--weight-medium);
@@ -11037,38 +11029,23 @@
     manualInventoryDraftName = '';
   }
 
-  // 分類底下實際有哪些食材，直接從食材庫撈，不另外維護一份名單
-  function getIngredientsByCategory(cat){
-    return getAllIngredients()
-      .filter(e => e.category === cat)
-      .map(e => e.name);
-  }
-
   /* 新增表單的共用版型。shopping 版多一個數量欄位，inventory 版沒有。
-     cfg = { formId, catRowId, gridId, inputId, suggestId, confirmId,
+     cfg = { formId, catRowId, inputId, suggestId, confirmId, cancelId,
              activeCat, draft, withAmount, placeholder } */
   function renderManualAddForm(cfg){
-    const names = getIngredientsByCategory(cfg.activeCat);
     let html = '<div class="manual-add-form" id="' + cfg.formId + '">';
     html += '<p class="manual-category-label">選分類</p>';
     html += '<div class="chip-row manual-category-row" id="' + cfg.catRowId + '">' +
       MANUAL_ITEM_CATEGORIES.map(cat =>
         '<button class="chip' + (cat === cfg.activeCat ? ' active' : '') + '" data-manual-category="' + cat + '">' + cat + '</button>'
       ).join('') + '</div>';
-    html += '<p class="manual-category-label">選一項，或直接在下面打字</p>';
-    if(names.length > 0){
-      html += '<div class="manual-ing-grid" id="' + cfg.gridId + '">' +
-        names.map(n => '<button class="manual-ing-pick' + (n === cfg.draft ? ' selected' : '') + '" data-pick-ing="' + n + '">' + n + '</button>').join('') +
-      '</div>';
-    } else {
-      html += '<p class="manual-ing-empty">這個分類目前沒有食材，請直接在下面輸入</p>';
-    }
+    html += '<p class="manual-category-label">輸入名稱（打第一個字就會跳出建議）</p>';
     html += '<input type="text" id="' + cfg.inputId + '" class="ai-name-input" placeholder="' + cfg.placeholder + '" autocomplete="off" value="' + cfg.draft.replace(/"/g, '&quot;') + '">';
     html += '<div class="ing-suggest-box" id="' + cfg.suggestId + '"></div>';
     if(cfg.withAmount){
       html += '<input type="number" id="manualItemAmountInput" class="ai-name-input" placeholder="數量" value="1" min="1" style="margin-top:8px;">';
     }
-    // 一定要按「加入」才真的加進去，點食材只是選取
+    // 一定要按「加入」才真的加進去，挑建議只是帶入名稱
     html += '<div class="manual-form-actions">' +
       '<button class="manual-form-cancel" id="' + cfg.cancelId + '">取消</button>' +
       '<button class="ai-generate-btn" id="' + cfg.confirmId + '">加入</button>' +
@@ -11133,14 +11110,21 @@
   // 新增採購／庫存項目時的食材建議清單——輸入時從食材庫（179種）
   // 即時過濾，點選帶入名稱與分類，避免使用者打了「洋蔥」卻跟
   // 食材庫的洋蔥對不起來。找不到的還是可以直接打字新增
-  function renderIngredientSuggestions(query, listId){
+  // preferCat：目前選的分類優先排前面（採購／庫存的新增表單用），
+  // 但不完全過濾掉其他分類，免得使用者分類選錯就什麼都找不到
+  function renderIngredientSuggestions(query, listId, preferCat){
     const q = (query || '').trim().toLowerCase();
     if(!q) return '';
-    const matches = getAllIngredients().filter(e =>
+    let matches = getAllIngredients().filter(e =>
       e.name.toLowerCase().includes(q) ||
       (e.aliases || []).some(a => a.toLowerCase().includes(q)) ||
       (e.matchNames || []).some(a => a.toLowerCase().includes(q))
-    ).slice(0, 8);
+    );
+    if(preferCat){
+      matches = matches.slice().sort((a, b) =>
+        (b.category === preferCat ? 1 : 0) - (a.category === preferCat ? 1 : 0));
+    }
+    matches = matches.slice(0, preferCat ? 5 : 8);
     if(matches.length === 0){
       return '<p class="ing-suggest-empty">食材庫沒有「' + query + '」，可直接新增</p>';
     }
@@ -11155,12 +11139,13 @@
   }
 
   // 把建議清單接到某個輸入框上：打字即時更新、點選帶入名稱與分類
-  function bindIngredientSuggest(inputId, containerId, onPick){
+  function bindIngredientSuggest(inputId, containerId, onPick, getPreferCat){
     const input = document.getElementById(inputId);
     const box = document.getElementById(containerId);
     if(!input || !box) return;
     function refresh(){
-      box.innerHTML = renderIngredientSuggestions(input.value, containerId + 'List');
+      box.innerHTML = renderIngredientSuggestions(input.value, containerId + 'List',
+        getPreferCat ? getPreferCat() : null);
       box.querySelectorAll('[data-suggest-name]').forEach(btn => {
         btn.addEventListener('click', () => {
           input.value = btn.dataset.suggestName;
@@ -11253,11 +11238,11 @@
 
     if(manualItemFormOpen){
       html += renderManualAddForm({
-        formId:'manualAddForm', catRowId:'manualCategoryRow', gridId:'manualIngGrid',
+        formId:'manualAddForm', catRowId:'manualCategoryRow',
         inputId:'manualItemInput', suggestId:'manualItemSuggest', confirmId:'confirmManualAddBtn',
         cancelId:'cancelManualAddBtn',
         activeCat: manualItemCategory, draft: manualItemDraftName,
-        withAmount: true, placeholder:'例如 衛生紙、洗衣精'
+        withAmount: true, placeholder:'例如 洋蔥、衛生紙'
       });
     }
 
@@ -11299,11 +11284,11 @@
 
     if(manualInventoryFormOpen){
       html += renderManualAddForm({
-        formId:'manualInventoryForm', catRowId:'manualInventoryCategoryRow', gridId:'manualInventoryIngGrid',
+        formId:'manualInventoryForm', catRowId:'manualInventoryCategoryRow',
         inputId:'manualInventoryInput', suggestId:'manualInventorySuggest', confirmId:'confirmManualInventoryBtn',
         cancelId:'cancelManualInventoryBtn',
         activeCat: manualInventoryCategory, draft: manualInventoryDraftName,
-        withAmount: false, placeholder:'例如 保鮮膜、家裡本來就有的東西'
+        withAmount: false, placeholder:'例如 雞蛋、保鮮膜'
       });
     }
 
@@ -11378,24 +11363,20 @@
     document.querySelectorAll('#manualInventoryCategoryRow .chip').forEach(chip => {
       chip.addEventListener('click', () => {
         manualInventoryCategory = chip.dataset.manualCategory;
-        manualInventoryDraftName = document.getElementById('manualInventoryInput').value;
-        renderInventoryTab();
-      });
-    });
-    document.querySelectorAll('#manualInventoryIngGrid [data-pick-ing]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        manualInventoryDraftName = btn.dataset.pickIng;
-        document.getElementById('manualInventoryInput').value = manualInventoryDraftName;
-        document.querySelectorAll('#manualInventoryIngGrid [data-pick-ing]').forEach(b => {
-          b.classList.toggle('selected', b.dataset.pickIng === manualInventoryDraftName);
+        document.querySelectorAll('#manualInventoryCategoryRow .chip').forEach(c => {
+          c.classList.toggle('active', c.dataset.manualCategory === manualInventoryCategory);
         });
       });
     });
     bindIngredientSuggest('manualInventoryInput', 'manualInventorySuggest', (name, cat) => {
       manualInventoryDraftName = name;
-      if(MANUAL_ITEM_CATEGORIES.indexOf(cat) !== -1){ manualInventoryCategory = cat; }
-      renderInventoryTab();
-    });
+      if(MANUAL_ITEM_CATEGORIES.indexOf(cat) !== -1){
+        manualInventoryCategory = cat;
+        document.querySelectorAll('#manualInventoryCategoryRow .chip').forEach(c => {
+          c.classList.toggle('active', c.dataset.manualCategory === cat);
+        });
+      }
+    }, () => manualInventoryCategory);
     const cancelInvBtn = document.getElementById('cancelManualInventoryBtn');
     if(cancelInvBtn){
       cancelInvBtn.addEventListener('click', () => {
@@ -11480,32 +11461,25 @@
         renderShoppingView();
       });
     }
-    // 分類切換：重畫分頁把該分類的食材帶出來，表單保持展開
+    // 分類只影響建議的排序，換分類不用重畫整頁，表單也不會閃
     document.querySelectorAll('#manualCategoryRow .chip').forEach(chip => {
       chip.addEventListener('click', () => {
         manualItemCategory = chip.dataset.manualCategory;
-        manualItemDraftName = document.getElementById('manualItemInput').value;
-        renderShoppingView();
-      });
-    });
-    // 點分類底下的食材＝直接加入，不用再按一次「加入」
-    document.querySelectorAll('#manualIngGrid [data-pick-ing]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        // 只是選取，真正加入要按下面的「加入」
-        manualItemDraftName = btn.dataset.pickIng;
-        document.getElementById('manualItemInput').value = manualItemDraftName;
-        document.querySelectorAll('#manualIngGrid [data-pick-ing]').forEach(b => {
-          b.classList.toggle('selected', b.dataset.pickIng === manualItemDraftName);
+        document.querySelectorAll('#manualCategoryRow .chip').forEach(c => {
+          c.classList.toggle('active', c.dataset.manualCategory === manualItemCategory);
         });
       });
     });
-    // 從建議清單挑到的食材，連分類一起帶過去並重畫，
-    // 不然分類鈕亮的是A類、下面列的還是B類的食材
+    // 打字才跳建議；挑了就把名稱與分類一起帶進來
     bindIngredientSuggest('manualItemInput', 'manualItemSuggest', (name, cat) => {
       manualItemDraftName = name;
-      if(MANUAL_ITEM_CATEGORIES.indexOf(cat) !== -1){ manualItemCategory = cat; }
-      renderShoppingView();
-    });
+      if(MANUAL_ITEM_CATEGORIES.indexOf(cat) !== -1){
+        manualItemCategory = cat;
+        document.querySelectorAll('#manualCategoryRow .chip').forEach(c => {
+          c.classList.toggle('active', c.dataset.manualCategory === cat);
+        });
+      }
+    }, () => manualItemCategory);
     const cancelAddBtn = document.getElementById('cancelManualAddBtn');
     if(cancelAddBtn){
       cancelAddBtn.addEventListener('click', () => {
