@@ -8957,6 +8957,25 @@
        有沒有這一筆，點一下畫面上的項目就是切換 inventory。
      全部只用 localStorage，不會修改原始 DISHES。
      ========================================================= */
+  /* 使用者慣用人數。家裡幾個人吃是固定的，沒道理每道菜都要重調，
+     所以第一次預設 2 人，之後使用者調過幾次就記住幾人，
+     打開任何一道菜都直接用這個數字。原始食譜的 servings 不動，
+     只是換算的分母。 */
+  const DEFAULT_SERVINGS_KEY = 'jiachangzhu_default_servings_v1';
+  let defaultServings = 2;
+  (function loadDefaultServings(){
+    try {
+      const raw = parseInt(localStorage.getItem(DEFAULT_SERVINGS_KEY), 10);
+      if(raw > 0) defaultServings = raw;
+    } catch(e){}
+  })();
+  function setDefaultServings(n){
+    const v = Math.max(1, parseInt(n, 10) || 1);
+    if(v === defaultServings) return;
+    defaultServings = v;
+    try { localStorage.setItem(DEFAULT_SERVINGS_KEY, String(v)); } catch(e){}
+  }
+
   const MENU_SERVINGS_KEY = 'jiachangzhu_menu_servings_v1';
   let menuServingsMap = {};
   function loadMenuServingsMap(){
@@ -8973,7 +8992,7 @@
   function getMenuServings(dishId){
     if(menuServingsMap[dishId]) return menuServingsMap[dishId];
     const dish = getDishById(dishId);
-    return dish ? dish.servings : 1;
+    return defaultServings;
   }
   function setMenuServings(dishId, servings){
     menuServingsMap[dishId] = Math.max(1, servings);
@@ -9004,7 +9023,7 @@
     const dish = getDishById(id);
     const s = (typeof servings === 'number' && servings > 0)
       ? servings
-      : (dish ? dish.servings : 1);
+      : defaultServings;
     menuServingsMap[id] = Math.max(1, s);
     saveSelectedMenu();
     saveMenuServingsMap();
@@ -9810,7 +9829,12 @@
   function formatAmount(amount, unit, ratio){
     const metricUnits = ["g","kg","ml","l"];
     let val = amount * ratio;
-    val = metricUnits.includes(unit) ? Math.round(val) : Math.round(val * 2) / 2;
+    if(metricUnits.includes(unit)){
+      // 換算後的克數取整十，不要出現「333g」這種買不到也秤不準的數字
+      val = val >= 100 ? Math.round(val / 10) * 10 : Math.round(val);
+    } else {
+      val = Math.round(val * 2) / 2;
+    }
     return Number.isInteger(val) ? String(val) : val.toFixed(1);
   }
 
@@ -9878,12 +9902,14 @@
 
   function adjustServings(delta){
     currentServings = Math.max(1, currentServings + delta);
+    setDefaultServings(currentServings); // 記住慣用人數，下次不用再調
     syncServingsToMenu();
     updateServingsUI();
   }
 
   function setServings(n){
     currentServings = Math.max(1, n);
+    setDefaultServings(currentServings);
     syncServingsToMenu();
     updateServingsUI();
   }
@@ -10070,7 +10096,8 @@
     if(!dish) return;
     detailReturnScroll = (typeof window.scrollY === 'number') ? window.scrollY : 0;
     currentDish = dish;
-    currentServings = initialServings || dish.servings; // 若指定初始份量（例如來自這次要煮），優先使用
+    // 這次要煮裡的菜用它自己存的份量，其他一律用慣用人數（預設2人）
+    currentServings = initialServings || defaultServings;
     detailReturnView = returnView || 'find-recipe';
     document.querySelector('#view-detail .page-title').textContent = dish.name;
     renderDetail(dish);
@@ -10378,7 +10405,7 @@
         closeSheet();
         renderSignatureView();
       } else {
-        logCook(dish.id, currentServings || dish.servings, logModalRating, note);
+        logCook(dish.id, currentServings || defaultServings, logModalRating, note);
         showToast('已儲存料理紀錄');
         closeSheet();
       }
@@ -10790,7 +10817,7 @@
         '<div class="dish-card-meta">' +
           '<span class="tag">' + d.difficulty + '</span>' +
           '<span class="tag">' + (d.prepTime + d.cookTime) + ' 分鐘</span>' +
-          '<span class="tag">' + d.servings + ' 人份</span>' +
+          '<span class="tag">' + getMenuServings(d.id) + ' 人份</span>' +
         '</div>' +
         badge + missingLine +
       '</div>' +
