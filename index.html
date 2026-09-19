@@ -9715,6 +9715,8 @@
      ========================================================= */
   const views = { find:"view-find", detail:"view-detail", "selected-menu":"view-selected-menu", shopping:"view-shopping", signature:"view-signature", settings:"view-settings", admin:"view-admin", upgrade:"view-upgrade" };
   function navigate(name){
+    // 離開採購頁就把展開中的新增表單收掉
+    if(name !== 'shopping' && typeof closeManualForms === 'function'){ closeManualForms(); }
     Object.values(views).forEach(id => document.getElementById(id).classList.remove('active'));
     document.getElementById(views[name]).classList.add('active');
 
@@ -10269,10 +10271,12 @@
   document.getElementById('findBackBtn').addEventListener('click', () => findGoBack());
   document.getElementById('shoppingTabList').addEventListener('click', () => {
     shoppingTab = 'list';
+    closeManualForms(); // 切分頁時收掉展開中的新增表單，不要一直佔著畫面
     renderShoppingView();
   });
   document.getElementById('shoppingTabInventory').addEventListener('click', () => {
     shoppingTab = 'inventory';
+    closeManualForms();
     renderShoppingView();
   });
   document.getElementById('signatureTabMenu').addEventListener('click', () => {
@@ -11024,6 +11028,15 @@
   let manualInventoryFormOpen = false;
   let manualInventoryDraftName = "";
 
+  // 離開／切換分頁時把展開中的新增表單收掉，回來才不會看到
+  // 一個沒人要用的表單一直佔著畫面
+  function closeManualForms(){
+    manualItemFormOpen = false;
+    manualItemDraftName = '';
+    manualInventoryFormOpen = false;
+    manualInventoryDraftName = '';
+  }
+
   // 分類底下實際有哪些食材，直接從食材庫撈，不另外維護一份名單
   function getIngredientsByCategory(cat){
     return getAllIngredients()
@@ -11037,12 +11050,12 @@
   function renderManualAddForm(cfg){
     const names = getIngredientsByCategory(cfg.activeCat);
     let html = '<div class="manual-add-form" id="' + cfg.formId + '">';
-    html += '<p class="manual-category-label">① 選分類</p>';
+    html += '<p class="manual-category-label">選分類</p>';
     html += '<div class="chip-row manual-category-row" id="' + cfg.catRowId + '">' +
       MANUAL_ITEM_CATEGORIES.map(cat =>
         '<button class="chip' + (cat === cfg.activeCat ? ' active' : '') + '" data-manual-category="' + cat + '">' + cat + '</button>'
       ).join('') + '</div>';
-    html += '<p class="manual-category-label">② 選一項（也可以直接在下面打字）</p>';
+    html += '<p class="manual-category-label">選一項，或直接在下面打字</p>';
     if(names.length > 0){
       html += '<div class="manual-ing-grid" id="' + cfg.gridId + '">' +
         names.map(n => '<button class="manual-ing-pick' + (n === cfg.draft ? ' selected' : '') + '" data-pick-ing="' + n + '">' + n + '</button>').join('') +
@@ -11058,7 +11071,7 @@
     // 一定要按「加入」才真的加進去，點食材只是選取
     html += '<div class="manual-form-actions">' +
       '<button class="manual-form-cancel" id="' + cfg.cancelId + '">取消</button>' +
-      '<button class="ai-generate-btn" id="' + cfg.confirmId + '">③ 加入</button>' +
+      '<button class="ai-generate-btn" id="' + cfg.confirmId + '">加入</button>' +
     '</div>';
     html += '</div>';
     return html;
@@ -11379,12 +11392,9 @@
       });
     });
     bindIngredientSuggest('manualInventoryInput', 'manualInventorySuggest', (name, cat) => {
-      if(MANUAL_ITEM_CATEGORIES.indexOf(cat) !== -1){
-        manualInventoryCategory = cat;
-        document.querySelectorAll('#manualInventoryCategoryRow .chip').forEach(c => {
-          c.classList.toggle('active', c.dataset.manualCategory === cat);
-        });
-      }
+      manualInventoryDraftName = name;
+      if(MANUAL_ITEM_CATEGORIES.indexOf(cat) !== -1){ manualInventoryCategory = cat; }
+      renderInventoryTab();
     });
     const cancelInvBtn = document.getElementById('cancelManualInventoryBtn');
     if(cancelInvBtn){
@@ -11489,13 +11499,12 @@
         });
       });
     });
+    // 從建議清單挑到的食材，連分類一起帶過去並重畫，
+    // 不然分類鈕亮的是A類、下面列的還是B類的食材
     bindIngredientSuggest('manualItemInput', 'manualItemSuggest', (name, cat) => {
-      if(MANUAL_ITEM_CATEGORIES.indexOf(cat) !== -1){
-        manualItemCategory = cat;
-        document.querySelectorAll('#manualCategoryRow .chip').forEach(c => {
-          c.classList.toggle('active', c.dataset.manualCategory === cat);
-        });
-      }
+      manualItemDraftName = name;
+      if(MANUAL_ITEM_CATEGORIES.indexOf(cat) !== -1){ manualItemCategory = cat; }
+      renderShoppingView();
     });
     const cancelAddBtn = document.getElementById('cancelManualAddBtn');
     if(cancelAddBtn){
