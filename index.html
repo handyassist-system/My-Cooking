@@ -967,6 +967,12 @@
     cursor:pointer; -webkit-tap-highlight-color:transparent;
   }
   .btn-primary:disabled{opacity:0.6;}
+  /* 管理員登入：次要按鈕（有框線、無底色），跟行事曆同一套 */
+  .btn-secondary{
+    width:100%; margin-top:14px; padding:12px; border-radius:var(--radius-lg);
+    background:transparent; color:var(--color-accent); border:1.5px solid var(--color-accent);
+    font-size:var(--fs-body); font-weight:var(--weight-semibold); font-family:var(--font-family); cursor:pointer;
+  }
   .login-msg{margin-top:12px; font-size:var(--fs-label); color:var(--color-accent-dark); min-height:16px; line-height:var(--lh-base);}
   .install-hint-btn{
     width:100%; margin-top:14px; padding:12px; border-radius:var(--radius-md);
@@ -1051,6 +1057,13 @@
     <label class="login-consent"><input type="checkbox" id="agreeChk"> <span>我已閱讀並同意 <a id="termsLink" class="login-terms-link">《服務條款與隱私政策》</a></span></label>
     <button id="loginBtn" class="btn-primary">登入</button>
     <div id="loginMsg" class="login-msg"></div>
+    <button id="adminLoginToggle" type="button" class="btn-secondary">🔧 管理員登入</button>
+    <div id="adminLoginBox" style="display:none; margin-top:12px; text-align:left;">
+      <input id="adminEmailInput" class="code-input" type="email" inputmode="email" autocomplete="username" placeholder="管理員 Email" style="margin-top:8px;">
+      <input id="adminPwInput" class="code-input" type="password" autocomplete="current-password" placeholder="密碼" style="margin-top:8px;">
+      <button id="adminLoginBtn" type="button" class="btn-primary" style="margin-top:12px;">管理員登入</button>
+      <div id="adminLoginMsg" class="login-msg" style="text-align:center;"></div>
+    </div>
     <button id="installHintBtn" type="button" class="install-hint-btn" style="display:none;">📲 安裝到手機桌面</button>
     <div id="installProgress" class="install-progress" style="display:none;">
       <div class="install-progress-check">✅ 已開始安裝</div>
@@ -1367,7 +1380,7 @@
   //  APP_VERSION = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
   //  BUILD_ID    = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
   const APP_VERSION = "v1.0";
-  const BUILD_ID = "0922-3";
+  const BUILD_ID = "0922-4";
   function appVersionText(){
     return APP_VERSION + ((typeof state!=="undefined" && state && state.isAdmin) ? " · " + BUILD_ID : "");
   }
@@ -1794,18 +1807,63 @@
   }
 
   var AUTH_KEY="cal_auth_email";
+  // D1：開 App 以 Firebase 的登入身分為準，手機裡存的 email 不再當作身分證明
   async function autoLogin(){
-    var saved; try{ saved=localStorage.getItem(AUTH_KEY); }catch(e){ saved=null; }
-    if(!saved) return false;
-    if(saved.toLowerCase()===ADMIN_EMAIL){ state.isAdmin=true; state.user=saved; state.plan="full"; enterApp(); return true; }
-    await finishCustomerLogin(saved);
+    if(!auth){
+      // Firebase 沒載入（多半完全沒網路）→ 用上次登入的帳號，方案走 3 天寬限；管理員不開放離線
+      var saved; try{ saved=localStorage.getItem(AUTH_KEY); }catch(e){ saved=null; }
+      if(!saved || saved.toLowerCase()===ADMIN_EMAIL) return false;
+      await finishCustomerLogin(saved);
+      return true;
+    }
+    var u=await waitAuthReady();
+    if(!u || !u.email) return false;
+    if(u.email.toLowerCase()===ADMIN_EMAIL){ state.isAdmin=true; state.user=u.email; state.plan="full"; localStorage.setItem(AUTH_KEY,u.email); enterApp(); return true; }
+    await finishCustomerLogin(u.email);
     return true;
   }
+
+  // 管理員登入：Email＋密碼（密碼存在 Firebase，程式裡沒有）
+  async function adminLogin(){
+    var em=document.getElementById('adminEmailInput').value.trim(), pw=document.getElementById('adminPwInput').value;
+    var msg=document.getElementById('adminLoginMsg'), btn=document.getElementById('adminLoginBtn');
+    msg.textContent='';
+    if(!em || !pw){ msg.textContent='請輸入 Email 和密碼'; return; }
+    if(!auth){ msg.textContent='登入服務暫時無法使用，請確認網路後再試'; return; }
+    btn.disabled=true; btn.textContent='登入中…';
+    try{
+      var cred=await auth.signInWithEmailAndPassword(em, pw);
+      if(!cred.user || String(cred.user.email||'').toLowerCase()!==ADMIN_EMAIL){
+        try{ await auth.signOut(); }catch(e){}
+        msg.textContent='這個帳號不是管理員';
+      } else {
+        _authReadyPromise=null; document.getElementById('adminPwInput').value='';
+        state.isAdmin=true; state.user=cred.user.email; state.plan='full';
+        localStorage.setItem(AUTH_KEY,cred.user.email);
+        enterApp();
+      }
+    }catch(e){
+      var c=(e&&e.code)||'';
+      msg.textContent=(c==='auth/wrong-password'||c==='auth/invalid-credential'||c==='auth/user-not-found'||c==='auth/invalid-login-credentials') ? 'Email 或密碼錯誤'
+        : (c==='auth/too-many-requests') ? '嘗試次數太多，請稍後再試'
+        : '登入失敗，請確認網路後再試';
+    }
+    btn.disabled=false; btn.textContent='管理員登入';
+  }
+  (function(){
+    var t=document.getElementById('adminLoginToggle'), box=document.getElementById('adminLoginBox');
+    if(t && box) t.addEventListener('click', function(){ box.style.display = box.style.display==='none' ? 'block' : 'none'; });
+    var b=document.getElementById('adminLoginBtn'); if(b) b.addEventListener('click', adminLogin);
+    var pwi=document.getElementById('adminPwInput'); if(pwi) pwi.addEventListener('keydown', function(e){ if(e.key==='Enter') adminLogin(); });
+  })();
 
   function doLogout(){
     localStorage.removeItem(AUTH_KEY);
     localStorage.removeItem("cal_admin_on");
-    location.reload();
+    // 登出 Firebase 後才重新整理，否則下次打開還是登入狀態
+    var _go=function(){ location.reload(); };
+    try{ if(auth){ auth.signOut().then(_go, _go); return; } }catch(e){}
+    _go();
   }
 
   /* =========================================================
