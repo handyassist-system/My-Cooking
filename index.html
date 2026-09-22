@@ -1364,7 +1364,7 @@
   }
 
   // 版本號：設定頁與我的菜單頁底部顯示，客服對單時用。每次交付更新這裡
-  const APP_VERSION = "v2026.09.22-1　單一付費版與新手引導";
+  const APP_VERSION = "v2026.09.22-2　離線寬限3天";
   const ADMIN_EMAIL = "mp65p@hotmail.com";
   // LINE官方帳號——客服聯繫管道。付款流程之後改接藍新金流，
   // LINE只負責問題諮詢，不再是升級付款的管道
@@ -1450,17 +1450,50 @@
     try{ db.ref("jiachangzhu_subscribers/"+key+"/deviceLimit").set(limit); }catch(e){}
     return {ok:true};
   }
+  /* ===== D2 離線寬限（智在生活 Standard）=====
+     每次成功連上雲端確認方案，就記下「方案＋到期日＋確認時間」。
+     連不上時：被拒絕（沒權限）→ 免費版；沒網路 → 上次確認 3 天內
+     且沒過到期日才沿用，否則降為免費版，等有網路再恢復。
+     Firebase 沒網路時讀取不會失敗而是一直等，所以最多等 8 秒就當沒網路。 */
+  var PLAN_CACHE_KEY = "jiachangzhu_plan_cache";
+  var PLAN_GRACE_MS = 3*86400000;
+  var VERIFY_TIMEOUT_MS = 8000;
+  function withTimeout(p, ms){
+    return Promise.race([p, new Promise(function(_, rej){
+      setTimeout(function(){ var e=new Error("timeout"); e.code="TIMEOUT"; rej(e); }, ms);
+    })]);
+  }
+  function isPermissionDenied(e){
+    var c=String((e&&e.code)||"").toUpperCase(), m=String((e&&e.message)||"");
+    return c.indexOf("PERMISSION")>=0 || /permission/i.test(m);
+  }
+  function savePlanCache(email, plan, expiry){
+    try{ localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify({ email:String(email||"").toLowerCase(), plan:plan, expiry:expiry||"", verifiedAt:Date.now() })); }catch(e){}
+  }
+  function planFromCache(email){
+    var c=null; try{ c=JSON.parse(localStorage.getItem(PLAN_CACHE_KEY)||"null"); }catch(e){}
+    if(!c || c.email!==String(email||"").toLowerCase() || !c.verifiedAt) return "free";
+    var now=Date.now();
+    if(now < c.verifiedAt || now - c.verifiedAt > PLAN_GRACE_MS) return "free";   // 超過 3 天（或手機時間被調回去）
+    if(c.expiry){ var exp=Date.parse(c.expiry+"T23:59:59"); if(exp && now>exp) return "free"; }
+    return c.plan || "free";
+  }
+
   async function verifyCustomer(email){
     var key=emailKey(email);
     var now=await getServerTime();
     var snap;
-    try{ snap=await db.ref("jiachangzhu_subscribers/"+key).once("value"); }
-    catch(e){ return { ok:true, plan: (localStorage.getItem("cal_plan")||"free") }; }
+    try{ snap=await withTimeout(db.ref("jiachangzhu_subscribers/"+key).once("value"), VERIFY_TIMEOUT_MS); }
+    catch(e){
+      if(isPermissionDenied(e)) return { ok:true, plan:"free", offline:true };
+      return { ok:true, plan:planFromCache(email), offline:true };
+    }
     var sub=snap.val();
     if(!sub){
       var expTs=now+7*86400000;
       var rec={ email:email, plan:"trial", expiry:_ymdTs(expTs), status:"active", deviceLimit:2, createdAt:now, lastSeen:now, devices:{} };
       try{ await db.ref("jiachangzhu_subscribers/"+key).set(rec); }catch(e){}
+      savePlanCache(email, "trial", rec.expiry);
       return { ok:true, plan:"trial", expiry:rec.expiry, newTrial:true };
     }
     if(sub.status==="disabled") return { ok:false, msg:"此帳號已停用，請聯繫客服" };
@@ -1468,6 +1501,7 @@
     var expMs = sub.expiry ? Date.parse(sub.expiry+"T23:59:59") : 0;
     var expired = expMs && now>expMs;
     var effPlan = expired ? "free" : (sub.plan||"free");
+    savePlanCache(email, effPlan, sub.expiry);
     return { ok:true, plan:effPlan, expiry:sub.expiry, expired:!!expired };
   }
 
@@ -1629,14 +1663,18 @@
   async function finishCustomerLogin(email){
     loginBtn.disabled=true; loginBtn.textContent="驗證中…";
     var res;
-    try{ res=await verifyCustomer(email); }catch(e){ res={ok:true,plan:"free"}; }
+    try{ res=await verifyCustomer(email); }catch(e){ res={ok:true,plan:planFromCache(email),offline:true}; }
     loginBtn.disabled=false; loginBtn.textContent="登入";
     if(!res.ok){ loginMsg.textContent=res.msg||"無法登入，請聯繫客服"; return; }
-    var _dev=await checkDevice(email, res.plan);
+    // 沒網路時無法檢查裝置數，直接放行（方案已由寬限規則限制）
+    var _dev = res.offline ? {ok:true} : await checkDevice(email, res.plan);
     if(!_dev.ok){ showDeviceLimit(email, res.plan, _dev.limit); return; }
     var _prevPlan; try{ _prevPlan=localStorage.getItem("cal_plan"); }catch(e){}
     state.isAdmin=false; state.user=email; state.plan=res.plan;
     localStorage.setItem(AUTH_KEY,email);
+    // 離線的結果只是暫時的，不寫進 cal_plan、也不跳升級／到期通知，
+    // 否則恢復網路時會誤判成「剛升級成功」
+    if(res.offline){ enterApp(); return; }
     try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
     if(res.newTrial){
       showTrialWelcome(res.expiry);
