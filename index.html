@@ -1363,8 +1363,14 @@
     render();
   }
 
-  // 版本號：設定頁與我的菜單頁底部顯示，客服對單時用。每次交付更新這裡
-  const APP_VERSION = "v2026.09.22-2　離線寬限3天";
+  // 版本號規則（智在生活 Standard）：
+  //  APP_VERSION = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
+  //  BUILD_ID    = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
+  const APP_VERSION = "v1.0";
+  const BUILD_ID = "0922-3";
+  function appVersionText(){
+    return APP_VERSION + ((typeof state!=="undefined" && state && state.isAdmin) ? " · " + BUILD_ID : "");
+  }
   const ADMIN_EMAIL = "mp65p@hotmail.com";
   // LINE官方帳號——客服聯繫管道。付款流程之後改接藍新金流，
   // LINE只負責問題諮詢，不再是升級付款的管道
@@ -2076,7 +2082,7 @@
     html += '<button class="settings-row" id="contactSupportBtn"><span class="settings-row-icon">💬</span><span class="settings-row-label">聯繫客服</span></button>';
     html += '<button class="settings-row danger" id="logoutBtn"><span class="settings-row-icon">🚪</span><span class="settings-row-label">登出</span></button>';
     html += '</div>';
-    html += '<p class="app-version">' + APP_VERSION + '</p>';
+    html += '<p class="app-version">' + appVersionText() + '</p>';
     document.getElementById('settingsContent').innerHTML = html;
     bindSettingsViewEvents();
   }
@@ -11747,7 +11753,7 @@
         '</div>'
       ).join('') + '</div>';
     }
-    html += '<p class="app-version">' + APP_VERSION + '</p>';
+    html += '<p class="app-version">' + appVersionText() + '</p>';
     document.getElementById('signatureContent').innerHTML = html;
     const clearSigBtn = document.getElementById('clearSignatureBtn');
     if(clearSigBtn){
