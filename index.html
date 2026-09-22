@@ -1380,7 +1380,7 @@
   //  APP_VERSION = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
   //  BUILD_ID    = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
   const APP_VERSION = "v1.0";
-  const BUILD_ID = "0922-4";
+  const BUILD_ID = "0922-5";
   function appVersionText(){
     return APP_VERSION + ((typeof state!=="undefined" && state && state.isAdmin) ? " · " + BUILD_ID : "");
   }
@@ -11893,6 +11893,61 @@
   // renderResults——那兩行現在移到enterApp()裡，只有登入
   // 通過後才會執行。這裡改成啟動整個登入流程判斷。
   _startAppFlow();
+
+  // 食在料理：返回鍵一層一層往回的順序
+  function _activeView(){
+    var names=Object.keys(views);
+    for(var i=0;i<names.length;i++){ var el=document.getElementById(views[names[i]]); if(el && el.classList.contains('active')) return names[i]; }
+    return 'find';
+  }
+  function appHandleBack(){
+    var onb=document.getElementById('onbOverlay');
+    if(onb){ try{ localStorage.setItem(ONBOARD_KEY,'1'); }catch(e){} onb.remove(); return true; }   // 新手引導 → 當作略過
+    var mr=document.getElementById('modalRoot');
+    if(mr && mr.innerHTML.trim()!==''){ closeSheet(); return true; }                                 // 彈窗
+    var lm=document.getElementById('sopLeaveModal');
+    if(lm && lm.style.display==='flex'){ closeLeaveModal(); return true; }                          // 「確定離開料理？」
+    var sop=document.getElementById('sopOverlay');
+    if(sop && sop.classList.contains('active')){                                                    // 料理步驟中
+      var done=document.getElementById('sopDoneScreen');
+      if(done && done.style.display==='block'){ exitSopDone(); } else { requestLeaveSOP(); }
+      return true;
+    }
+    var lg=document.getElementById('login');
+    if(lg && lg.style.display!=='none') return false;                                                // 登入頁 → 離開
+    var v=_activeView();
+    if(v==='shopping' && (manualItemFormOpen || manualInventoryFormOpen)){ closeManualForms(); renderShoppingView(); return true; }
+    if(v==='detail'){ goBackFromDetail(); return true; }
+    if(v==='admin'){ navigate('settings'); return true; }
+    if(v==='settings' || v==='upgrade'){ navigate('find'); return true; }
+    if(v==='find'){
+      if(typeof findMode!=='undefined' && findMode!=='choice'){ findGoBack(); return true; }
+      return false;                                                                                  // 首頁 → 提示再按一次離開
+    }
+    navigate('find'); renderFindView(); return true;                                                  // 其他分頁 → 回首頁
+  }
+
+/* ===== D9 手機返回鍵（智在生活 Standard，三支 App 同一套）=====
+   開 App 時先放一層「守門」紀錄，按手機返回鍵（或 iPhone 左緣滑動）時
+   會先被這層接住，交給 appHandleBack() 一層一層往回：
+   關彈窗 → 回上一頁 → 回首頁。已經在首頁時提示「再按一次離開」，
+   2 秒內再按才真的離開；超過 2 秒就重新放回守門，避免誤觸跳出。 */
+(function(){
+  if(!window.history || !history.pushState) return;
+  var _exitArmed=false, _exitTimer=null;
+  function pushGuard(){ try{ history.pushState({haGuard:1}, ''); }catch(e){} }
+  pushGuard();
+  window.addEventListener('popstate', function(){
+    if(_exitArmed) return;                       // 提示後 2 秒內再按：讓瀏覽器照常離開
+    var handled=false;
+    try{ handled = appHandleBack(); }catch(e){ handled=false; }
+    if(handled){ pushGuard(); return; }
+    _exitArmed=true;
+    try{ showToast('再按一次返回鍵離開'); }catch(e){}
+    clearTimeout(_exitTimer);
+    _exitTimer=setTimeout(function(){ _exitArmed=false; pushGuard(); }, 2000);
+  });
+})();
 </script>
 
 </body>
