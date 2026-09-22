@@ -993,6 +993,33 @@
     max-height:85vh; overflow-y:auto;
   }
 
+  /* ---------- 有新版本橫幅（Standard：與行事曆同一套機制）----------
+     放在最上方，避免跟底部導覽列、食材頁的固定按鈕重疊 */
+  .update-bar{display:none; position:fixed; left:0; right:0; top:0; z-index:2200;
+    max-width:480px; margin:0 auto; background:var(--color-accent); color:#FBF3EE;
+    padding:calc(10px + env(safe-area-inset-top)) 16px 10px; align-items:center; gap:12px;
+    box-shadow:0 2px 12px rgba(0,0,0,.15);}
+  .update-bar span{flex:1; font-size:14px; font-weight:600;}
+  .update-bar button{background:#FBF3EE; color:var(--color-accent); font-weight:800; font-size:13px;
+    padding:8px 16px; border-radius:10px; border:none; cursor:pointer;}
+
+  /* ---------- 新手引導（第一次登入，4 張卡，可左右滑） ---------- */
+  .onb-overlay{position:fixed; inset:0; z-index:2100; background:rgba(43,36,29,0.55);
+    display:flex; align-items:center; justify-content:center; padding:16px;}
+  .onb-card{width:100%; max-width:380px; background:var(--color-surface); border-radius:20px;
+    padding:30px 22px 18px; text-align:center; touch-action:pan-y;}
+  .onb-emoji{font-size:52px; line-height:1; margin-bottom:14px;}
+  .onb-title{font-size:19px; font-weight:900; color:var(--color-text); margin:0 0 10px;}
+  .onb-body{font-size:14px; line-height:1.8; color:var(--color-text-soft); margin:0; min-height:76px;}
+  .onb-dots{display:flex; justify-content:center; gap:8px; margin:18px 0 16px;}
+  .onb-dot{width:8px; height:8px; border-radius:50%; background:var(--color-border);}
+  .onb-dot.active{background:var(--color-accent); width:20px; border-radius:4px;}
+  .onb-actions{display:flex; gap:10px;}
+  .onb-skip{flex:none; padding:13px 18px; border:1px solid var(--color-border); background:var(--color-surface);
+    color:var(--color-text-soft); border-radius:12px; font-size:15px; font-weight:600; cursor:pointer;}
+  .onb-next{flex:1; padding:13px; border:none; background:var(--color-accent); color:#FBF3EE;
+    border-radius:12px; font-size:15px; font-weight:800; cursor:pointer;}
+
   /* ---------- 服務條款彈窗 ---------- */
   .terms-sheet{border-radius:20px; max-width:420px; margin:0 16px; padding:26px 22px; max-height:85vh;}
   .terms-logo-img{display:block; width:64px; height:auto; margin:0 auto 10px;}
@@ -1033,6 +1060,7 @@
   </div>
 </div>
 <div id="modalRoot"></div>
+<div class="update-bar" id="updateBar"><span>🔄 有新版本可用</span><button id="updateBtn" type="button">立即更新</button></div>
 
 <div id="appRoot" style="display:none">
 <div class="app">
@@ -1261,8 +1289,82 @@
     document.getElementById('login').style.display = 'none';
     document.getElementById('appRoot').style.display = 'block';
     renderFindView();
+    maybeShowOnboarding();
   }
 
+  /* 新手引導：這台裝置第一次進 App 才跳，看完（或略過）就記住。
+     試用歡迎、到期通知這些彈窗也用 modalRoot，所以等它們關掉
+     才出現，不會兩個疊在一起。設定頁「使用教學」可以重看。 */
+  const ONBOARD_KEY = 'jiachangzhu_onboarded_v1';
+  const ONBOARD_STEPS = [
+    { emoji:'🔍', title:'先找一道想煮的菜', body:'用菜名搜尋，或輸入手邊有的食材，<br>看看能煮哪些菜' },
+    { emoji:'🍳', title:'加入今日料理', body:'選好幾人份再加入，<br>食材份量會自動幫你算好' },
+    { emoji:'🛒', title:'採購清單自動列好', body:'今日料理需要的食材自動彙整，<br>買好點一下就移到庫存' },
+    { emoji:'📝', title:'煮完存成紀錄', body:'做過的菜都留在料理紀錄，<br>想再煮一次點一下就回到做法' }
+  ];
+  let onboardTimer = null;
+  function maybeShowOnboarding(){
+    let done = false;
+    try{ done = localStorage.getItem(ONBOARD_KEY) === '1'; }catch(e){}
+    if(done) return;
+    let tries = 0;
+    clearInterval(onboardTimer);
+    onboardTimer = setInterval(function(){
+      tries++;
+      const root = document.getElementById('modalRoot');
+      const busy = root && root.innerHTML.trim() !== '';
+      if(!busy){ clearInterval(onboardTimer); showOnboarding(); }
+      else if(tries > 240){ clearInterval(onboardTimer); }   // 最多等 2 分鐘，避免永遠輪詢
+    }, 500);
+  }
+  function showOnboarding(){
+    if(document.getElementById('onbOverlay')) return;
+    let idx = 0;
+    const wrap = document.createElement('div');
+    wrap.className = 'onb-overlay';
+    wrap.id = 'onbOverlay';
+    document.body.appendChild(wrap);
+    function finish(){
+      try{ localStorage.setItem(ONBOARD_KEY, '1'); }catch(e){}
+      const el = document.getElementById('onbOverlay');
+      if(el) el.remove();
+    }
+    function render(){
+      const st = ONBOARD_STEPS[idx];
+      const last = idx === ONBOARD_STEPS.length - 1;
+      wrap.innerHTML =
+        '<div class="onb-card" id="onbCard">' +
+          '<div class="onb-emoji">' + st.emoji + '</div>' +
+          '<p class="onb-title">' + st.title + '</p>' +
+          '<p class="onb-body">' + st.body + '</p>' +
+          '<div class="onb-dots">' + ONBOARD_STEPS.map(function(_, i){ return '<span class="onb-dot' + (i === idx ? ' active' : '') + '"></span>'; }).join('') + '</div>' +
+          '<div class="onb-actions">' +
+            (last ? '' : '<button class="onb-skip" id="onbSkip">略過</button>') +
+            '<button class="onb-next" id="onbNext">' + (last ? '開始使用' : '下一步') + '</button>' +
+          '</div>' +
+        '</div>';
+      const skip = document.getElementById('onbSkip');
+      if(skip) skip.addEventListener('click', finish);
+      document.getElementById('onbNext').addEventListener('click', function(){
+        if(last){ finish(); } else { idx++; render(); }
+      });
+      // 左右滑動換頁
+      const card = document.getElementById('onbCard');
+      let x0 = null;
+      card.addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; }, {passive:true});
+      card.addEventListener('touchend', function(e){
+        if(x0 === null) return;
+        const dx = e.changedTouches[0].clientX - x0;
+        x0 = null;
+        if(dx < -50 && idx < ONBOARD_STEPS.length - 1){ idx++; render(); }
+        else if(dx > 50 && idx > 0){ idx--; render(); }
+      });
+    }
+    render();
+  }
+
+  // 版本號：設定頁與我的菜單頁底部顯示，客服對單時用。每次交付更新這裡
+  const APP_VERSION = "v2026.09.22-1　單一付費版與新手引導";
   const ADMIN_EMAIL = "mp65p@hotmail.com";
   // LINE官方帳號——客服聯繫管道。付款流程之後改接藍新金流，
   // LINE只負責問題諮詢，不再是升級付款的管道
@@ -1288,14 +1390,15 @@
 
   function showDeviceLimit(email, plan, limit){
     var root=document.getElementById("modalRoot");
-    var isFull=(plan==="full"||plan==="family");
+    // 單一付費版：付費／試用都是 2 台，只有免費版（1 台）才提示升級
+    var canUpgrade=!(isPaidPlan(plan)||plan==="trial");
     root.innerHTML=
       '<div class="overlay" id="ovl" style="align-items:center"><div class="sheet" id="sheet" style="border-radius:20px;max-width:400px;margin:0 16px;padding:24px 20px">'+
         '<div style="text-align:center;font-size:44px;line-height:1;margin-bottom:10px">📱</div>'+
         '<div style="text-align:center;font-size:19px;font-weight:900;color:#2E2E33">已達裝置上限</div>'+
         '<div style="text-align:center;font-size:13.5px;color:#8A8A93;margin-top:8px;line-height:1.7">您目前的方案可在 <b style="color:#E8735C">'+limit+' 台裝置</b>使用。<br>若要更換裝置或釋出名額，請透過官方 LINE 聯繫我們協助處理。</div>'+
-        (isFull?'':'<div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #EFEAE2"><div style="font-size:13px;color:#8A8A93;margin-bottom:10px">想和家人一起使用？</div>'+
-        '<button id="dlUp" style="width:100%;border:none;background:#E8735C;color:#fff;border-radius:12px;padding:13px;font-size:15px;font-weight:800">💬 聯繫客服了解家庭版</button></div>')+
+        (canUpgrade?'<div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #EFEAE2"><div style="font-size:13px;color:#8A8A93;margin-bottom:10px">付費版可在 2 台裝置使用</div>'+
+        '<button id="dlUp" style="width:100%;border:none;background:#E8735C;color:#fff;border-radius:12px;padding:13px;font-size:15px;font-weight:800">💬 聯繫客服了解付費版</button></div>':'')+
         '<button id="dlClose" style="width:100%;border:none;background:none;color:#8A8A93;font-size:13px;padding:12px;margin-top:6px">關閉</button>'+
       '</div></div>';
     var up=document.getElementById("dlUp");
@@ -1315,9 +1418,10 @@
     var os=/iPhone|iPad/i.test(ua)?"iPhone":/Android/i.test(ua)?"Android":/Windows/i.test(ua)?"Windows":/Mac/i.test(ua)?"Mac":"裝置";
     return os;
   }
+  // 單一付費版：舊資料裡的 basic／full／family 一律視為付費，不用手動改客戶資料
+  function isPaidPlan(plan){ return plan==="basic"||plan==="full"||plan==="family"; }
   function planDeviceLimit(plan){
-    if(plan==="full"||plan==="family") return 3;
-    if(plan==="trial") return 2;
+    if(isPaidPlan(plan)||plan==="trial") return 2;
     return 1;
   }
   async function checkDevice(email, plan){
@@ -1381,7 +1485,7 @@
 
   // 登入頁「服務條款與隱私政策」連結——內容沿用智在生活
   // 既有條款的架構與文字，只換品牌名稱／服務項目說明，
-  // 付款方式（LINE Pay/轉帳）與聯絡方式（官方LINE）維持
+  // 付款方式改為藍新金流（D6），聯絡方式（官方LINE）維持
   // 完全一致
   function showTermsSheet(){
     var root = document.getElementById('modalRoot');
@@ -1389,7 +1493,7 @@
       '<p class="terms-section-title">服務說明</p>' +
       '<p class="terms-section-body">本服務（找食譜、菜單規劃、採購清單管理）為「食在料理」提供之個人／家庭料理規劃工具，以電子郵件登入使用。</p>' +
       '<p class="terms-section-title">訂閱與付款</p>' +
-      '<p class="terms-section-body">提供免費試用及付費訂閱，方案與價格以App內公告為準。付款採LINE Pay或轉帳等人工方式，確認後開通。數位服務一經開通原則上不退款，特殊情形請透過官方LINE協商。</p>' +
+      '<p class="terms-section-body">提供免費試用及付費訂閱，方案與價格以App內公告為準。付款採藍新金流線上付款，付款完成後開通。數位服務一經開通原則上不退款，特殊情形請透過官方LINE協商。</p>' +
       '<p class="terms-section-title">使用者義務</p>' +
       '<p class="terms-section-body">不得利用本服務從事違法、侵權行為，不得破解、干擾或攻擊本服務，不得上傳違法或侵害他人權益之內容。帳號請妥善保管，勿提供他人使用。</p>' +
       '<p class="terms-section-title">服務變更與資料備份</p>' +
@@ -1419,6 +1523,37 @@
     e.preventDefault();
     showTermsSheet();
   });
+
+  // Service Worker：網路優先，有網路永遠抓最新版、沒網路用上次的畫面。
+  // sw.js 本身改版時才會出現「有新版本」橫幅，點了立即接管並重載一次
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js').then(function(reg){
+        reg.addEventListener('updatefound', function(){
+          var nw = reg.installing; if(!nw) return;
+          nw.addEventListener('statechange', function(){
+            if(nw.state === 'installed' && navigator.serviceWorker.controller){
+              var ub = document.getElementById('updateBar'); if(ub) ub.style.display = 'flex';
+            }
+          });
+        });
+      }).catch(function(){});
+      // 只有使用者按了「立即更新」才重載。第一次安裝 sw.js 時也會觸發
+      // controllerchange，若無條件重載，可能打斷 Email 連結登入（連結碼只能用一次）
+      var _swReloaded = false, _swUpdateAsked = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function(){
+        if(!_swUpdateAsked || _swReloaded) return; _swReloaded = true; window.location.reload();
+      });
+      var ubtn = document.getElementById('updateBtn');
+      if(ubtn) ubtn.addEventListener('click', function(){
+        _swUpdateAsked = true;
+        navigator.serviceWorker.getRegistration().then(function(reg){
+          if(reg && reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
+        });
+        var ub = document.getElementById('updateBar'); if(ub) ub.style.display = 'none';
+      });
+    });
+  }
 
   // 安裝到手機桌面：Android/桌面Chrome這類瀏覽器支援
   // beforeinstallprompt事件，可以跳出瀏覽器原生的安裝
@@ -1485,7 +1620,7 @@
       +'<div style="margin-top:14px;color:#8A8A93">😊</div>');
   }
   function showUpgradeSuccess(newPlan){
-    var name = (newPlan==="full"||newPlan==="family") ? "家庭版" : "個人版";
+    var name = "付費版";
     showInfoSheet("🎉", "升級成功！",
       '感謝支持！<br>您現在是 <b style="color:#3E9B8E">'+name+'</b> 用戶，功能已全部解鎖'
       +'<div style="margin-top:14px;color:#8A8A93">祝使用愉快 😊</div>');
@@ -1640,7 +1775,8 @@
      ========================================================= */
   let adminSearchQuery = '';
   let adminExpiringOnly = false;
-  const PLAN_LABELS = { trial:'試用', basic:'個人版', full:'完整版', family:'家庭版', free:'免費版' };
+  // 單一付費版：basic／full／family 都是舊代碼，一律顯示「付費版」
+  const PLAN_LABELS = { trial:'試用', basic:'付費版', full:'付費版', family:'付費版', free:'免費版' };
 
   function openAdminView(){
     if(!state.isAdmin){ return; }
@@ -1689,7 +1825,7 @@
 
     html += '<div class="admin-actions-row" style="margin-top:20px;">';
     html += '<button class="admin-action-btn sim free" id="adminSimFreeBtn">🧪 模擬 free 版預覽</button>';
-    html += '<button class="admin-action-btn sim paid" id="adminSimPaidBtn">🧪 模擬 個人版</button>';
+    html += '<button class="admin-action-btn sim paid" id="adminSimPaidBtn">🧪 模擬 付費版</button>';
     html += '</div>';
     html += '<p class="app-version" style="padding-top:0;">（測試用，只改變你自己畫面上看到的方案，不會動到任何客戶的真實資料）</p>';
 
@@ -1757,11 +1893,11 @@
     });
     const simPaidBtn = document.getElementById('adminSimPaidBtn');
     if(simPaidBtn) simPaidBtn.addEventListener('click', () => {
-      state.plan = 'basic';
+      state.plan = 'full';
       renderSelectedMenuView();
       renderShoppingView();
       renderSignatureView();
-      showToast('已模擬個人版，付費功能都可以正常使用');
+      showToast('已模擬付費版，付費功能都可以正常使用');
       navigate('find');
     });
   }
@@ -1799,11 +1935,12 @@
   }
 
   async function adminChangePlan(key){
-    const validPlans = ['trial','basic','full','family','free'];
-    const plan = prompt('改成哪個方案？（' + validPlans.join('／') + '）');
+    // 簡化成三選一，輸入數字即可；付費版統一存成 full
+    const choiceMap = { '1':'trial', '2':'full', '3':'free' };
+    const plan = prompt('改成哪個方案？\n1 = 試用\n2 = 付費版\n3 = 免費版\n請輸入數字：');
     if(!plan) return;
-    const trimmed = plan.trim();
-    if(validPlans.indexOf(trimmed) === -1){ alert('請輸入：' + validPlans.join('／')); return; }
+    const trimmed = choiceMap[plan.trim()];
+    if(!trimmed){ alert('請輸入 1、2 或 3'); return; }
     try{
       await db.ref('jiachangzhu_subscribers/' + key + '/plan').set(trimmed);
       await db.ref('jiachangzhu_subscribers/' + key + '/deviceLimit').set(planDeviceLimit(trimmed));
@@ -1868,7 +2005,7 @@
       ['採購清單自動彙整', false, true],
       ['我的庫存', false, true],
       ['我的菜單（收藏拿手菜）', false, true],
-      ['多裝置／家人共用', false, true]
+      ['同帳號 2 台裝置使用', false, true]
     ].forEach(row => {
       html += '<div class="upgrade-compare-row">' +
         '<span class="upgrade-compare-label">' + row[0] + '</span>' +
@@ -1897,16 +2034,18 @@
     if(state.isAdmin){
       html += '<button class="settings-row admin" id="openAdminBtn"><span class="settings-row-icon">🔧</span><span class="settings-row-label">訂閱管理後台</span></button>';
     }
+    html += '<button class="settings-row" id="tutorialBtn"><span class="settings-row-icon">📖</span><span class="settings-row-label">使用教學</span></button>';
     html += '<button class="settings-row" id="contactSupportBtn"><span class="settings-row-icon">💬</span><span class="settings-row-label">聯繫客服</span></button>';
     html += '<button class="settings-row danger" id="logoutBtn"><span class="settings-row-icon">🚪</span><span class="settings-row-label">登出</span></button>';
     html += '</div>';
-    html += '<p class="app-version">v2026.09.09-1　登入優化與付費鎖定版</p>';
+    html += '<p class="app-version">' + APP_VERSION + '</p>';
     document.getElementById('settingsContent').innerHTML = html;
     bindSettingsViewEvents();
   }
 
   function bindSettingsViewEvents(){
     document.getElementById('shareAppBtn').addEventListener('click', shareApp);
+    document.getElementById('tutorialBtn').addEventListener('click', showOnboarding);
     document.getElementById('contactSupportBtn').addEventListener('click', () => {
       window.open(LINE_SUPPORT_URL, '_blank');
     });
@@ -11570,7 +11709,7 @@
         '</div>'
       ).join('') + '</div>';
     }
-    html += '<p class="app-version">v2026.09.09-1　登入優化與付費鎖定版</p>';
+    html += '<p class="app-version">' + APP_VERSION + '</p>';
     document.getElementById('signatureContent').innerHTML = html;
     const clearSigBtn = document.getElementById('clearSignatureBtn');
     if(clearSigBtn){
