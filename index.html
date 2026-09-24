@@ -12,11 +12,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --color-bg:#F6F1E7;
+    --color-page:#FBF8F3;   /* 智在生活標準底色（頁面）*/
+    --color-bg:#F6F1E7;     /* 淺色填充：晶片、標籤、次要區塊 */
     --color-surface:#FFFFFF;
     --color-text:#2B241D;
     --color-text-soft:#867A6C;
     --color-accent:#A8462E;
+    --color-danger:#C0392B;   /* 刪除／登出，四支一致 */
     --color-accent-dark:#8A3722;
     --color-accent-soft:#F1DCD2;
     --color-jade:#4F6A52;
@@ -51,7 +53,7 @@
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--color-bg);
+    background:var(--color-page);
     color:var(--color-text);
     font-family:var(--font-family);
     font-size:var(--fs-body);
@@ -62,10 +64,10 @@
   }
 
   .app{
-    max-width:480px;
+    max-width:520px;
     margin:0 auto;
     min-height:100vh;
-    background:var(--color-bg);
+    background:var(--color-page);
     position:relative;
     padding-bottom:calc(84px + env(safe-area-inset-bottom));
   }
@@ -258,7 +260,7 @@
   }
   .settings-row-icon{font-size:20px; flex-shrink:0;}
   .settings-row-label{font-size:var(--fs-body); font-weight:var(--weight-semibold); color:var(--color-text);}
-  .settings-row.danger .settings-row-label{color:var(--color-accent-dark);}
+  .settings-row.danger .settings-row-label{color:var(--color-danger); font-weight:var(--weight-bold);}
   .settings-row.admin{background:var(--color-accent-soft); border-color:var(--color-accent);}
 
   /* ---------- 訂閱管理後台 ---------- */
@@ -409,12 +411,12 @@
 
   /* ---------- 料理 SOP 模式（全螢幕獨立畫面）---------- */
   .sop-overlay{
-    position:fixed; inset:0; background:var(--color-bg);
+    position:fixed; inset:0; background:var(--color-page);
     z-index:50; display:none;
   }
   .sop-overlay.active{display:flex; flex-direction:column;}
   .sop-inner{
-    max-width:480px; margin:0 auto; width:100%; height:100%;
+    max-width:520px; margin:0 auto; width:100%; height:100%;
     display:flex; flex-direction:column; position:relative;
   }
 
@@ -555,7 +557,7 @@
   /* 固定於畫面底部的主要按鈕（各食材選擇畫面共用） */
   .ingredients-cta-wrap{
     position:fixed; left:0; right:0; bottom:calc(58px + env(safe-area-inset-bottom));
-    max-width:480px; margin:0 auto; z-index:9;
+    max-width:520px; margin:0 auto; z-index:9;
     padding:10px 22px; background:var(--color-bg);
     border-top:1px solid var(--color-border);
   }
@@ -904,7 +906,7 @@
   /* ---------- Bottom nav ---------- */
   .bottom-nav{
     position:fixed; left:0; right:0; bottom:0;
-    max-width:480px; margin:0 auto;
+    max-width:520px; margin:0 auto;
     background:var(--color-surface); border-top:1px solid var(--color-border);
     display:flex; padding:8px 4px calc(10px + env(safe-area-inset-bottom));
     z-index:10;
@@ -934,7 +936,7 @@
   #login{
     position:fixed; inset:0; z-index:1000;
     display:flex; align-items:center; justify-content:center;
-    background:var(--color-bg); padding:24px;
+    background:var(--color-page); padding:24px;
   }
   .login-card{
     width:100%; max-width:360px; background:var(--color-surface);
@@ -942,17 +944,25 @@
     padding:32px 26px; text-align:center;
   }
   .login-logo-img{width:84px; height:84px; border-radius:20px; display:block; margin:0 auto 14px; object-fit:cover;}
-  .login-title{font-size:var(--fs-title); font-weight:var(--weight-bold); color:var(--color-text); margin:0 0 22px;}
+  .login-title{font-size:var(--fs-title); font-weight:var(--weight-bold); color:var(--color-text); margin:0 0 6px;}
+  .login-sub{margin:0 0 20px; color:var(--color-text-soft); font-size:13.5px;}
+  .login-sub .kw{font-size:12px; opacity:.7;}
+  /* 表單輸入一律 16px：小於 16px 時 iPhone 會自動放大整個畫面（智在生活 Standard） */
+  input, select, textarea{ font-size:16px; }
+  .sop-note-input, .ai-name-input{ font-size:16px; background:var(--color-surface); }
+  .sop-note-input:focus, .ai-name-input:focus, .code-input:focus{
+    outline:none; border-color:var(--color-accent); box-shadow:0 0 0 3px var(--color-accent-soft);
+  }
   .code-input{
     width:100%; padding:14px 16px; border-radius:var(--radius-md);
-    border:1px solid var(--color-border); background:var(--color-bg);
+    border:1px solid var(--color-border); background:var(--color-surface);
     font-size:var(--fs-body); font-family:var(--font-family); color:var(--color-text);
-    box-sizing:border-box;
+    box-sizing:border-box; text-align:center;
   }
+  .code-input:focus{outline:none; border-color:var(--color-accent); box-shadow:0 0 0 3px var(--color-accent-soft);}
   .code-hint{
-    margin-top:14px; padding:10px 12px; border-radius:var(--radius-md);
-    background:var(--color-jade-soft); color:var(--color-jade);
-    font-size:var(--fs-label); font-weight:var(--weight-medium);
+    margin-top:10px; font-size:var(--fs-label); color:var(--color-text-soft);
+    text-align:center;
   }
   .login-consent{
     display:flex; align-items:flex-start; gap:8px; margin-top:16px;
@@ -967,6 +977,14 @@
     cursor:pointer; -webkit-tap-highlight-color:transparent;
   }
   .btn-primary:disabled{opacity:0.6;}
+
+  /* 管理員入口：低調文字樣式，避免引起一般使用者好奇（智在生活 Standard） */
+  #adminLoginToggle{
+    width:100%; margin-top:18px; padding:8px; background:none; border:none;
+    color:var(--color-text-soft); font-size:12.5px; font-weight:400; opacity:.75;
+    text-decoration:none; cursor:pointer;
+  }
+  #adminLoginToggle:active{opacity:1;}
   /* 管理員登入：次要按鈕（有框線、無底色），跟行事曆同一套 */
   .btn-secondary{
     width:100%; margin-top:14px; padding:12px; border-radius:var(--radius-lg);
@@ -1002,7 +1020,7 @@
   /* ---------- 有新版本橫幅（Standard：與行事曆同一套機制）----------
      放在最上方，避免跟底部導覽列、食材頁的固定按鈕重疊 */
   .update-bar{display:none; position:fixed; left:0; right:0; top:0; z-index:2200;
-    max-width:480px; margin:0 auto; background:var(--color-accent); color:#FBF3EE;
+    max-width:520px; margin:0 auto; background:var(--color-accent); color:#FBF3EE;
     padding:calc(10px + env(safe-area-inset-top)) 16px 10px; align-items:center; gap:12px;
     box-shadow:0 2px 12px rgba(0,0,0,.15);}
   .update-bar span{flex:1; font-size:14px; font-weight:600;}
@@ -1052,6 +1070,7 @@
   <div class="login-card">
     <img class="login-logo-img" src="icon-192.png" alt="食在料理">
     <h1 class="login-title">食在料理</h1>
+    <p class="login-sub">把食材，變成好菜。</p>
     <input id="codeInput" class="code-input" type="email" inputmode="email" autocomplete="email" placeholder="請輸入 Email" maxlength="60">
     <div class="code-hint">🎁 首次登入即享 7 天全功能免費試用</div>
     <label class="login-consent"><input type="checkbox" id="agreeChk"> <span>我已閱讀並同意 <a id="termsLink" class="login-terms-link">《服務條款與隱私政策》</a></span></label>
@@ -1084,7 +1103,7 @@
       <button class="back-btn" id="findBackBtn" aria-label="返回" style="display:none;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B241D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
       </button>
-      <h2 class="page-title" id="findHeaderTitle">🏠 首頁</h2>
+      <h2 class="page-title" id="findHeaderTitle">🏠 首頁</h2><span id="appVerTag" style="font-size:10px;color:var(--color-text-soft);font-weight:400;white-space:nowrap;margin-left:6px"></span>
       <button class="header-upgrade-btn" data-open-upgrade>升級</button>
       <button class="header-settings-btn" data-open-settings aria-label="設定">⚙️</button>
     </div>
@@ -1301,6 +1320,7 @@
   function enterApp(){
     document.getElementById('login').style.display = 'none';
     document.getElementById('appRoot').style.display = 'block';
+    renderVerTag();
     renderFindView();
     maybeShowOnboarding();
   }
@@ -1380,9 +1400,14 @@
   //  APP_VERSION = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
   //  BUILD_ID    = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
   const APP_VERSION = "v1.0";
-  const BUILD_ID = "0922-5";
+  const BUILD_ID = "0924-5";
   function appVersionText(){
     return APP_VERSION + ((typeof state!=="undefined" && state && state.isAdmin) ? " · " + BUILD_ID : "");
+  }
+  // 版本號同時顯示在標題列（智在生活 Standard）
+  function renderVerTag(){
+    var el=document.getElementById("appVerTag");
+    if(el) el.textContent = appVersionText();
   }
   const ADMIN_EMAIL = "mp65p@hotmail.com";
   // LINE官方帳號——客服聯繫管道。付款流程之後改接藍新金流，
@@ -1407,6 +1432,11 @@
   }
   function _ymdTs(ts){ var d=new Date(ts); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 
+  async function kickOtherDevices(email){
+    var key=emailKey(email), id=_devId(), now=Date.now();
+    var only={}; only[id]={ name:_devName(), last:now, first:now };
+    try{ await db.ref("jiachangzhu_subscribers/"+key+"/devices").set(only); return true; }catch(e){ return false; }
+  }
   function showDeviceLimit(email, plan, limit){
     var root=document.getElementById("modalRoot");
     // 單一付費版：付費／試用都是 2 台，只有免費版（1 台）才提示升級
@@ -1415,11 +1445,18 @@
       '<div class="overlay" id="ovl" style="align-items:center"><div class="sheet" id="sheet" style="border-radius:20px;max-width:400px;margin:0 16px;padding:24px 20px">'+
         '<div style="text-align:center;font-size:44px;line-height:1;margin-bottom:10px">📱</div>'+
         '<div style="text-align:center;font-size:19px;font-weight:900;color:#2E2E33">已達裝置上限</div>'+
-        '<div style="text-align:center;font-size:13.5px;color:#8A8A93;margin-top:8px;line-height:1.7">您目前的方案可在 <b style="color:#E8735C">'+limit+' 台裝置</b>使用。<br>若要更換裝置或釋出名額，請透過官方 LINE 聯繫我們協助處理。</div>'+
+        '<div style="text-align:center;font-size:13.5px;color:#8A8A93;margin-top:8px;line-height:1.7">您目前的方案可在 <b style="color:#E8735C">'+limit+' 台裝置</b>使用。<br>若這是您的新手機，可登出其他裝置。</div>'+
+        '<button id="dlKick" style="width:100%;border:none;background:var(--color-accent);color:#fff;border-radius:12px;padding:14px;font-size:15px;font-weight:800;margin-top:18px">這是我的新裝置，登出其他裝置</button>'+
         (canUpgrade?'<div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #EFEAE2"><div style="font-size:13px;color:#8A8A93;margin-bottom:10px">付費版可在 2 台裝置使用</div>'+
         '<button id="dlUp" style="width:100%;border:none;background:#E8735C;color:#fff;border-radius:12px;padding:13px;font-size:15px;font-weight:800">💬 聯繫客服了解付費版</button></div>':'')+
         '<button id="dlClose" style="width:100%;border:none;background:none;color:#8A8A93;font-size:13px;padding:12px;margin-top:6px">關閉</button>'+
       '</div></div>';
+    document.getElementById("dlKick").addEventListener("click", async function(){
+      var b=this; b.textContent="處理中…"; b.disabled=true;
+      var ok=await kickOtherDevices(email);
+      if(ok){ closeSheet(); alert("已登出其他裝置，請重新登入"); location.reload(); }
+      else { b.textContent="失敗，請再試一次"; b.disabled=false; }
+    });
     var up=document.getElementById("dlUp");
     if(up) up.addEventListener("click", function(){ window.open(LINE_SUPPORT_URL, "_blank"); closeSheet(); });
     document.getElementById("dlClose").addEventListener("click", closeSheet);
@@ -1662,7 +1699,7 @@
     showInfoSheet("🎉", "歡迎使用食在料理！",
       '已開啟 <b style="color:#3E9B8E">7 天全功能免費試用</b><br>到期日：'+expiry
       +'<div style="margin:16px 0;border-top:1px dashed #E3DED4"></div>'
-      +'<b>👪 全家共用</b><br>家人用同一個Email登入即可共用，依方案有裝置數量上限。'
+      +'<b>📱 裝置數量</b><br>同一個 Email 最多可在 2 台裝置登入（免費版 1 台）。'
       +'<div style="margin-top:14px;color:#8A8A93">到期後仍可使用基本功能 😊</div>');
   }
   function showTrialExpired(){
@@ -11811,7 +11848,6 @@
         '</div>'
       ).join('') + '</div>';
     }
-    html += '<p class="app-version">' + appVersionText() + '</p>';
     document.getElementById('signatureContent').innerHTML = html;
     const clearSigBtn = document.getElementById('clearSignatureBtn');
     if(clearSigBtn){
