@@ -946,6 +946,13 @@
   .login-logo-img{width:84px; height:84px; border-radius:20px; display:block; margin:0 auto 14px; object-fit:cover;}
   .login-title{font-size:var(--fs-title); font-weight:var(--weight-bold); color:var(--color-text); margin:0 0 6px;}
   .login-sub{margin:0 0 20px; color:var(--color-text-soft); font-size:13.5px;}
+  /* 設定頁帳號卡（智在生活 Standard） */
+  .set-acc-card{background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:var(--radius-lg); padding:16px; margin:0 0 16px;}
+  .set-acc-em{font-size:15px; font-weight:var(--weight-bold); word-break:break-all;}
+  .set-acc-pl{margin-top:8px; display:inline-block; font-size:12.5px; font-weight:var(--weight-bold);
+    background:var(--color-accent-soft); color:var(--color-accent); border-radius:999px; padding:5px 12px;}
+  .set-acc-ex{margin-top:8px; font-size:12.5px; color:var(--color-text-soft);}
   .login-sub .kw{font-size:12px; opacity:.7;}
   /* 表單輸入一律 16px：小於 16px 時 iPhone 會自動放大整個畫面（智在生活 Standard） */
   input, select, textarea{ font-size:16px; }
@@ -1400,7 +1407,7 @@
   //  APP_VERSION = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
   //  BUILD_ID    = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
   const APP_VERSION = "v1.0";
-  const BUILD_ID = "0924-5";
+  const BUILD_ID = "0924-7";
   function appVersionText(){
     return APP_VERSION + ((typeof state!=="undefined" && state && state.isAdmin) ? " · " + BUILD_ID : "");
   }
@@ -1583,7 +1590,7 @@
       '<p class="terms-section-title">服務說明</p>' +
       '<p class="terms-section-body">本服務（找食譜、菜單規劃、採購清單管理）為「食在料理」提供之個人／家庭料理規劃工具，以電子郵件登入使用。</p>' +
       '<p class="terms-section-title">訂閱與付款</p>' +
-      '<p class="terms-section-body">提供免費試用及付費訂閱，方案與價格以App內公告為準。付款採藍新金流線上付款，付款完成後開通。數位服務一經開通原則上不退款，特殊情形請透過官方LINE協商。</p>' +
+      '<p class="terms-section-body">提供免費試用及付費訂閱，方案與價格以App內公告為準。付款方式以App內公告為準，完成後由客服開通。數位服務一經開通原則上不退款，特殊情形請透過官方LINE協商。</p>' +
       '<p class="terms-section-title">使用者義務</p>' +
       '<p class="terms-section-body">不得利用本服務從事違法、侵權行為，不得破解、干擾或攻擊本服務，不得上傳違法或侵害他人權益之內容。帳號請妥善保管，勿提供他人使用。</p>' +
       '<p class="terms-section-title">服務變更與資料備份</p>' +
@@ -1726,7 +1733,7 @@
     var _dev = res.offline ? {ok:true} : await checkDevice(email, res.plan);
     if(!_dev.ok){ showDeviceLimit(email, res.plan, _dev.limit); return; }
     var _prevPlan; try{ _prevPlan=localStorage.getItem("cal_plan"); }catch(e){}
-    state.isAdmin=false; state.user=email; state.plan=res.plan;
+    state.isAdmin=false; state.user=email; state.plan=res.plan; state.expiry=res.expiry||"";
     localStorage.setItem(AUTH_KEY,email);
     // 離線的結果只是暫時的，不寫進 cal_plan、也不跳升級／到期通知，
     // 否則恢復網路時會誤判成「剛升級成功」
@@ -2164,7 +2171,13 @@
   }
 
   function renderSettingsView(){
-    let html = '<p class="menu-subtitle">已登入：' + (state.user || '') + '</p>';
+    // 帳號卡（智在生活 Standard：Email、方案、到期日）
+    var _plan = state.isAdmin ? '管理員' : ({trial:'試用中',basic:'付費版',full:'付費版',family:'付費版',free:'免費版'}[state.plan] || '免費版');
+    let html = '<div class="set-acc-card">'
+      + '<div class="set-acc-em">' + (state.user || '—') + '</div>'
+      + '<div class="set-acc-pl">' + _plan + '</div>'
+      + ((!state.isAdmin && state.expiry) ? '<div class="set-acc-ex">到期日：' + state.expiry + '</div>' : '')
+      + '</div>';
     html += '<div class="settings-list">';
     html += '<button class="settings-row" id="shareAppBtn"><span class="settings-row-icon">🔗</span><span class="settings-row-label">分享這個App</span></button>';
     html += '<button class="settings-row" id="exportDataBtn"><span class="settings-row-icon">📤</span><span class="settings-row-label">匯出備份</span></button>';
@@ -2175,6 +2188,7 @@
     }
     html += '<button class="settings-row" id="tutorialBtn"><span class="settings-row-icon">📖</span><span class="settings-row-label">使用教學</span></button>';
     html += '<button class="settings-row" id="contactSupportBtn"><span class="settings-row-icon">💬</span><span class="settings-row-label">聯繫客服</span></button>';
+    html += '<button class="settings-row" id="termsFromSettings"><span class="settings-row-icon">📄</span><span class="settings-row-label">服務條款與隱私政策</span></button>';
     html += '<button class="settings-row danger" id="logoutBtn"><span class="settings-row-icon">🚪</span><span class="settings-row-label">登出</span></button>';
     html += '</div>';
     html += '<p class="app-version">' + appVersionText() + '</p>';
@@ -2188,6 +2202,8 @@
     document.getElementById('contactSupportBtn').addEventListener('click', () => {
       window.open(LINE_SUPPORT_URL, '_blank');
     });
+    const _tfs = document.getElementById('termsFromSettings');
+    if(_tfs) _tfs.addEventListener('click', showTermsSheet);
     document.getElementById('exportDataBtn').addEventListener('click', exportBackup);
     document.getElementById('importDataBtn').addEventListener('click', () => document.getElementById('importFileInput').click());
     document.getElementById('importFileInput').addEventListener('change', importBackup);
@@ -9150,6 +9166,968 @@
       status: "confirmed",
       source: "official"
     }
+    ,{
+      id: "dish337", name: "高麗菜滷", icon: "🥬", category: "家常菜", difficulty: "簡單",
+      priority: 1,
+      servings: 4, prepTime: 12, cookTime: 20,
+      ingredients: [ {name:"高麗菜", amount:0.5, unit:"顆"}, {name:"豬絞肉", amount:150, unit:"g"}, {name:"紅蘿蔔", amount:0.3, unit:"條"}, {name:"香菇", amount:4, unit:"朵"} ],
+      seasonings: [ {name:"醬油", amount:2, unit:"大匙"}, {name:"米酒", amount:1, unit:"大匙"}, {name:"糖", amount:0.5, unit:"小匙"}, {name:"白胡椒粉", amount:0.3, unit:"小匙"}, {name:"蒜頭", amount:3, unit:"瓣"} ],
+      tools: ["炒鍋","鍋鏟","鍋蓋"],
+      preparationSteps: ["高麗菜用手剝成大片，洗淨瀝乾","乾香菇泡軟切絲，泡菇水留著","紅蘿蔔切絲，蒜頭切片"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，絞肉下鍋炒到出油變色", heatLevel:"中大火", time:3, tip:"絞肉先煸出油，整鍋才會香"},
+        {step:2, description:"加蒜片、香菇絲一起炒香", heatLevel:"中火", time:2},
+        {step:3, description:"下紅蘿蔔絲和高麗菜，翻炒到菜葉開始軟", heatLevel:"中大火", time:3},
+        {step:4, description:"淋米酒、醬油，加糖和泡菇水約半杯", heatLevel:"中火", time:1},
+        {step:5, description:"蓋鍋蓋轉小火燜煮，中途翻拌一次", heatLevel:"小火", time:10, tip:"燜到高麗菜梗用筷子一戳就穿最好吃"},
+        {step:6, description:"撒白胡椒粉拌勻收汁即可", heatLevel:"中火", time:1}
+      ],
+      heatLevel: "先中大火炒香，再小火燜軟",
+      tips: ["高麗菜用手剝比刀切好吃，斷面不規則更容易入味","泡香菇的水別倒掉，是這道菜的鮮味來源"],
+      commonMistakes: ["水加太多變成湯，應該只到鍋底一層","燜太久高麗菜變黃爛，失去甜味"],
+      aliases: ["高麗菜滷","絞肉滷高麗菜","滷高麗菜"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish338", name: "鹹蛋四季豆", icon: "🫘", category: "蔬菜", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 10, cookTime: 8,
+      ingredients: [ {name:"四季豆", amount:250, unit:"g"}, {name:"鹹蛋", amount:2, unit:"顆"} ],
+      seasonings: [ {name:"蒜頭", amount:3, unit:"瓣"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"糖", amount:0.3, unit:"小匙"} ],
+      tools: ["炒鍋","鍋鏟","湯鍋"],
+      preparationSteps: ["四季豆撕除頭尾老筋，折成小段","鹹蛋剝殼，蛋白蛋黃分開切碎","蒜頭切末"],
+      cookingSteps: [
+        {step:1, description:"滾水加少許鹽，四季豆汆燙1分半撈起瀝乾", heatLevel:"大火", time:3, tip:"先燙過，炒的時候才不會外熟內生"},
+        {step:2, description:"鍋中多一點油，小火把鹹蛋黃碎炒到起泡融化", heatLevel:"小火", time:2, tip:"起泡就是鹹蛋黃出沙了，這是金沙的關鍵"},
+        {step:3, description:"加蒜末炒香，再放鹹蛋白碎", heatLevel:"小火", time:1},
+        {step:4, description:"四季豆下鍋，淋米酒，翻炒讓每根都裹上金沙", heatLevel:"中火", time:2},
+        {step:5, description:"加糖提味，試鹹淡後起鍋", heatLevel:"中火", time:1, tip:"鹹蛋本身很鹹，通常完全不用加鹽"}
+      ],
+      heatLevel: "炒鹹蛋黃要小火，下菜後轉中火",
+      tips: ["鹹蛋黃要用小火慢慢炒到起泡，急火會焦苦","油要比平常多一點，鹹蛋黃才化得開"],
+      commonMistakes: ["四季豆沒先燙，炒到焦了裡面還是生的","另外加鹽，成品鹹到吃不下"],
+      aliases: ["鹹蛋四季豆","金沙四季豆"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish339", name: "乾煸四季豆", icon: "🫘", category: "蔬菜", difficulty: "普通",
+      priority: 2,
+      servings: 3, prepTime: 12, cookTime: 12,
+      ingredients: [ {name:"四季豆", amount:300, unit:"g"}, {name:"豬絞肉", amount:80, unit:"g"} ],
+      seasonings: [ {name:"蒜頭", amount:3, unit:"瓣"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"糖", amount:0.5, unit:"小匙"}, {name:"辣椒", amount:1, unit:"根"} ],
+      tools: ["炒鍋","鍋鏟","廚房紙巾"],
+      preparationSteps: ["四季豆去老筋擦乾，折成段","蒜頭切末，辣椒切圈","絞肉備用"],
+      cookingSteps: [
+        {step:1, description:"鍋中放油，四季豆下鍋用中小火慢煸到表皮起皺", heatLevel:"中小火", time:6, tip:"煸到表皮皺皺的才對，這是這道菜的精髓"},
+        {step:2, description:"四季豆撈起，鍋中留油炒絞肉到出油", heatLevel:"中火", time:3},
+        {step:3, description:"加蒜末、辣椒炒香", heatLevel:"中火", time:1},
+        {step:4, description:"四季豆回鍋，加醬油和糖翻炒均勻", heatLevel:"中大火", time:2}
+      ],
+      heatLevel: "煸豆用中小火，最後回鍋轉中大火",
+      tips: ["四季豆一定要擦乾再下鍋，有水會噴油","沒耐心煸就不會皺，口感差很多"],
+      commonMistakes: ["火太大外皮焦內部還脆","四季豆帶水下鍋，油爆又煸不乾"],
+      aliases: ["乾煸四季豆"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish340", name: "四季豆炒肉末", icon: "🫘", category: "蔬菜", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 10, cookTime: 8,
+      ingredients: [ {name:"四季豆", amount:250, unit:"g"}, {name:"豬絞肉", amount:120, unit:"g"} ],
+      seasonings: [ {name:"醬油", amount:1, unit:"大匙"}, {name:"蒜頭", amount:2, unit:"瓣"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"鹽", amount:0.3, unit:"小匙"} ],
+      tools: ["炒鍋","鍋鏟","湯鍋"],
+      preparationSteps: ["四季豆去筋切成小丁","蒜頭切末","絞肉用少許醬油拌一下"],
+      cookingSteps: [
+        {step:1, description:"四季豆丁汆燙1分鐘撈起瀝乾", heatLevel:"大火", time:2},
+        {step:2, description:"熱鍋炒絞肉到變色出油", heatLevel:"中大火", time:3},
+        {step:3, description:"加蒜末炒香，淋米酒和醬油", heatLevel:"中火", time:1},
+        {step:4, description:"四季豆丁下鍋炒勻，試鹹淡起鍋", heatLevel:"中火", time:2}
+      ],
+      heatLevel: "中大火為主",
+      tips: ["切成丁跟絞肉大小接近，配飯特別好扒","一次多炒一點冰起來，早餐配粥也很好"],
+      commonMistakes: ["四季豆切太大塊，跟肉末不搭"],
+      aliases: ["四季豆炒肉末","肉末四季豆"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish341", name: "金針菇炒蛋", icon: "🍄", category: "蛋料理", difficulty: "簡單",
+      priority: 1,
+      servings: 2, prepTime: 5, cookTime: 6,
+      ingredients: [ {name:"金針菇", amount:1, unit:"包"}, {name:"雞蛋", amount:3, unit:"顆"} ],
+      seasonings: [ {name:"鹽", amount:0.5, unit:"小匙"}, {name:"白胡椒粉", amount:0.2, unit:"小匙"}, {name:"青蔥", amount:1, unit:"根"} ],
+      tools: ["炒鍋","鍋鏟","碗"],
+      preparationSteps: ["金針菇切除根部，撕成小撮","雞蛋打散加少許鹽","蔥切蔥花"],
+      cookingSteps: [
+        {step:1, description:"乾鍋下金針菇，中火炒到出水並收乾", heatLevel:"中火", time:3, tip:"先把水炒掉，蛋才不會被稀釋變濕軟"},
+        {step:2, description:"推到鍋邊，中間下油倒入蛋液", heatLevel:"中大火", time:1},
+        {step:3, description:"蛋液半凝固時與金針菇拌炒均勻", heatLevel:"中火", time:2},
+        {step:4, description:"加鹽、白胡椒粉，撒蔥花起鍋", heatLevel:"小火", time:1}
+      ],
+      heatLevel: "中火為主",
+      tips: ["金針菇一定要先炒出水，這是成敗關鍵","撕開比切開好，口感比較鬆"],
+      commonMistakes: ["金針菇直接跟蛋一起下，整盤水水的"],
+      aliases: ["金針菇炒蛋"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish342", name: "培根金針菇捲", icon: "🥓", category: "肉類", difficulty: "簡單",
+      priority: 2,
+      servings: 3, prepTime: 10, cookTime: 8,
+      ingredients: [ {name:"金針菇", amount:1, unit:"包"}, {name:"培根", amount:6, unit:"片"} ],
+      seasonings: [ {name:"黑胡椒粒", amount:0.3, unit:"小匙"}, {name:"醬油", amount:1, unit:"小匙"} ],
+      tools: ["平底鍋","夾子"],
+      preparationSteps: ["金針菇切除根部，分成6小束","培根攤平備用"],
+      cookingSteps: [
+        {step:1, description:"每片培根捲起一束金針菇，收口朝下", heatLevel:"免加熱", time:5, tip:"收口朝下就不用牙籤固定"},
+        {step:2, description:"平底鍋不放油，收口朝下先煎定型", heatLevel:"中小火", time:3, tip:"培根自己會出油，不用另外加"},
+        {step:3, description:"翻面把四周煎到金黃", heatLevel:"中小火", time:3},
+        {step:4, description:"淋一點醬油嗆香，撒黑胡椒起鍋", heatLevel:"小火", time:1}
+      ],
+      heatLevel: "全程中小火",
+      tips: ["培根本身有鹹度，醬油只要一點點","便當菜很適合，冷掉也好吃"],
+      commonMistakes: ["火太大培根焦了，裡面金針菇還沒熟"],
+      aliases: ["培根金針菇捲","金針菇培根捲"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish343", name: "涼拌金針菇", icon: "🍄", category: "蔬菜", difficulty: "簡單",
+      priority: 2,
+      servings: 3, prepTime: 8, cookTime: 3,
+      ingredients: [ {name:"金針菇", amount:1, unit:"包"}, {name:"小黃瓜", amount:1, unit:"條"}, {name:"紅蘿蔔", amount:0.2, unit:"條"} ],
+      seasonings: [ {name:"醬油", amount:1, unit:"大匙"}, {name:"烏醋", amount:1, unit:"大匙"}, {name:"香油", amount:1, unit:"小匙"}, {name:"糖", amount:0.5, unit:"小匙"}, {name:"蒜頭", amount:2, unit:"瓣"} ],
+      tools: ["湯鍋","調理盆"],
+      preparationSteps: ["金針菇切根撕開","小黃瓜、紅蘿蔔切細絲","蒜頭切末"],
+      cookingSteps: [
+        {step:1, description:"滾水汆燙金針菇約40秒，撈起泡冰水", heatLevel:"大火", time:2, tip:"泡冰水口感才會脆"},
+        {step:2, description:"金針菇確實擠乾水分", heatLevel:"免加熱", time:1, tip:"沒擠乾醬汁會被稀釋"},
+        {step:3, description:"所有材料與調味料拌勻，冷藏20分鐘更入味", heatLevel:"免加熱", time:3}
+      ],
+      heatLevel: "只需汆燙",
+      tips: ["夏天的常備小菜，做一次可以吃兩三餐","喜歡辣可以加一點辣油"],
+      commonMistakes: ["金針菇燙太久變軟爛","沒擠乾，吃起來水水的沒味道"],
+      aliases: ["涼拌金針菇"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish344", name: "三杯杏鮑菇", icon: "🍄", category: "蔬菜", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 8, cookTime: 12,
+      ingredients: [ {name:"杏鮑菇", amount:3, unit:"根"}, {name:"九層塔", amount:1, unit:"把"} ],
+      seasonings: [ {name:"黑麻油", amount:2, unit:"大匙"}, {name:"醬油膏", amount:2, unit:"大匙"}, {name:"米酒", amount:2, unit:"大匙"}, {name:"糖", amount:1, unit:"小匙"}, {name:"薑", amount:5, unit:"片"}, {name:"蒜頭", amount:5, unit:"瓣"} ],
+      tools: ["炒鍋","鍋鏟","鍋蓋"],
+      preparationSteps: ["杏鮑菇切滾刀塊","薑切片、蒜頭去皮整顆備用","九層塔洗淨摘葉"],
+      cookingSteps: [
+        {step:1, description:"乾鍋下杏鮑菇，中火煸到表面微焦出水收乾", heatLevel:"中火", time:5, tip:"先乾煸逼出水分，才吸得進醬汁"},
+        {step:2, description:"另下黑麻油，小火爆香薑片到邊緣捲曲", heatLevel:"小火", time:2, tip:"麻油怕高溫，一定要小火"},
+        {step:3, description:"加蒜粒炒香，杏鮑菇回鍋", heatLevel:"中火", time:1},
+        {step:4, description:"加醬油膏、米酒、糖，蓋鍋蓋燜煮", heatLevel:"中小火", time:3},
+        {step:5, description:"開蓋收汁到濃稠，熄火拌入九層塔", heatLevel:"中大火", time:2, tip:"九層塔熄火後才放，才不會變黑"}
+      ],
+      heatLevel: "麻油小火，收汁轉中大火",
+      tips: ["杏鮑菇先乾煸是關鍵，否則出水整鍋湯湯水水","素食版三杯，味道不輸三杯雞"],
+      commonMistakes: ["麻油大火爆薑，整鍋發苦","九層塔太早下，變黑又沒香氣"],
+      aliases: ["三杯杏鮑菇"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish345", name: "奶油杏鮑菇", icon: "🍄", category: "蔬菜", difficulty: "簡單",
+      priority: 1,
+      servings: 2, prepTime: 5, cookTime: 8,
+      ingredients: [ {name:"杏鮑菇", amount:3, unit:"根"} ],
+      seasonings: [ {name:"奶油", amount:20, unit:"g"}, {name:"蒜頭", amount:3, unit:"瓣"}, {name:"鹽", amount:0.3, unit:"小匙"}, {name:"黑胡椒粒", amount:0.3, unit:"小匙"} ],
+      tools: ["平底鍋","夾子"],
+      preparationSteps: ["杏鮑菇切成約1公分厚片，表面劃格紋","蒜頭切末"],
+      cookingSteps: [
+        {step:1, description:"乾鍋不放油，杏鮑菇片單層平鋪煎", heatLevel:"中火", time:3, tip:"不要翻動，讓它煎出金黃焦痕"},
+        {step:2, description:"翻面再煎到兩面上色", heatLevel:"中火", time:3},
+        {step:3, description:"轉小火放入奶油和蒜末，翻拌讓菇裹上奶油", heatLevel:"小火", time:1, tip:"奶油最後放才不會燒焦"},
+        {step:4, description:"撒鹽和黑胡椒起鍋", heatLevel:"小火", time:1}
+      ],
+      heatLevel: "先中火乾煎，奶油階段轉小火",
+      tips: ["劃格紋不只好看，也更容易熟透入味","乾煎不放油，菇的香氣才出得來"],
+      commonMistakes: ["一開始就放奶油，奶油燒焦發黑","切太薄煎完縮成薄片沒口感"],
+      aliases: ["奶油杏鮑菇","蒜香奶油杏鮑菇"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish346", name: "椒鹽杏鮑菇", icon: "🍄", category: "蔬菜", difficulty: "簡單",
+      priority: 2,
+      servings: 3, prepTime: 8, cookTime: 10,
+      ingredients: [ {name:"杏鮑菇", amount:3, unit:"根"} ],
+      seasonings: [ {name:"地瓜粉", amount:4, unit:"大匙"}, {name:"胡椒鹽", amount:1, unit:"小匙"}, {name:"蒜頭", amount:3, unit:"瓣"}, {name:"九層塔", amount:0.5, unit:"把"} ],
+      tools: ["炒鍋","漏勺","盤子"],
+      preparationSteps: ["杏鮑菇撕成長條或切滾刀","裹上地瓜粉靜置3分鐘反潮","蒜頭切末，九層塔摘葉擦乾"],
+      cookingSteps: [
+        {step:1, description:"油燒至170度，杏鮑菇下鍋炸到外表定型", heatLevel:"中大火", time:3, tip:"裹粉後要等反潮再炸，粉才不會掉"},
+        {step:2, description:"撈起瀝油，油溫升高後回鍋複炸20秒", heatLevel:"大火", time:1, tip:"複炸是酥脆的關鍵"},
+        {step:3, description:"九層塔下油鍋快速炸5秒撈起", heatLevel:"中火", time:1},
+        {step:4, description:"鍋中留少許油炒香蒜末，倒回杏鮑菇與九層塔", heatLevel:"中火", time:1},
+        {step:5, description:"撒胡椒鹽翻勻起鍋", heatLevel:"中火", time:1}
+      ],
+      heatLevel: "炸物中大火，最後拌炒中火",
+      tips: ["撕的比切的好，不規則表面炸起來更酥","九層塔一定要擦乾再下鍋，否則會爆油"],
+      commonMistakes: ["沒複炸，放涼就軟掉","油溫不夠，整個吸油變很膩"],
+      aliases: ["椒鹽杏鮑菇","鹽酥杏鮑菇"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish347", name: "秋葵炒蛋", icon: "🥚", category: "蛋料理", difficulty: "簡單",
+      priority: 2,
+      servings: 2, prepTime: 6, cookTime: 6,
+      ingredients: [ {name:"秋葵", amount:8, unit:"根"}, {name:"雞蛋", amount:3, unit:"顆"} ],
+      seasonings: [ {name:"鹽", amount:0.5, unit:"小匙"}, {name:"白胡椒粉", amount:0.2, unit:"小匙"} ],
+      tools: ["炒鍋","鍋鏟","湯鍋"],
+      preparationSteps: ["秋葵去蒂頭，斜切成片","雞蛋打散加少許鹽"],
+      cookingSteps: [
+        {step:1, description:"秋葵片汆燙30秒撈起瀝乾", heatLevel:"大火", time:2, tip:"先燙過可以去掉多餘黏液"},
+        {step:2, description:"熱鍋下油倒入蛋液，炒至半凝固盛起", heatLevel:"中大火", time:2},
+        {step:3, description:"下秋葵略炒，炒蛋回鍋拌勻", heatLevel:"中火", time:2},
+        {step:4, description:"加鹽和白胡椒粉調味起鍋", heatLevel:"小火", time:1}
+      ],
+      heatLevel: "中火為主",
+      tips: ["斜切成片斷面漂亮，星星形狀小孩喜歡","去蒂頭時削掉一圈就好，不要整個切掉會流出黏液"],
+      commonMistakes: ["秋葵沒燙過直接炒，整盤黏糊糊"],
+      aliases: ["秋葵炒蛋"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish348", name: "柴魚秋葵", icon: "🥬", category: "蔬菜", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 5, cookTime: 3,
+      ingredients: [ {name:"秋葵", amount:12, unit:"根"} ],
+      seasonings: [ {name:"柴魚片", amount:1, unit:"小把"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"味醂", amount:1, unit:"小匙"} ],
+      tools: ["湯鍋","調理盆","盤子"],
+      preparationSteps: ["秋葵用鹽搓洗表面絨毛後沖淨","削去蒂頭硬邊"],
+      cookingSteps: [
+        {step:1, description:"滾水加鹽，整根秋葵下鍋燙90秒", heatLevel:"大火", time:3, tip:"整根燙，切開燙黏液會全跑出來"},
+        {step:2, description:"撈起立刻泡冰水，保持翠綠脆度", heatLevel:"免加熱", time:2},
+        {step:3, description:"瀝乾擺盤，淋上醬油和味醂", heatLevel:"免加熱", time:1},
+        {step:4, description:"鋪上柴魚片即可", heatLevel:"免加熱", time:1}
+      ],
+      heatLevel: "只需汆燙",
+      tips: ["冰鎮過顏色才翠綠，口感也脆","冷藏一下當冰涼小菜更好吃"],
+      commonMistakes: ["切開才燙，黏液流光又變色","燙太久顏色變黃"],
+      aliases: ["柴魚秋葵","涼拌秋葵佐柴魚"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish349", name: "菠菜炒蛋", icon: "🥬", category: "蛋料理", difficulty: "簡單",
+      priority: 1,
+      servings: 2, prepTime: 6, cookTime: 6,
+      ingredients: [ {name:"菠菜", amount:1, unit:"把"}, {name:"雞蛋", amount:3, unit:"顆"} ],
+      seasonings: [ {name:"鹽", amount:0.5, unit:"小匙"}, {name:"蒜頭", amount:2, unit:"瓣"} ],
+      tools: ["炒鍋","鍋鏟"],
+      preparationSteps: ["菠菜洗淨切段，梗葉分開","雞蛋打散加少許鹽","蒜頭切片"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，蛋液炒至半凝固盛起", heatLevel:"中大火", time:2},
+        {step:2, description:"爆香蒜片，先下菠菜梗炒30秒", heatLevel:"中大火", time:1, tip:"梗比葉子難熟，要先下"},
+        {step:3, description:"下菠菜葉快炒到轉深綠", heatLevel:"大火", time:1},
+        {step:4, description:"炒蛋回鍋，加鹽拌勻立刻起鍋", heatLevel:"中火", time:1, tip:"菠菜久炒會出水變爛，動作要快"}
+      ],
+      heatLevel: "大火快炒",
+      tips: ["菠菜梗葉分開下鍋，熟度才一致","起鍋要快，多炒30秒就出一灘水"],
+      commonMistakes: ["整把一起下，梗還脆葉子已經爛","炒太久出水，蛋被泡軟"],
+      aliases: ["菠菜炒蛋"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish350", name: "菠菜豆腐湯", icon: "🍲", category: "湯品", difficulty: "簡單",
+      priority: 1,
+      servings: 4, prepTime: 5, cookTime: 8,
+      ingredients: [ {name:"菠菜", amount:1, unit:"把"}, {name:"豆腐", amount:1, unit:"盒"} ],
+      seasonings: [ {name:"鹽", amount:1, unit:"小匙"}, {name:"香油", amount:0.5, unit:"小匙"}, {name:"薑", amount:2, unit:"片"}, {name:"白胡椒粉", amount:0.2, unit:"小匙"} ],
+      tools: ["湯鍋","湯杓"],
+      preparationSteps: ["菠菜洗淨切段","豆腐切小塊","薑切絲"],
+      cookingSteps: [
+        {step:1, description:"鍋中加水約800ml，放薑絲煮滾", heatLevel:"大火", time:3},
+        {step:2, description:"放入豆腐塊，轉中火煮3分鐘", heatLevel:"中火", time:3, tip:"豆腐下鍋後不要一直攪，會碎掉"},
+        {step:3, description:"放入菠菜煮30秒至變色", heatLevel:"中火", time:1},
+        {step:4, description:"加鹽、白胡椒粉，滴香油起鍋", heatLevel:"小火", time:1}
+      ],
+      heatLevel: "中火為主",
+      tips: ["菠菜最後放，煮久了會發澀變黃","豆腐用湯匙輕推，不要用鏟子翻"],
+      commonMistakes: ["菠菜跟豆腐一起下，湯變得澀澀的"],
+      aliases: ["菠菜豆腐湯"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish351", name: "沙茶空心菜", icon: "🥬", category: "蔬菜", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 5, cookTime: 5,
+      ingredients: [ {name:"空心菜", amount:1, unit:"把"} ],
+      seasonings: [ {name:"沙茶醬", amount:1.5, unit:"大匙"}, {name:"蒜頭", amount:3, unit:"瓣"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"糖", amount:0.3, unit:"小匙"} ],
+      tools: ["炒鍋","鍋鏟"],
+      preparationSteps: ["空心菜洗淨切段，梗葉分開","蒜頭切片","沙茶醬先用一大匙水調開"],
+      cookingSteps: [
+        {step:1, description:"大火熱鍋下油，爆香蒜片", heatLevel:"大火", time:1},
+        {step:2, description:"下空心菜梗快炒30秒", heatLevel:"大火", time:1},
+        {step:3, description:"下葉子，淋米酒，翻炒到葉子軟", heatLevel:"大火", time:1},
+        {step:4, description:"加調開的沙茶醬和糖，快速翻勻起鍋", heatLevel:"大火", time:2, tip:"沙茶醬最後下，久炒會苦"}
+      ],
+      heatLevel: "全程大火",
+      tips: ["空心菜要大火快炒，時間拉長就變黑出水","沙茶先用水調開才不會結塊沾不勻"],
+      commonMistakes: ["沙茶太早下鍋炒焦發苦","火不夠大，整盤變成水煮"],
+      aliases: ["沙茶空心菜"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish352", name: "腐乳空心菜", icon: "🥬", category: "蔬菜", difficulty: "簡單",
+      priority: 2,
+      servings: 3, prepTime: 5, cookTime: 5,
+      ingredients: [ {name:"空心菜", amount:1, unit:"把"} ],
+      seasonings: [ {name:"豆腐乳", amount:1, unit:"塊"}, {name:"蒜頭", amount:3, unit:"瓣"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"糖", amount:0.5, unit:"小匙"} ],
+      tools: ["炒鍋","鍋鏟","小碗"],
+      preparationSteps: ["空心菜切段，梗葉分開","蒜頭切片","豆腐乳用一大匙水加糖壓成泥"],
+      cookingSteps: [
+        {step:1, description:"大火熱鍋下油爆香蒜片", heatLevel:"大火", time:1},
+        {step:2, description:"下空心菜梗炒30秒，再下葉子", heatLevel:"大火", time:2},
+        {step:3, description:"淋米酒，倒入腐乳醬快速翻炒均勻", heatLevel:"大火", time:2, tip:"腐乳本身就鹹，不用再加鹽"}
+      ],
+      heatLevel: "全程大火",
+      tips: ["腐乳先壓成泥調水，才能均勻裹上每一根","一塊腐乳配一把菜剛剛好，多了會過鹹"],
+      commonMistakes: ["整塊腐乳直接丟進鍋，一口鹹一口淡","另外加鹽導致過鹹"],
+      aliases: ["腐乳空心菜","豆腐乳炒空心菜"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish353", name: "花椰菜炒肉片", icon: "🥦", category: "蔬菜", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 10, cookTime: 8,
+      ingredients: [ {name:"花椰菜", amount:1, unit:"顆"}, {name:"豬肉", amount:150, unit:"g"}, {name:"紅蘿蔔", amount:0.3, unit:"條"} ],
+      seasonings: [ {name:"醬油", amount:1, unit:"大匙"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"太白粉", amount:1, unit:"小匙"}, {name:"蒜頭", amount:3, unit:"瓣"}, {name:"鹽", amount:0.5, unit:"小匙"} ],
+      tools: ["炒鍋","鍋鏟","湯鍋"],
+      preparationSteps: ["花椰菜切小朵泡鹽水5分鐘後沖淨","豬肉切片用醬油和太白粉抓醃10分鐘","紅蘿蔔切片、蒜頭切片"],
+      cookingSteps: [
+        {step:1, description:"滾水加鹽，花椰菜汆燙2分鐘撈起", heatLevel:"大火", time:3, tip:"先燙過，炒的時候才熟得均勻"},
+        {step:2, description:"熱鍋下油，肉片炒至變色盛起", heatLevel:"中大火", time:2},
+        {step:3, description:"爆香蒜片，下紅蘿蔔片炒軟", heatLevel:"中火", time:1},
+        {step:4, description:"花椰菜下鍋，肉片回鍋，加米酒和鹽翻炒", heatLevel:"中大火", time:2}
+      ],
+      heatLevel: "中大火快炒",
+      tips: ["花椰菜泡鹽水可以逼出裡面的小蟲","肉片抓太白粉才會嫩"],
+      commonMistakes: ["花椰菜沒先燙，炒很久梗還是生的"],
+      aliases: ["花椰菜炒肉片","青花菜炒肉片"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish354", name: "涼拌花椰菜", icon: "🥦", category: "蔬菜", difficulty: "簡單",
+      priority: 2,
+      servings: 3, prepTime: 8, cookTime: 4,
+      ingredients: [ {name:"花椰菜", amount:1, unit:"顆"} ],
+      seasonings: [ {name:"蒜頭", amount:3, unit:"瓣"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"烏醋", amount:1, unit:"小匙"}, {name:"香油", amount:1, unit:"小匙"}, {name:"糖", amount:0.5, unit:"小匙"} ],
+      tools: ["湯鍋","調理盆"],
+      preparationSteps: ["花椰菜切小朵泡鹽水後沖淨","蒜頭切末"],
+      cookingSteps: [
+        {step:1, description:"滾水加鹽和幾滴油，花椰菜燙2分半", heatLevel:"大火", time:3, tip:"水裡加幾滴油，顏色會更翠綠"},
+        {step:2, description:"撈起泡冰水，完全冷卻後瀝乾", heatLevel:"免加熱", time:2},
+        {step:3, description:"與所有調味料拌勻，冷藏15分鐘", heatLevel:"免加熱", time:2}
+      ],
+      heatLevel: "只需汆燙",
+      tips: ["冰鎮是脆度的關鍵，不要省","可以一次燙多一點，分裝當常備菜"],
+      commonMistakes: ["燙太久變軟，涼拌就不脆了","沒瀝乾，醬汁都被水稀釋"],
+      aliases: ["涼拌花椰菜"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish355", name: "玉米炒蛋", icon: "🌽", category: "蛋料理", difficulty: "簡單",
+      priority: 1,
+      servings: 2, prepTime: 5, cookTime: 6,
+      ingredients: [ {name:"玉米", amount:1, unit:"支"}, {name:"雞蛋", amount:3, unit:"顆"} ],
+      seasonings: [ {name:"鹽", amount:0.5, unit:"小匙"}, {name:"糖", amount:0.3, unit:"小匙"}, {name:"青蔥", amount:1, unit:"根"} ],
+      tools: ["炒鍋","鍋鏟","刀"],
+      preparationSteps: ["玉米粒用刀削下（或用玉米罐頭瀝乾）","雞蛋打散加少許鹽","蔥切花"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，玉米粒先炒2分鐘到熟", heatLevel:"中火", time:2, tip:"玉米比蛋難熟，要先炒"},
+        {step:2, description:"倒入蛋液，稍等5秒再開始拌", heatLevel:"中大火", time:2},
+        {step:3, description:"蛋半凝固時加鹽和糖炒勻", heatLevel:"中火", time:1},
+        {step:4, description:"撒蔥花起鍋", heatLevel:"小火", time:1}
+      ],
+      heatLevel: "中火為主",
+      tips: ["加一點點糖會把玉米的甜度帶出來","小朋友很愛的一道，便當也適合"],
+      commonMistakes: ["玉米跟蛋一起下，玉米還是生脆的"],
+      aliases: ["玉米炒蛋"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish356", name: "奶油玉米", icon: "🌽", category: "蔬菜", difficulty: "簡單",
+      priority: 2,
+      servings: 3, prepTime: 5, cookTime: 6,
+      ingredients: [ {name:"玉米", amount:2, unit:"支"} ],
+      seasonings: [ {name:"奶油", amount:20, unit:"g"}, {name:"鹽", amount:0.3, unit:"小匙"}, {name:"黑胡椒粒", amount:0.2, unit:"小匙"} ],
+      tools: ["平底鍋","鍋鏟"],
+      preparationSteps: ["玉米削下玉米粒（或用罐頭瀝乾）"],
+      cookingSteps: [
+        {step:1, description:"乾鍋中火下玉米粒，炒到表面微焦", heatLevel:"中火", time:3, tip:"炒出一點焦痕，香氣完全不一樣"},
+        {step:2, description:"轉小火放入奶油，翻拌到融化裹勻", heatLevel:"小火", time:2},
+        {step:3, description:"加鹽和黑胡椒起鍋", heatLevel:"小火", time:1}
+      ],
+      heatLevel: "先中火乾炒，奶油階段轉小火",
+      tips: ["奶油一定最後放，早放會燒焦","配牛排或當小菜都合適"],
+      commonMistakes: ["奶油一開始就下，變黑又有苦味"],
+      aliases: ["奶油玉米","奶油炒玉米"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish357", name: "南瓜炒米粉", icon: "🎃", category: "主食", difficulty: "普通",
+      priority: 1,
+      servings: 4, prepTime: 15, cookTime: 15,
+      ingredients: [ {name:"南瓜", amount:0.5, unit:"顆"}, {name:"米粉", amount:2, unit:"把"}, {name:"豬肉", amount:100, unit:"g"}, {name:"香菇", amount:4, unit:"朵"} ],
+      seasonings: [ {name:"醬油", amount:2, unit:"大匙"}, {name:"白胡椒粉", amount:0.5, unit:"小匙"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"紅蔥頭", amount:3, unit:"顆"} ],
+      tools: ["炒鍋","鍋鏟","鍋蓋","調理盆"],
+      preparationSteps: ["南瓜去籽切細絲，皮可留","米粉用冷水泡軟後瀝乾","乾香菇泡軟切絲，泡菇水留下","豬肉切絲，紅蔥頭切片"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油爆香紅蔥頭到金黃撈起備用", heatLevel:"中小火", time:2, tip:"紅蔥頭酥是這道菜的靈魂"},
+        {step:2, description:"同鍋炒肉絲到變色，加香菇絲炒香", heatLevel:"中大火", time:3},
+        {step:3, description:"放入南瓜絲拌炒，加醬油", heatLevel:"中火", time:2},
+        {step:4, description:"加泡菇水與清水約1杯，蓋鍋蓋燜到南瓜軟化出泥", heatLevel:"中小火", time:4, tip:"南瓜要燜到半化開，才會裹住米粉"},
+        {step:5, description:"放入米粉翻拌吸收湯汁", heatLevel:"中火", time:3},
+        {step:6, description:"加鹽、白胡椒粉，撒紅蔥酥起鍋", heatLevel:"小火", time:1}
+      ],
+      heatLevel: "燜南瓜用中小火，拌米粉轉中火",
+      tips: ["南瓜要切細絲才容易化開","米粉用冷水泡就好，熱水泡會爛"],
+      commonMistakes: ["米粉泡太久，一炒就斷成碎粉","水一次加太多，變成湯米粉"],
+      aliases: ["南瓜炒米粉","金瓜米粉"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish358", name: "蒸南瓜", icon: "🎃", category: "蔬菜", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 5, cookTime: 15,
+      ingredients: [ {name:"南瓜", amount:0.5, unit:"顆"} ],
+      seasonings: [ {name:"鹽", amount:0.2, unit:"小匙"} ],
+      tools: ["電鍋","盤子"],
+      preparationSteps: ["南瓜去籽切塊，帶皮不用削"],
+      cookingSteps: [
+        {step:1, description:"南瓜塊排入盤中，皮朝下", heatLevel:"免加熱", time:2},
+        {step:2, description:"電鍋外鍋一杯水，蒸到筷子能輕鬆插入", heatLevel:"蒸煮", time:15, tip:"想吃綿一點就多蒸3分鐘"},
+        {step:3, description:"撒一點點鹽帶出甜味即可", heatLevel:"免加熱", time:1, tip:"鹽會讓甜味更明顯，別加多"}
+      ],
+      heatLevel: "電鍋蒸",
+      tips: ["南瓜皮蒸軟後可以直接吃，營養也在皮","一次多蒸一些，隔天壓成泥做濃湯很方便"],
+      commonMistakes: ["切太厚蒸不透，中間還硬"],
+      aliases: ["蒸南瓜","電鍋蒸南瓜"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish359", name: "地瓜葉湯", icon: "🍲", category: "湯品", difficulty: "簡單",
+      priority: 1,
+      servings: 4, prepTime: 5, cookTime: 8,
+      ingredients: [ {name:"地瓜葉", amount:1, unit:"把"}, {name:"吻仔魚", amount:50, unit:"g"} ],
+      seasonings: [ {name:"薑", amount:3, unit:"片"}, {name:"鹽", amount:1, unit:"小匙"}, {name:"香油", amount:0.5, unit:"小匙"} ],
+      tools: ["湯鍋","湯杓"],
+      preparationSteps: ["地瓜葉摘除粗梗，只留嫩葉與嫩莖","吻仔魚沖洗瀝乾","薑切絲"],
+      cookingSteps: [
+        {step:1, description:"鍋中加水800ml和薑絲煮滾", heatLevel:"大火", time:3},
+        {step:2, description:"放入吻仔魚煮2分鐘", heatLevel:"中火", time:2},
+        {step:3, description:"放入地瓜葉煮1分鐘至變色", heatLevel:"中火", time:1, tip:"地瓜葉很快熟，變色就可以了"},
+        {step:4, description:"加鹽調味，滴香油起鍋", heatLevel:"小火", time:1}
+      ],
+      heatLevel: "中火為主",
+      tips: ["粗梗一定要摘掉，不然口感像在啃草","沒有吻仔魚可以改用蛤蜊或直接清湯"],
+      commonMistakes: ["地瓜葉煮太久變黑，湯也變濁"],
+      aliases: ["地瓜葉湯","吻仔魚地瓜葉湯"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish360", name: "馬鈴薯燉肉", icon: "🥔", category: "肉類", difficulty: "普通",
+      priority: 1,
+      servings: 4, prepTime: 15, cookTime: 30,
+      ingredients: [ {name:"馬鈴薯", amount:2, unit:"顆"}, {name:"豬肉", amount:300, unit:"g"}, {name:"洋蔥", amount:1, unit:"顆"}, {name:"紅蘿蔔", amount:1, unit:"條"} ],
+      seasonings: [ {name:"醬油", amount:3, unit:"大匙"}, {name:"味醂", amount:2, unit:"大匙"}, {name:"米酒", amount:2, unit:"大匙"}, {name:"糖", amount:1, unit:"大匙"} ],
+      tools: ["湯鍋","鍋鏟","鍋蓋"],
+      preparationSteps: ["馬鈴薯、紅蘿蔔去皮切滾刀塊","洋蔥切粗絲","豬肉切薄片"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，洋蔥炒到透明帶甜香", heatLevel:"中火", time:3, tip:"洋蔥炒透是甜味的來源，別急"},
+        {step:2, description:"下豬肉片炒到變色", heatLevel:"中大火", time:3},
+        {step:3, description:"加馬鈴薯、紅蘿蔔一起拌炒", heatLevel:"中火", time:2},
+        {step:4, description:"加水蓋過食材八分，放醬油、味醂、米酒、糖", heatLevel:"大火", time:2},
+        {step:5, description:"煮滾後撈浮沫，蓋鍋蓋轉小火燉煮", heatLevel:"小火", time:18, tip:"筷子能插進馬鈴薯就好了"},
+        {step:6, description:"開蓋轉中火收汁到略稠", heatLevel:"中火", time:3}
+      ],
+      heatLevel: "先中火炒香，再小火慢燉",
+      tips: ["馬鈴薯切大塊，燉久才不會化掉","隔餐更入味，很適合前一晚先做"],
+      commonMistakes: ["水加太滿變成湯","一直翻攪導致馬鈴薯散開"],
+      aliases: ["馬鈴薯燉肉","日式馬鈴薯燉肉"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish361", name: "乾煎馬鈴薯片", icon: "🥔", category: "蔬菜", difficulty: "簡單",
+      priority: 2,
+      servings: 3, prepTime: 8, cookTime: 12,
+      ingredients: [ {name:"馬鈴薯", amount:2, unit:"顆"} ],
+      seasonings: [ {name:"鹽", amount:0.5, unit:"小匙"}, {name:"黑胡椒粒", amount:0.3, unit:"小匙"}, {name:"蒜頭", amount:3, unit:"瓣"} ],
+      tools: ["平底鍋","夾子","調理盆"],
+      preparationSteps: ["馬鈴薯去皮切約0.5公分厚片","泡冷水洗去表面澱粉後擦乾","蒜頭切片"],
+      cookingSteps: [
+        {step:1, description:"鍋中下油，馬鈴薯片單層平鋪", heatLevel:"中小火", time:1, tip:"不要疊，疊了就變成蒸的"},
+        {step:2, description:"煎到底面金黃再翻面", heatLevel:"中小火", time:5, tip:"不要一直翻，等它上色"},
+        {step:3, description:"另一面同樣煎到金黃", heatLevel:"中小火", time:4},
+        {step:4, description:"加蒜片略炒，撒鹽和黑胡椒起鍋", heatLevel:"小火", time:2}
+      ],
+      heatLevel: "全程中小火",
+      tips: ["切完泡水去澱粉，煎起來才不會黏鍋","厚度一致才會同時熟"],
+      commonMistakes: ["沒擦乾就下鍋，油爆又煎不酥","火太大外焦內生"],
+      aliases: ["乾煎馬鈴薯片","香煎馬鈴薯"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish362", name: "薯泥沙拉", icon: "🥔", category: "蔬菜", difficulty: "簡單",
+      priority: 2,
+      servings: 4, prepTime: 15, cookTime: 15,
+      ingredients: [ {name:"馬鈴薯", amount:3, unit:"顆"}, {name:"雞蛋", amount:2, unit:"顆"}, {name:"小黃瓜", amount:1, unit:"條"}, {name:"紅蘿蔔", amount:0.3, unit:"條"} ],
+      seasonings: [ {name:"美乃滋", amount:4, unit:"大匙"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"黑胡椒粒", amount:0.3, unit:"小匙"} ],
+      tools: ["電鍋","調理盆","叉子"],
+      preparationSteps: ["馬鈴薯去皮切塊","雞蛋洗淨","小黃瓜切薄片用鹽抓出水","紅蘿蔔切小丁"],
+      cookingSteps: [
+        {step:1, description:"馬鈴薯與紅蘿蔔丁放電鍋蒸15分鐘至軟", heatLevel:"蒸煮", time:15},
+        {step:2, description:"雞蛋一起蒸熟，剝殼切碎", heatLevel:"蒸煮", time:2},
+        {step:3, description:"馬鈴薯趁熱壓成泥，放涼到不燙手", heatLevel:"免加熱", time:5, tip:"一定要放涼再拌美乃滋，否則會出油分離"},
+        {step:4, description:"小黃瓜擠乾水分，與所有材料和美乃滋拌勻", heatLevel:"免加熱", time:3},
+        {step:5, description:"加鹽和黑胡椒調味，冷藏更好吃", heatLevel:"免加熱", time:1}
+      ],
+      heatLevel: "電鍋蒸，之後免開火",
+      tips: ["小黃瓜要用鹽殺青擠乾，沙拉才不會出水","趁熱壓泥比較好壓，但要放涼才拌醬"],
+      commonMistakes: ["熱的時候拌美乃滋，整盆油水分離","小黃瓜沒擠乾，隔天變一攤水"],
+      aliases: ["薯泥沙拉","馬鈴薯沙拉"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish363", name: "蘿蔔燉肉", icon: "🥣", category: "肉類", difficulty: "普通",
+      priority: 1,
+      servings: 4, prepTime: 12, cookTime: 35,
+      ingredients: [ {name:"白蘿蔔", amount:1, unit:"條"}, {name:"五花肉", amount:400, unit:"g"} ],
+      seasonings: [ {name:"醬油", amount:4, unit:"大匙"}, {name:"米酒", amount:3, unit:"大匙"}, {name:"冰糖", amount:1, unit:"大匙"}, {name:"薑", amount:4, unit:"片"}, {name:"八角", amount:1, unit:"顆"} ],
+      tools: ["湯鍋","鍋蓋","鍋鏟"],
+      preparationSteps: ["白蘿蔔去皮切大塊","五花肉切塊汆燙去血水","薑切片"],
+      cookingSteps: [
+        {step:1, description:"乾鍋煸五花肉到兩面微焦出油", heatLevel:"中火", time:5, tip:"逼出豬油，肉才不膩"},
+        {step:2, description:"加薑片和冰糖炒到糖融化上色", heatLevel:"中火", time:2},
+        {step:3, description:"淋米酒和醬油嗆鍋", heatLevel:"中大火", time:1},
+        {step:4, description:"加水蓋過食材，放八角，煮滾撈沫", heatLevel:"大火", time:3},
+        {step:5, description:"蓋鍋蓋小火燉20分鐘", heatLevel:"小火", time:20},
+        {step:6, description:"放入蘿蔔塊再燉15分鐘至透明", heatLevel:"小火", time:10, tip:"蘿蔔後放才不會爛掉散開"}
+      ],
+      heatLevel: "先中火煸香，後小火慢燉",
+      tips: ["蘿蔔要等肉燉軟了再放，才不會化在湯裡","冬天的蘿蔔最甜，這道最適合冬天做"],
+      commonMistakes: ["蘿蔔跟肉一起下鍋，燉完只剩碎渣","火太大湯汁乾掉燒焦"],
+      aliases: ["蘿蔔燉肉","紅燒蘿蔔肉"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish364", name: "滷蘿蔔", icon: "🥣", category: "蔬菜", difficulty: "簡單",
+      priority: 1,
+      servings: 4, prepTime: 8, cookTime: 30,
+      ingredients: [ {name:"白蘿蔔", amount:1, unit:"條"} ],
+      seasonings: [ {name:"醬油", amount:3, unit:"大匙"}, {name:"糖", amount:1, unit:"小匙"}, {name:"薑", amount:3, unit:"片"}, {name:"八角", amount:1, unit:"顆"}, {name:"柴魚片", amount:1, unit:"小把"} ],
+      tools: ["湯鍋","鍋蓋"],
+      preparationSteps: ["白蘿蔔去皮切厚片或大塊","邊角稍微削圓，煮時不易碎"],
+      cookingSteps: [
+        {step:1, description:"蘿蔔放入鍋中，加水蓋過", heatLevel:"大火", time:2},
+        {step:2, description:"加醬油、糖、薑片、八角、柴魚片", heatLevel:"大火", time:1},
+        {step:3, description:"煮滾後轉小火，蓋鍋蓋滷25分鐘", heatLevel:"小火", time:25, tip:"滷到用筷子能穿透、顏色半透明"},
+        {step:4, description:"熄火浸泡30分鐘以上更入味", heatLevel:"免加熱", time:2, tip:"泡的時間比煮的時間更決定入味程度"}
+      ],
+      heatLevel: "小火慢滷",
+      tips: ["削圓邊角是關東煮店的做法，賣相好又不易碎","滷好放冰箱隔天吃最入味"],
+      commonMistakes: ["大火滾煮，蘿蔔外爛內白","煮好馬上撈起，完全沒入味"],
+      aliases: ["滷蘿蔔","關東煮蘿蔔"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish365", name: "蘿蔔絲蛋", icon: "🥚", category: "蛋料理", difficulty: "簡單",
+      priority: 2,
+      servings: 2, prepTime: 8, cookTime: 8,
+      ingredients: [ {name:"白蘿蔔", amount:0.3, unit:"條"}, {name:"雞蛋", amount:3, unit:"顆"} ],
+      seasonings: [ {name:"鹽", amount:0.5, unit:"小匙"}, {name:"白胡椒粉", amount:0.2, unit:"小匙"}, {name:"青蔥", amount:1, unit:"根"} ],
+      tools: ["炒鍋","鍋鏟","碗"],
+      preparationSteps: ["白蘿蔔刨成細絲，用少許鹽抓一下出水後擠乾","雞蛋打散","蔥切花"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，蘿蔔絲炒到透明變軟", heatLevel:"中火", time:3, tip:"炒到軟才不會有生蘿蔔的辛味"},
+        {step:2, description:"蘿蔔絲拌入蛋液中，加鹽和白胡椒", heatLevel:"免加熱", time:1},
+        {step:3, description:"鍋中補油，倒入蛋液攤平", heatLevel:"中火", time:2},
+        {step:4, description:"底面凝固後翻面，煎到兩面金黃", heatLevel:"中小火", time:2},
+        {step:5, description:"撒蔥花起鍋切塊", heatLevel:"小火", time:1}
+      ],
+      heatLevel: "中火為主",
+      tips: ["蘿蔔絲要先擠乾水，蛋才煎得起來","跟菜脯蛋同一個路數，但清爽很多"],
+      commonMistakes: ["蘿蔔絲沒擠乾，蛋液整個散掉"],
+      aliases: ["蘿蔔絲蛋","蘿蔔絲煎蛋"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish366", name: "芹菜炒豆干", icon: "🥬", category: "蔬菜", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 8, cookTime: 8,
+      ingredients: [ {name:"芹菜", amount:1, unit:"把"}, {name:"豆干", amount:5, unit:"塊"}, {name:"豬肉", amount:80, unit:"g"} ],
+      seasonings: [ {name:"醬油", amount:1, unit:"大匙"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"鹽", amount:0.3, unit:"小匙"}, {name:"辣椒", amount:1, unit:"根"} ],
+      tools: ["炒鍋","鍋鏟"],
+      preparationSteps: ["芹菜去葉切段","豆干切薄片","豬肉切絲","辣椒切斜片"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，豆干片煎到兩面微焦", heatLevel:"中火", time:3, tip:"豆干煎過再炒，香氣差很多"},
+        {step:2, description:"加肉絲炒到變色", heatLevel:"中大火", time:2},
+        {step:3, description:"下芹菜和辣椒，淋米酒和醬油快炒", heatLevel:"大火", time:2, tip:"芹菜要保持脆度，炒久就軟爛"},
+        {step:4, description:"試鹹淡補鹽，起鍋", heatLevel:"中火", time:1}
+      ],
+      heatLevel: "先中火煎豆干，下芹菜轉大火",
+      tips: ["芹菜葉別丟，可以留著煮湯","豆干切薄一點比較容易入味"],
+      commonMistakes: ["豆干沒煎直接炒，吃起來乾乾沒味道","芹菜炒太久變黃"],
+      aliases: ["芹菜炒豆干","豆干炒芹菜"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish367", name: "豆干炒韭菜", icon: "🥬", category: "蔬菜", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 8, cookTime: 6,
+      ingredients: [ {name:"韭菜", amount:1, unit:"把"}, {name:"豆干", amount:5, unit:"塊"} ],
+      seasonings: [ {name:"醬油", amount:1, unit:"大匙"}, {name:"鹽", amount:0.3, unit:"小匙"}, {name:"蒜頭", amount:2, unit:"瓣"}, {name:"辣椒", amount:1, unit:"根"} ],
+      tools: ["炒鍋","鍋鏟"],
+      preparationSteps: ["韭菜切段，根部與葉子分開","豆干切條","蒜頭切片，辣椒切圈"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，豆干條煎到邊緣金黃", heatLevel:"中火", time:3},
+        {step:2, description:"加蒜片、辣椒炒香，淋醬油", heatLevel:"中火", time:1},
+        {step:3, description:"先下韭菜根部炒20秒，再下葉子", heatLevel:"大火", time:1},
+        {step:4, description:"快速翻炒到韭菜軟，加鹽起鍋", heatLevel:"大火", time:1, tip:"韭菜熟得很快，看到變軟就要起鍋"}
+      ],
+      heatLevel: "豆干中火，韭菜大火快炒",
+      tips: ["韭菜根部先下，熟度才一致","起鍋要果斷，慢了就變黃"],
+      commonMistakes: ["韭菜炒過頭，整盤黃綠色出水"],
+      aliases: ["豆干炒韭菜","韭菜炒豆干"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish368", name: "涼拌豆干絲", icon: "🥢", category: "蔬菜", difficulty: "簡單",
+      priority: 2,
+      servings: 3, prepTime: 10, cookTime: 3,
+      ingredients: [ {name:"豆干", amount:5, unit:"塊"}, {name:"小黃瓜", amount:1, unit:"條"}, {name:"紅蘿蔔", amount:0.2, unit:"條"} ],
+      seasonings: [ {name:"香油", amount:1, unit:"大匙"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"糖", amount:0.3, unit:"小匙"}, {name:"蒜頭", amount:2, unit:"瓣"}, {name:"白胡椒粉", amount:0.2, unit:"小匙"} ],
+      tools: ["湯鍋","調理盆"],
+      preparationSteps: ["豆干切細絲","小黃瓜、紅蘿蔔切細絲","蒜頭切末"],
+      cookingSteps: [
+        {step:1, description:"滾水汆燙豆干絲1分鐘，撈起瀝乾放涼", heatLevel:"大火", time:3, tip:"燙過可以去豆腥味"},
+        {step:2, description:"紅蘿蔔絲同鍋燙30秒撈起", heatLevel:"大火", time:1},
+        {step:3, description:"所有材料與調味料拌勻", heatLevel:"免加熱", time:3},
+        {step:4, description:"冷藏20分鐘後更入味", heatLevel:"免加熱", time:1}
+      ],
+      heatLevel: "只需汆燙",
+      tips: ["常備小菜，冰個三天沒問題","想更香可以加一點花生粉"],
+      commonMistakes: ["豆干沒燙，有生豆味","沒瀝乾水分，隔天出水"],
+      aliases: ["涼拌豆干絲","涼拌豆乾絲"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish369", name: "韭黃炒蛋", icon: "🥚", category: "蛋料理", difficulty: "簡單",
+      priority: 1,
+      servings: 2, prepTime: 5, cookTime: 5,
+      ingredients: [ {name:"韭菜", amount:1, unit:"把"}, {name:"雞蛋", amount:3, unit:"顆"} ],
+      seasonings: [ {name:"鹽", amount:0.5, unit:"小匙"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"白胡椒粉", amount:0.2, unit:"小匙"} ],
+      tools: ["炒鍋","鍋鏟","碗"],
+      preparationSteps: ["韭黃或韭菜切約3公分段","雞蛋打散加少許鹽和米酒"],
+      cookingSteps: [
+        {step:1, description:"熱鍋多下一點油，倒入蛋液", heatLevel:"中大火", time:1, tip:"油多一點，蛋才會蓬鬆"},
+        {step:2, description:"蛋液半凝固時盛起備用", heatLevel:"中大火", time:1},
+        {step:3, description:"同鍋下韭黃大火快炒20秒", heatLevel:"大火", time:1},
+        {step:4, description:"炒蛋回鍋，加鹽和白胡椒拌勻立即起鍋", heatLevel:"大火", time:2}
+      ],
+      heatLevel: "大火快炒",
+      tips: ["韭黃比韭菜嫩，更快熟，動作要快","蛋先炒半熟盛起，最後才回鍋，口感最嫩"],
+      commonMistakes: ["蛋炒太老變硬","韭黃炒久出水變爛"],
+      aliases: ["韭黃炒蛋","韭菜炒蛋"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish370", name: "皮蛋炒青椒", icon: "🫑", category: "蔬菜", difficulty: "簡單",
+      priority: 2,
+      servings: 3, prepTime: 8, cookTime: 6,
+      ingredients: [ {name:"皮蛋", amount:3, unit:"顆"}, {name:"青椒", amount:2, unit:"顆"} ],
+      seasonings: [ {name:"蒜頭", amount:3, unit:"瓣"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"糖", amount:0.3, unit:"小匙"}, {name:"辣椒", amount:1, unit:"根"} ],
+      tools: ["炒鍋","鍋鏟","電鍋"],
+      preparationSteps: ["皮蛋先蒸5分鐘定型再剝殼切塊","青椒去籽切塊","蒜頭切片"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，皮蛋塊先煎到表面微焦盛起", heatLevel:"中火", time:2, tip:"煎過的皮蛋比較香，也不會散開"},
+        {step:2, description:"爆香蒜片和辣椒", heatLevel:"中火", time:1},
+        {step:3, description:"下青椒大火炒到表面起皺", heatLevel:"大火", time:2},
+        {step:4, description:"皮蛋回鍋，加醬油和糖快速翻勻起鍋", heatLevel:"中大火", time:1}
+      ],
+      heatLevel: "中大火",
+      tips: ["皮蛋先蒸過再切，蛋黃不會流得滿刀都是","青椒炒到虎皮狀最香"],
+      commonMistakes: ["皮蛋沒先定型，切的時候整個爛掉","翻炒太用力，皮蛋碎成泥"],
+      aliases: ["皮蛋炒青椒","虎皮青椒皮蛋"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish371", name: "涼拌皮蛋", icon: "🥚", category: "蛋料理", difficulty: "簡單",
+      priority: 1,
+      servings: 2, prepTime: 8, cookTime: 0,
+      ingredients: [ {name:"皮蛋", amount:3, unit:"顆"}, {name:"小黃瓜", amount:1, unit:"條"} ],
+      seasonings: [ {name:"醬油膏", amount:1.5, unit:"大匙"}, {name:"烏醋", amount:1, unit:"小匙"}, {name:"香油", amount:1, unit:"小匙"}, {name:"蒜頭", amount:2, unit:"瓣"}, {name:"糖", amount:0.3, unit:"小匙"}, {name:"香菜", amount:1, unit:"小把"} ],
+      tools: ["盤子","小碗"],
+      preparationSteps: ["皮蛋剝殼切瓣","小黃瓜拍裂切段","蒜頭切末，香菜切碎"],
+      cookingSteps: [
+        {step:1, description:"小黃瓜段鋪盤底", heatLevel:"免加熱", time:2},
+        {step:2, description:"皮蛋擺在小黃瓜上", heatLevel:"免加熱", time:1},
+        {step:3, description:"醬油膏、烏醋、香油、糖、蒜末調成醬汁", heatLevel:"免加熱", time:2},
+        {step:4, description:"淋上醬汁，撒香菜即可", heatLevel:"免加熱", time:1}
+      ],
+      heatLevel: "完全免開火",
+      tips: ["夏天最快的一道菜，三分鐘上桌","小黃瓜用拍的比切的入味"],
+      commonMistakes: ["醬汁太早淋，小黃瓜出水變稀"],
+      aliases: ["涼拌皮蛋","皮蛋小黃瓜"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish372", name: "金沙杏鮑菇", icon: "🍄", category: "蔬菜", difficulty: "普通",
+      priority: 1,
+      servings: 3, prepTime: 10, cookTime: 10,
+      ingredients: [ {name:"杏鮑菇", amount:3, unit:"根"}, {name:"鹹蛋", amount:2, unit:"顆"} ],
+      seasonings: [ {name:"太白粉", amount:3, unit:"大匙"}, {name:"蒜頭", amount:2, unit:"瓣"}, {name:"糖", amount:0.3, unit:"小匙"}, {name:"米酒", amount:1, unit:"小匙"} ],
+      tools: ["炒鍋","漏勺","盤子"],
+      preparationSteps: ["杏鮑菇切條狀，裹薄薄一層太白粉","鹹蛋黃與蛋白分開切碎","蒜頭切末"],
+      cookingSteps: [
+        {step:1, description:"油溫170度，杏鮑菇條炸到金黃撈起瀝油", heatLevel:"中大火", time:4},
+        {step:2, description:"鍋中留油，小火炒鹹蛋黃到起泡融化", heatLevel:"小火", time:2, tip:"起泡是出沙的訊號"},
+        {step:3, description:"加蒜末和鹹蛋白碎炒香", heatLevel:"小火", time:1},
+        {step:4, description:"杏鮑菇回鍋，淋米酒加糖，翻炒裹勻", heatLevel:"中火", time:2}
+      ],
+      heatLevel: "炸物中大火，炒金沙小火",
+      tips: ["裹太白粉要薄，太厚會結塊","鹹蛋很鹹，不用另外加鹽"],
+      commonMistakes: ["鹹蛋黃用大火炒，焦掉發苦","杏鮑菇沒炸乾，裹不上金沙"],
+      aliases: ["金沙杏鮑菇","鹹蛋杏鮑菇"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish373", name: "打拋豬", icon: "🌶️", category: "肉類", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 10, cookTime: 8,
+      ingredients: [ {name:"豬絞肉", amount:300, unit:"g"}, {name:"番茄", amount:1, unit:"顆"}, {name:"九層塔", amount:1, unit:"把"} ],
+      seasonings: [ {name:"魚露", amount:1.5, unit:"大匙"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"糖", amount:1, unit:"小匙"}, {name:"蒜頭", amount:4, unit:"瓣"}, {name:"辣椒", amount:2, unit:"根"}, {name:"檸檬", amount:0.5, unit:"顆"} ],
+      tools: ["炒鍋","鍋鏟"],
+      preparationSteps: ["蒜頭和辣椒切末","番茄切小丁","九層塔洗淨摘葉"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，爆香蒜末和辣椒末", heatLevel:"中火", time:1},
+        {step:2, description:"下絞肉大火炒散炒到出油上色", heatLevel:"大火", time:4, tip:"要炒到微焦，香氣才夠"},
+        {step:3, description:"加番茄丁炒到出汁", heatLevel:"中大火", time:2},
+        {step:4, description:"加魚露、醬油、糖拌炒收汁", heatLevel:"中火", time:1},
+        {step:5, description:"熄火拌入九層塔，擠檸檬汁", heatLevel:"免加熱", time:1, tip:"檸檬汁熄火後擠，酸香才不會揮發"}
+      ],
+      heatLevel: "大火快炒",
+      tips: ["魚露是靈魂，沒有的話味道會不對","配白飯加一顆半熟蛋最經典"],
+      commonMistakes: ["絞肉沒炒散結成塊","九層塔太早下變黑"],
+      aliases: ["打拋豬","泰式打拋豬肉"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish374", name: "絞肉蒸蛋", icon: "🥚", category: "蛋料理", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 10, cookTime: 15,
+      ingredients: [ {name:"雞蛋", amount:3, unit:"顆"}, {name:"豬絞肉", amount:120, unit:"g"} ],
+      seasonings: [ {name:"醬油", amount:1, unit:"大匙"}, {name:"米酒", amount:1, unit:"小匙"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"青蔥", amount:1, unit:"根"}, {name:"香油", amount:0.5, unit:"小匙"} ],
+      tools: ["電鍋","深盤","篩網","碗"],
+      preparationSteps: ["絞肉用醬油和米酒拌勻醃10分鐘","雞蛋打散，加1.5倍溫開水和鹽拌勻","蛋液過篩去泡沫","蔥切花"],
+      cookingSteps: [
+        {step:1, description:"絞肉平鋪在深盤底部", heatLevel:"免加熱", time:2},
+        {step:2, description:"倒入過篩的蛋液，撈掉表面泡沫", heatLevel:"免加熱", time:1, tip:"過篩再撈泡沫，表面才會平滑如鏡"},
+        {step:3, description:"蓋上盤子或封保鮮膜，電鍋外鍋一杯水", heatLevel:"蒸煮", time:13, tip:"蓋著蒸，避免水滴落造成坑洞"},
+        {step:4, description:"取出淋香油、撒蔥花", heatLevel:"免加熱", time:1}
+      ],
+      heatLevel: "電鍋蒸",
+      tips: ["蛋水比例 1:1.5，用溫開水最滑嫩","鍋蓋留一條縫，蒸氣不會太猛"],
+      commonMistakes: ["蛋液沒過篩，表面坑坑洞洞","蒸太久變成蜂窩狀"],
+      aliases: ["絞肉蒸蛋","肉末蒸蛋"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish375", name: "肉末茄子", icon: "🍆", category: "蔬菜", difficulty: "普通",
+      priority: 1,
+      servings: 3, prepTime: 10, cookTime: 12,
+      ingredients: [ {name:"茄子", amount:2, unit:"條"}, {name:"豬絞肉", amount:150, unit:"g"} ],
+      seasonings: [ {name:"醬油", amount:1.5, unit:"大匙"}, {name:"糖", amount:1, unit:"小匙"}, {name:"蒜頭", amount:3, unit:"瓣"}, {name:"米酒", amount:1, unit:"大匙"}, {name:"辣豆瓣醬", amount:1, unit:"小匙"}, {name:"青蔥", amount:1, unit:"根"} ],
+      tools: ["炒鍋","鍋鏟","鍋蓋"],
+      preparationSteps: ["茄子切滾刀塊，泡鹽水防止變黑","蒜頭切末，蔥切花"],
+      cookingSteps: [
+        {step:1, description:"茄子瀝乾，下油鍋中火炸或煎到表面軟化", heatLevel:"中火", time:4, tip:"先過油茄子才會保持紫色不變黑"},
+        {step:2, description:"茄子撈起，鍋中留油炒絞肉到出油", heatLevel:"中大火", time:3},
+        {step:3, description:"加蒜末和辣豆瓣醬炒香", heatLevel:"中火", time:1},
+        {step:4, description:"茄子回鍋，加醬油、糖、米酒和半杯水", heatLevel:"中火", time:1},
+        {step:5, description:"蓋鍋蓋燜3分鐘後收汁，撒蔥花起鍋", heatLevel:"中小火", time:3}
+      ],
+      heatLevel: "先中火過油，後中小火燜煮",
+      tips: ["茄子泡鹽水＋過油，是保持紫色的兩個關鍵","怕油可以改用電鍋先蒸軟茄子"],
+      commonMistakes: ["茄子沒過油，成品黑黑的不好看","水加太多變成一鍋湯"],
+      aliases: ["肉末茄子","絞肉茄子"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish376", name: "絞肉豆腐煲", icon: "🍲", category: "家常菜", difficulty: "簡單",
+      priority: 1,
+      servings: 4, prepTime: 10, cookTime: 12,
+      ingredients: [ {name:"豆腐", amount:1, unit:"盒"}, {name:"豬絞肉", amount:150, unit:"g"}, {name:"香菇", amount:3, unit:"朵"} ],
+      seasonings: [ {name:"醬油", amount:2, unit:"大匙"}, {name:"蠔油", amount:1, unit:"大匙"}, {name:"糖", amount:0.5, unit:"小匙"}, {name:"太白粉", amount:1, unit:"小匙"}, {name:"蒜頭", amount:3, unit:"瓣"}, {name:"青蔥", amount:1, unit:"根"} ],
+      tools: ["炒鍋","鍋鏟","鍋蓋"],
+      preparationSteps: ["豆腐切厚片","香菇泡軟切丁","蒜頭切末，蔥切花","太白粉加兩大匙水調成芡水"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下油，豆腐片兩面煎到微金黃盛起", heatLevel:"中火", time:4, tip:"先煎過豆腐才不容易散"},
+        {step:2, description:"同鍋炒絞肉到出油，加香菇丁和蒜末炒香", heatLevel:"中大火", time:3},
+        {step:3, description:"加醬油、蠔油、糖和一杯水煮滾", heatLevel:"中火", time:2},
+        {step:4, description:"豆腐回鍋，蓋鍋蓋小火燜5分鐘", heatLevel:"小火", time:4},
+        {step:5, description:"淋芡水勾薄芡，撒蔥花起鍋", heatLevel:"中火", time:1}
+      ],
+      heatLevel: "煎豆腐中火，燜煮小火",
+      tips: ["豆腐煎過再燒，形狀完整又入味","勾薄芡讓醬汁掛在豆腐上，配飯剛好"],
+      commonMistakes: ["豆腐沒煎直接燒，翻兩下就碎光","芡勾太濃變成糊"],
+      aliases: ["絞肉豆腐煲","肉末燒豆腐"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish377", name: "蔭鳳梨苦瓜雞", icon: "🍍", category: "湯品", difficulty: "簡單",
+      priority: 1,
+      servings: 4, prepTime: 12, cookTime: 35,
+      ingredients: [ {name:"苦瓜", amount:1, unit:"條"}, {name:"雞腿肉", amount:500, unit:"g"}, {name:"鳳梨", amount:150, unit:"g"} ],
+      seasonings: [ {name:"米酒", amount:2, unit:"大匙"}, {name:"薑", amount:3, unit:"片"}, {name:"鹽", amount:0.3, unit:"小匙"} ],
+      tools: ["湯鍋","鍋蓋","湯杓"],
+      preparationSteps: ["苦瓜對半剖開去籽去白膜，切大塊","雞腿切塊汆燙去血水","薑切片"],
+      cookingSteps: [
+        {step:1, description:"雞肉塊放入鍋中，加水蓋過約1500ml", heatLevel:"大火", time:3},
+        {step:2, description:"放薑片和米酒，煮滾後撈除浮沫", heatLevel:"大火", time:3},
+        {step:3, description:"轉小火燉15分鐘", heatLevel:"小火", time:15},
+        {step:4, description:"放入苦瓜和鳳梨（用蔭鳳梨罐頭連醬汁風味最好），再燉15分鐘", heatLevel:"小火", time:14, tip:"用蔭鳳梨的話，它的醬汁就是鹹味來源"},
+        {step:5, description:"試味道，不夠鹹才補一點鹽", heatLevel:"小火", time:1}
+      ],
+      heatLevel: "先大火煮滾，後小火慢燉",
+      tips: ["白膜刮乾淨，苦味會少一半","蔭鳳梨已經很鹹，鹽最後再看要不要加"],
+      commonMistakes: ["一開始就加鹽，燉完鹹到不行","苦瓜太早下，燉到爛掉沒口感"],
+      aliases: ["蔭鳳梨苦瓜雞","鳳梨苦瓜雞"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish378", name: "番茄豆腐湯", icon: "🍅", category: "湯品", difficulty: "簡單",
+      priority: 1,
+      servings: 4, prepTime: 8, cookTime: 12,
+      ingredients: [ {name:"番茄", amount:2, unit:"顆"}, {name:"豆腐", amount:1, unit:"盒"}, {name:"雞蛋", amount:1, unit:"顆"} ],
+      seasonings: [ {name:"鹽", amount:1, unit:"小匙"}, {name:"糖", amount:0.5, unit:"小匙"}, {name:"香油", amount:0.5, unit:"小匙"}, {name:"青蔥", amount:1, unit:"根"} ],
+      tools: ["湯鍋","湯杓","碗"],
+      preparationSteps: ["番茄切塊","豆腐切小塊","雞蛋打散","蔥切花"],
+      cookingSteps: [
+        {step:1, description:"熱鍋下少許油，番茄塊炒到出汁變軟", heatLevel:"中火", time:4, tip:"番茄先炒過，湯頭酸甜才夠味"},
+        {step:2, description:"加水約800ml煮滾", heatLevel:"大火", time:3},
+        {step:3, description:"放入豆腐塊，轉中火煮3分鐘", heatLevel:"中火", time:3},
+        {step:4, description:"加鹽和糖，蛋液繞圈慢慢倒入成蛋花", heatLevel:"小火", time:1, tip:"小火慢倒才會有漂亮的蛋花"},
+        {step:5, description:"滴香油撒蔥花起鍋", heatLevel:"小火", time:1}
+      ],
+      heatLevel: "炒番茄中火，煮湯中小火",
+      tips: ["番茄一定要先炒過，直接丟水裡煮味道會很淡","加一點點糖可以把番茄的酸中和得剛好"],
+      commonMistakes: ["蛋液大火快倒，變成一坨蛋塊"],
+      aliases: ["番茄豆腐湯","番茄蛋花豆腐湯"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish379", name: "三杯豆腐", icon: "🥘", category: "家常菜", difficulty: "簡單",
+      priority: 1,
+      servings: 3, prepTime: 8, cookTime: 12,
+      ingredients: [ {name:"豆腐", amount:1, unit:"盒"}, {name:"九層塔", amount:1, unit:"把"} ],
+      seasonings: [ {name:"黑麻油", amount:2, unit:"大匙"}, {name:"醬油膏", amount:2, unit:"大匙"}, {name:"米酒", amount:2, unit:"大匙"}, {name:"糖", amount:1, unit:"小匙"}, {name:"薑", amount:5, unit:"片"}, {name:"蒜頭", amount:5, unit:"瓣"} ],
+      tools: ["炒鍋","鍋鏟","鍋蓋"],
+      preparationSteps: ["豆腐切厚片，用廚房紙巾吸乾表面水分","薑切片，蒜頭去皮整顆","九層塔摘葉"],
+      cookingSteps: [
+        {step:1, description:"鍋中下油，豆腐兩面煎到金黃酥皮盛起", heatLevel:"中火", time:5, tip:"表面要擦乾才煎得出酥皮"},
+        {step:2, description:"另下黑麻油，小火爆香薑片到邊緣捲曲", heatLevel:"小火", time:2},
+        {step:3, description:"加蒜粒炒香", heatLevel:"中火", time:1},
+        {step:4, description:"豆腐回鍋，加醬油膏、米酒、糖，蓋鍋蓋燜煮", heatLevel:"中小火", time:3},
+        {step:5, description:"開蓋收汁，熄火拌入九層塔", heatLevel:"中大火", time:1}
+      ],
+      heatLevel: "煎豆腐中火，爆薑小火",
+      tips: ["豆腐先煎出皮，才禁得起後面翻炒","素食者把醬油膏換成素蠔油即可"],
+      commonMistakes: ["豆腐沒擦乾，下鍋噴油又黏鍋","麻油大火爆香變苦"],
+      aliases: ["三杯豆腐"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish380", name: "控肉飯", icon: "🍚", category: "主食", difficulty: "普通",
+      priority: 1,
+      servings: 4, prepTime: 15, cookTime: 60,
+      ingredients: [ {name:"五花肉", amount:600, unit:"g"} ],
+      seasonings: [ {name:"醬油", amount:5, unit:"大匙"}, {name:"米酒", amount:4, unit:"大匙"}, {name:"冰糖", amount:1.5, unit:"大匙"}, {name:"八角", amount:2, unit:"顆"}, {name:"薑", amount:4, unit:"片"}, {name:"蒜頭", amount:5, unit:"瓣"}, {name:"五香粉", amount:0.3, unit:"小匙"} ],
+      tools: ["湯鍋","鍋蓋","夾子"],
+      preparationSteps: ["五花肉切約2公分厚片","汆燙去血水後沖淨","薑切片，蒜頭拍扁"],
+      cookingSteps: [
+        {step:1, description:"乾鍋把五花肉兩面煎到微焦出油", heatLevel:"中火", time:6, tip:"煸出豬油，吃起來才不會太膩"},
+        {step:2, description:"倒掉多餘的油，加冰糖炒到融化上焦糖色", heatLevel:"小火", time:3, tip:"焦糖色是控肉紅亮的關鍵"},
+        {step:3, description:"加薑片、蒜頭炒香，淋米酒和醬油嗆鍋", heatLevel:"中火", time:2},
+        {step:4, description:"加水淹過肉，放八角和五香粉，煮滾撈沫", heatLevel:"大火", time:4},
+        {step:5, description:"蓋鍋蓋轉最小火滷45分鐘，中途翻面一次", heatLevel:"小火", time:42, tip:"筷子能輕鬆插穿就是軟了"},
+        {step:6, description:"開蓋轉中火收汁，淋在白飯上", heatLevel:"中火", time:3}
+      ],
+      heatLevel: "煸肉中火，慢滷最小火",
+      tips: ["一定要煸出油再滷，否則整碗都是油","前一天做好冰起來，隔天加熱更入味"],
+      commonMistakes: ["冰糖炒過頭變苦","火太大湯汁燒乾，肉還沒軟"],
+      aliases: ["控肉飯","焢肉飯","爌肉飯"],
+      status: "confirmed",
+      source: "official"
+    }
+    ,{
+      id: "dish381", name: "炸雞排", icon: "🍗", category: "肉類", difficulty: "普通",
+      priority: 1,
+      servings: 2, prepTime: 25, cookTime: 10,
+      ingredients: [ {name:"雞胸肉", amount:2, unit:"片"} ],
+      seasonings: [ {name:"醬油", amount:2, unit:"大匙"}, {name:"米酒", amount:1, unit:"大匙"}, {name:"糖", amount:0.5, unit:"小匙"}, {name:"五香粉", amount:0.5, unit:"小匙"}, {name:"白胡椒粉", amount:0.5, unit:"小匙"}, {name:"蒜頭", amount:3, unit:"瓣"}, {name:"地瓜粉", amount:6, unit:"大匙"}, {name:"胡椒鹽", amount:1, unit:"小匙"} ],
+      tools: ["炒鍋","夾子","盤子","肉錘"],
+      preparationSteps: ["雞胸肉從側面片開攤成一大片，用肉錘拍鬆拍薄","用醬油、米酒、糖、五香粉、白胡椒、蒜末醃30分鐘","地瓜粉倒在盤中"],
+      cookingSteps: [
+        {step:1, description:"雞排兩面均勻裹上地瓜粉，用手壓實", heatLevel:"免加熱", time:3, tip:"要壓緊，炸的時候粉才不會掉"},
+        {step:2, description:"靜置3分鐘讓粉反潮", heatLevel:"免加熱", time:3, tip:"反潮這一步不能省，否則粉會整片脫落"},
+        {step:3, description:"油溫170度，雞排下鍋炸4分鐘", heatLevel:"中大火", time:4},
+        {step:4, description:"撈起瀝油，油溫升到190度回鍋複炸40秒", heatLevel:"大火", time:2, tip:"複炸逼油，外皮才酥脆不油膩"},
+        {step:5, description:"瀝油後剪塊，撒胡椒鹽", heatLevel:"免加熱", time:1}
+      ],
+      heatLevel: "初炸中大火，複炸大火",
+      tips: ["雞胸要拍薄拍鬆，才不會外熟內生又乾柴","地瓜粉比麵粉酥，粗粒的更好"],
+      commonMistakes: ["沒等反潮就下鍋，粉全部掉在油裡","油溫不夠，整片吸油變軟"],
+      aliases: ["炸雞排","鹹酥雞排"],
+      status: "confirmed",
+      source: "official"
+    }
   ];
 
   function getAllDishes(){
@@ -9663,9 +10641,9 @@
     { id:"ing054", name:"地瓜葉", icon:"🥬", category:"蔬菜", aliases:["番薯葉"], matchNames:["地瓜葉"], commonUnits:["把"], status:"confirmed", source:"official" },
     { id:"ing087", name:"大白菜", icon:"🥬", category:"蔬菜", aliases:["白菜"], matchNames:["大白菜","白菜"], commonUnits:["顆","片"], status:"confirmed", source:"official" },
     // 肉類
-    { id:"ing015", name:"豬肉", icon:"🥩", category:"肉類", aliases:[], matchNames:["豬肉絲"], commonUnits:["g"], status:"confirmed", source:"official" },
-    { id:"ing016", name:"豬絞肉", icon:"🥩", category:"肉類", aliases:[], matchNames:["豬絞肉"], commonUnits:["g"], status:"confirmed", source:"official" },
-    { id:"ing017", name:"排骨", icon:"🍖", category:"肉類", aliases:[], matchNames:["小排骨"], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing015", name:"豬肉", icon:"🥩", category:"肉類", aliases:[], matchNames:["豬肉","豬肉絲","肉絲","豬肉片","豬肉塊"], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing016", name:"豬絞肉", icon:"🥩", category:"肉類", aliases:[], matchNames:["豬絞肉","絞肉","豬絞"], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing017", name:"排骨", icon:"🍖", category:"肉類", aliases:[], matchNames:["排骨","小排骨","豬小排","肋排"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing018", name:"牛肉", icon:"🥩", category:"肉類", aliases:[], matchNames:["牛肉"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing019", name:"牛絞肉", icon:"🥩", category:"肉類", aliases:[], matchNames:[], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing043", name:"五花肉", icon:"🥩", category:"肉類", aliases:[], matchNames:["五花肉"], commonUnits:["g"], status:"confirmed", source:"official" },
@@ -9674,11 +10652,11 @@
     { id:"ing057", name:"鴨肉", icon:"🦆", category:"肉類", aliases:[], matchNames:["鴨肉","鴨腿"], commonUnits:["g"], status:"confirmed", source:"official" },
     // 雞肉（獨立一類）
     { id:"ing020", name:"雞肉", icon:"🐔", category:"雞肉", aliases:[], matchNames:[], commonUnits:["g"], status:"confirmed", source:"official" },
-    { id:"ing021", name:"雞腿肉", icon:"🐔", category:"雞肉", aliases:[], matchNames:["雞腿肉","去骨雞腿排"], commonUnits:["g","片"], status:"confirmed", source:"official" },
+    { id:"ing021", name:"雞腿肉", icon:"🐔", category:"雞肉", aliases:[], matchNames:["雞腿肉","去骨雞腿排","雞腿","棒棒腿","雞腿排"], commonUnits:["g","片"], status:"confirmed", source:"official" },
     { id:"ing022", name:"雞胸肉", icon:"🐔", category:"雞肉", aliases:[], matchNames:["雞胸肉"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing058", name:"雞翅", icon:"🍗", category:"雞肉", aliases:[], matchNames:["雞翅","雞翅膀"], commonUnits:["支"], status:"confirmed", source:"official" },
     // 海鮮
-    { id:"ing024", name:"蝦", icon:"🦐", category:"海鮮", aliases:[], matchNames:[], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing024", name:"蝦", icon:"🦐", category:"海鮮", aliases:[], matchNames:["蝦","蝦仁","草蝦","白蝦","鮮蝦","蝦子"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing025", name:"蛤蜊", icon:"🐚", category:"海鮮", aliases:[], matchNames:["蛤蜊"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing026", name:"透抽", icon:"🦑", category:"海鮮", aliases:[], matchNames:[], commonUnits:["隻"], status:"confirmed", source:"official" },
     { id:"ing059", name:"花枝", icon:"🦑", category:"海鮮", aliases:[], matchNames:["花枝"], commonUnits:["隻"], status:"confirmed", source:"official" },
@@ -9763,7 +10741,6 @@
     { id:"ing168", name:"虱目魚", icon:"🐟", category:"海鮮", aliases:["虱目魚肚"], matchNames:["虱目魚","虱目魚肚"], commonUnits:["片","尾"], status:"confirmed", source:"official" },
     { id:"ing169", name:"鯛魚片", icon:"🐟", category:"海鮮", aliases:["鯛魚"], matchNames:["鯛魚片","鯛魚"], commonUnits:["片","g"], status:"confirmed", source:"official" },
     { id:"ing170", name:"白帶魚", icon:"🐟", category:"海鮮", aliases:[], matchNames:["白帶魚"], commonUnits:["段","尾"], status:"confirmed", source:"official" },
-    { id:"ing171", name:"蝦仁", icon:"🦐", category:"海鮮", aliases:[], matchNames:["蝦仁"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing172", name:"小卷", icon:"🦑", category:"海鮮", aliases:[], matchNames:["小卷"], commonUnits:["尾","g"], status:"confirmed", source:"official" },
     { id:"ing173", name:"里肌肉", icon:"🍖", category:"肉類", aliases:[], matchNames:["里肌肉"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing174", name:"梅花肉", icon:"🍖", category:"肉類", aliases:[], matchNames:["梅花肉"], commonUnits:["g","片"], status:"confirmed", source:"official" },
@@ -9775,7 +10752,7 @@
     { id:"ing180", name:"粉絲", icon:"🍜", category:"主食", aliases:[], matchNames:["粉絲"], commonUnits:["把","g"], status:"confirmed", source:"official" },
     // 蛋／豆製品
     { id:"ing027", name:"雞蛋", icon:"🥚", category:"蛋豆製品", aliases:["蛋","雞子"], matchNames:["雞蛋"], commonUnits:["顆"], status:"confirmed", source:"official" },
-    { id:"ing028", name:"豆腐", icon:"🫘", category:"蛋豆製品", aliases:[], matchNames:["板豆腐"], commonUnits:["盒"], status:"confirmed", source:"official" },
+    { id:"ing028", name:"豆腐", icon:"🫘", category:"蛋豆製品", aliases:[], matchNames:["豆腐","板豆腐","嫩豆腐","傳統豆腐"], commonUnits:["盒"], status:"confirmed", source:"official" },
     { id:"ing029", name:"豆干", icon:"🫘", category:"蛋豆製品", aliases:[], matchNames:[], commonUnits:["片"], status:"confirmed", source:"official" },
     { id:"ing063", name:"皮蛋", icon:"🥚", category:"蛋豆製品", aliases:[], matchNames:["皮蛋"], commonUnits:["顆"], status:"confirmed", source:"official" },
     { id:"ing064", name:"鹹蛋", icon:"🥚", category:"蛋豆製品", aliases:[], matchNames:["鹹蛋","鹹蛋黃"], commonUnits:["顆"], status:"confirmed", source:"official" },
@@ -9789,10 +10766,10 @@
     { id:"ing067", name:"秀珍菇", icon:"🍄", category:"菇類", aliases:[], matchNames:["秀珍菇"], commonUnits:["包"], status:"confirmed", source:"official" },
     { id:"ing068", name:"木耳", icon:"🍄", category:"菇類", aliases:["黑木耳"], matchNames:["木耳","黑木耳"], commonUnits:["片","g"], status:"confirmed", source:"official" },
     // 辛香料
-    { id:"ing034", name:"蒜頭", icon:"🧄", category:"調味辛香", aliases:["大蒜"], matchNames:["蒜頭","蒜末"], commonUnits:["瓣"], status:"confirmed", source:"official" },
-    { id:"ing035", name:"青蔥", icon:"🌿", category:"調味辛香", aliases:["蔥"], matchNames:["蔥白","蔥花"], commonUnits:["根"], status:"confirmed", source:"official" },
-    { id:"ing036", name:"辣椒", icon:"🌶️", category:"調味辛香", aliases:["乾辣椒"], matchNames:["乾辣椒"], commonUnits:["支"], status:"confirmed", source:"official" },
-    { id:"ing037", name:"薑", icon:"🫚", category:"調味辛香", aliases:["生薑"], matchNames:["老薑","薑絲"], commonUnits:["塊"], status:"confirmed", source:"official" },
+    { id:"ing034", name:"蒜頭", icon:"🧄", category:"調味辛香", aliases:["大蒜"], matchNames:["蒜頭","蒜末","蒜片","蒜泥","蒜仁"], commonUnits:["瓣"], status:"confirmed", source:"official" },
+    { id:"ing035", name:"青蔥", icon:"🌿", category:"調味辛香", aliases:["蔥"], matchNames:["青蔥","蔥白","蔥花","蔥","蔥段"], commonUnits:["根"], status:"confirmed", source:"official" },
+    { id:"ing036", name:"辣椒", icon:"🌶️", category:"調味辛香", aliases:["乾辣椒"], matchNames:["辣椒","乾辣椒","辣椒絲","紅辣椒"], commonUnits:["支"], status:"confirmed", source:"official" },
+    { id:"ing037", name:"薑", icon:"🫚", category:"調味辛香", aliases:["生薑"], matchNames:["薑","老薑","薑絲","嫩薑","薑片","薑末"], commonUnits:["塊"], status:"confirmed", source:"official" },
     { id:"ing038", name:"九層塔", icon:"🌱", category:"調味辛香", aliases:[], matchNames:["九層塔"], commonUnits:["把"], status:"confirmed", source:"official" },
     { id:"ing069", name:"蒜苗", icon:"🧄", category:"調味辛香", aliases:["蒜白"], matchNames:["蒜苗"], commonUnits:["支"], status:"confirmed", source:"official" },
     { id:"ing070", name:"紅蔥頭", icon:"🧅", category:"調味辛香", aliases:[], matchNames:["紅蔥頭","油蔥酥"], commonUnits:["顆"], status:"confirmed", source:"official" },
