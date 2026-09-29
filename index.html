@@ -583,6 +583,7 @@
   .match-badge.ok{background:var(--color-jade-soft); color:var(--color-jade);}
   .match-badge.mid{background:var(--color-accent-soft); color:var(--color-accent-dark);}
   .match-badge.low{background:var(--color-bg); color:var(--color-text-soft); border:1px solid var(--color-border);}
+  .match-have{font-size:12.5px; color:var(--color-jade, #2e7d5b); margin:4px 0 0;}
   .match-missing{font-size:var(--fs-label); font-weight:var(--weight-regular); color:var(--color-text-soft); margin:4px 0 0;}
 
   /* ---------- 搜尋找不到時的空狀態（找料理/我有食材共用）---------- */
@@ -3425,7 +3426,7 @@
       id: "dish057", name: "蝦仁蒸蛋", icon: "🥚", category: "蛋料理", difficulty: "簡單",
       priority: 1,
       servings: 2, prepTime: 10, cookTime: 12,
-      ingredients: [ {name:"雞蛋", amount:3, unit:"顆"}, {name:"蝦", amount:80, unit:"g"} ],
+      ingredients: [ {name:"雞蛋", amount:3, unit:"顆"}, {name:"蝦仁", amount:80, unit:"g"} ],
       seasonings: [ {name:"鹽", amount:0.3, unit:"小匙"}, {name:"香油", amount:0.5, unit:"小匙"}, {name:"青蔥", amount:1, unit:"根"} ],
       tools: ["電鍋或蒸鍋","蒸蛋碗"],
       preparationSteps: ["雞蛋打散，加入約1.5倍水量與鹽拌勻，過篩去除氣泡","蝦仁去腸泥洗淨"],
@@ -3785,7 +3786,7 @@
       id: "dish075", name: "鳳梨蝦球", icon: "🍍", category: "海鮮", difficulty: "中等",
       priority: 1,
       servings: 3, prepTime: 20, cookTime: 10,
-      ingredients: [ {name:"蝦", amount:300, unit:"g"}, {name:"鳳梨", amount:150, unit:"g"} ],
+      ingredients: [ {name:"蝦仁", amount:300, unit:"g"}, {name:"鳳梨", amount:150, unit:"g"} ],
       seasonings: [ {name:"太白粉", amount:3, unit:"大匙"}, {name:"鹽", amount:0.3, unit:"小匙"}, {name:"美乃滋", amount:3, unit:"大匙"}, {name:"煉乳", amount:1, unit:"大匙"} ],
       tools: ["炒鍋（油炸用）"],
       preparationSteps: ["蝦去殼去腸泥，用鹽稍微抓醃，裹上太白粉","鳳梨切塊，美乃滋與煉乳拌勻成醬"],
@@ -4716,7 +4717,7 @@
       id: "dish123", name: "宮保蝦仁", icon: "🦐", category: "海鮮", difficulty: "中等",
       priority: 1,
       servings: 3, prepTime: 15, cookTime: 8,
-      ingredients: [ {name:"蝦", amount:300, unit:"g"}, {name:"花生", amount:50, unit:"g"} ],
+      ingredients: [ {name:"蝦仁", amount:300, unit:"g"}, {name:"花生", amount:50, unit:"g"} ],
       seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"辣椒", amount:1, unit:"支"}, {name:"醬油", amount:1, unit:"大匙"}, {name:"白醋", amount:1, unit:"大匙"}, {name:"糖", amount:1, unit:"大匙"}, {name:"太白粉", amount:1, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["蝦仁去腸泥，加太白粉抓醃","蒜頭、辣椒切片"],
@@ -4737,7 +4738,7 @@
       id: "dish124", name: "滑蛋蝦仁", icon: "🦐", category: "海鮮", difficulty: "簡單",
       priority: 1,
       servings: 3, prepTime: 10, cookTime: 6,
-      ingredients: [ {name:"蝦", amount:200, unit:"g"}, {name:"雞蛋", amount:4, unit:"顆"} ],
+      ingredients: [ {name:"蝦仁", amount:200, unit:"g"}, {name:"雞蛋", amount:4, unit:"顆"} ],
       seasonings: [ {name:"鹽", amount:0.5, unit:"小匙"}, {name:"米酒", amount:1, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["蝦仁去腸泥，用鹽、米酒稍微抓醃","雞蛋打散"],
@@ -4757,7 +4758,7 @@
       id: "dish125", name: "腰果蝦仁", icon: "🦐", category: "海鮮", difficulty: "中等",
       priority: 1,
       servings: 3, prepTime: 15, cookTime: 8,
-      ingredients: [ {name:"蝦", amount:250, unit:"g"}, {name:"腰果", amount:60, unit:"g"}, {name:"芹菜", amount:1, unit:"把"} ],
+      ingredients: [ {name:"蝦仁", amount:250, unit:"g"}, {name:"腰果", amount:60, unit:"g"}, {name:"芹菜", amount:1, unit:"把"} ],
       seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"太白粉", amount:1, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["蝦仁去腸泥，加太白粉抓醃","芹菜切段，蒜頭切末，腰果烤過或乾鍋炒香備用"],
@@ -5478,7 +5479,7 @@
       id: "dish160", name: "蝦仁炒飯", icon: "🦐", category: "主食", difficulty: "簡單",
       priority: 2,
       servings: 2, prepTime: 15, cookTime: 10,
-      ingredients: [ {name:"白米", amount:2, unit:"米杯"}, {name:"蝦", amount:150, unit:"g"}, {name:"雞蛋", amount:2, unit:"顆"} ],
+      ingredients: [ {name:"白米", amount:2, unit:"米杯"}, {name:"蝦仁", amount:150, unit:"g"}, {name:"雞蛋", amount:2, unit:"顆"} ],
       seasonings: [ {name:"青蔥", amount:1, unit:"根"}, {name:"鹽", amount:0.5, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["蝦仁去腸泥，白飯放涼或用隔夜飯","雞蛋打散，蔥切蔥花"],
@@ -5499,7 +5500,7 @@
       id: "dish161", name: "蝦仁炒麵", icon: "🦐", category: "主食", difficulty: "簡單",
       priority: 2,
       servings: 2, prepTime: 15, cookTime: 10,
-      ingredients: [ {name:"麵", amount:2, unit:"把"}, {name:"蝦", amount:150, unit:"g"}, {name:"高麗菜", amount:0.2, unit:"顆"} ],
+      ingredients: [ {name:"麵", amount:2, unit:"把"}, {name:"蝦仁", amount:150, unit:"g"}, {name:"高麗菜", amount:0.2, unit:"顆"} ],
       seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"醬油", amount:2, unit:"大匙"} ],
       tools: ["炒鍋","湯鍋"],
       preparationSteps: ["麵條先煮至七分熟撈起拌少許油防沾黏","蝦仁去腸泥，高麗菜切片，蒜頭切末"],
@@ -5520,7 +5521,7 @@
       id: "dish162", name: "海鮮炒飯", icon: "🍚", category: "主食", difficulty: "簡單",
       priority: 2,
       servings: 3, prepTime: 15, cookTime: 10,
-      ingredients: [ {name:"白米", amount:3, unit:"米杯"}, {name:"蝦", amount:100, unit:"g"}, {name:"透抽", amount:1, unit:"隻"}, {name:"雞蛋", amount:2, unit:"顆"} ],
+      ingredients: [ {name:"白米", amount:3, unit:"米杯"}, {name:"蝦仁", amount:100, unit:"g"}, {name:"透抽", amount:1, unit:"隻"}, {name:"雞蛋", amount:2, unit:"顆"} ],
       seasonings: [ {name:"青蔥", amount:1, unit:"根"}, {name:"鹽", amount:0.5, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["蝦仁去腸泥，透抽切圈，白飯放涼或用隔夜飯","雞蛋打散，蔥切蔥花"],
@@ -5541,7 +5542,7 @@
       id: "dish163", name: "海鮮炒麵", icon: "🦑", category: "主食", difficulty: "簡單",
       priority: 2,
       servings: 3, prepTime: 15, cookTime: 10,
-      ingredients: [ {name:"麵", amount:3, unit:"把"}, {name:"蝦", amount:100, unit:"g"}, {name:"透抽", amount:1, unit:"隻"}, {name:"高麗菜", amount:0.2, unit:"顆"} ],
+      ingredients: [ {name:"麵", amount:3, unit:"把"}, {name:"蝦仁", amount:100, unit:"g"}, {name:"透抽", amount:1, unit:"隻"}, {name:"高麗菜", amount:0.2, unit:"顆"} ],
       seasonings: [ {name:"蒜頭", amount:2, unit:"瓣"}, {name:"醬油", amount:2, unit:"大匙"} ],
       tools: ["炒鍋","湯鍋"],
       preparationSteps: ["麵條先煮至七分熟撈起拌少許油防沾黏","蝦仁去腸泥，透抽切圈，高麗菜切片，蒜頭切末"],
@@ -6155,7 +6156,7 @@
       id: "dish193", name: "龍井蝦仁", icon: "🍵", category: "海鮮", difficulty: "中等",
       priority: 3,
       servings: 3, prepTime: 20, cookTime: 8,
-      ingredients: [ {name:"蝦", amount:300, unit:"g"} ],
+      ingredients: [ {name:"蝦仁", amount:300, unit:"g"} ],
       seasonings: [ {name:"茶葉", amount:2, unit:"大匙"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"太白粉", amount:1, unit:"小匙"}, {name:"米酒", amount:1, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["蝦仁去腸泥，加鹽、太白粉抓醃","茶葉用熱水沖泡，茶葉與茶湯分開備用"],
@@ -6237,7 +6238,7 @@
       id: "dish197", name: "XO醬海鮮", icon: "🦐", category: "海鮮", difficulty: "中等",
       priority: 3,
       servings: 3, prepTime: 15, cookTime: 8,
-      ingredients: [ {name:"蝦", amount:150, unit:"g"}, {name:"透抽", amount:1, unit:"隻"}, {name:"芥蘭", amount:1, unit:"把"} ],
+      ingredients: [ {name:"蝦仁", amount:150, unit:"g"}, {name:"透抽", amount:1, unit:"隻"}, {name:"芥蘭", amount:1, unit:"把"} ],
       seasonings: [ {name:"XO醬", amount:2, unit:"大匙"}, {name:"蒜頭", amount:2, unit:"瓣"}, {name:"米酒", amount:1, unit:"小匙"} ],
       tools: ["炒鍋"],
       preparationSteps: ["蝦仁去腸泥，透抽切圈，芥蘭切段梗葉分開，蒜頭切末"],
@@ -6258,7 +6259,7 @@
       id: "dish198", name: "海鮮豆腐煲", icon: "🫘", category: "海鮮", difficulty: "中等",
       priority: 3,
       servings: 4, prepTime: 20, cookTime: 15,
-      ingredients: [ {name:"豆腐", amount:1, unit:"盒"}, {name:"蝦", amount:150, unit:"g"}, {name:"鮮蚵", amount:100, unit:"g"} ],
+      ingredients: [ {name:"豆腐", amount:1, unit:"盒"}, {name:"蝦仁", amount:150, unit:"g"}, {name:"鮮蚵", amount:100, unit:"g"} ],
       seasonings: [ {name:"薑", amount:2, unit:"片"}, {name:"蒜頭", amount:2, unit:"瓣"}, {name:"蠔油", amount:1.5, unit:"大匙"}, {name:"太白粉", amount:1, unit:"小匙"} ],
       tools: ["炒鍋（或砂鍋）"],
       preparationSteps: ["豆腐切塊，蝦仁去腸泥，鮮蚵用太白粉抓洗沖淨"],
@@ -6631,7 +6632,7 @@
       id: "dish216", name: "燒賣", icon: "🥟", category: "主食", difficulty: "中等",
       priority: 3,
       servings: 3, prepTime: 25, cookTime: 12,
-      ingredients: [ {name:"水餃皮", amount:20, unit:"片"}, {name:"豬絞肉", amount:250, unit:"g"}, {name:"蝦", amount:100, unit:"g"} ],
+      ingredients: [ {name:"水餃皮", amount:20, unit:"片"}, {name:"豬絞肉", amount:250, unit:"g"}, {name:"蝦仁", amount:100, unit:"g"} ],
       seasonings: [ {name:"香菇", amount:3, unit:"朵"}, {name:"太白粉", amount:1, unit:"大匙"}, {name:"醬油", amount:1.5, unit:"大匙"}, {name:"香油", amount:1, unit:"小匙"} ],
       tools: ["調理盆","電鍋或蒸鍋"],
       preparationSteps: ["蝦仁切碎，香菇泡軟切碎，與絞肉、太白粉、醬油、香油拌勻摔打成內餡"],
@@ -6866,7 +6867,7 @@
       id: "dish227", name: "蝦棗", icon: "🦐", category: "海鮮", difficulty: "中等",
       priority: 3,
       servings: 3, prepTime: 20, cookTime: 10,
-      ingredients: [ {name:"豆皮", amount:3, unit:"片"}, {name:"蝦", amount:250, unit:"g"}, {name:"豬絞肉", amount:100, unit:"g"} ],
+      ingredients: [ {name:"豆皮", amount:3, unit:"片"}, {name:"蝦仁", amount:250, unit:"g"}, {name:"豬絞肉", amount:100, unit:"g"} ],
       seasonings: [ {name:"荸薺", amount:5, unit:"顆"}, {name:"太白粉", amount:1, unit:"大匙"}, {name:"鹽", amount:0.5, unit:"小匙"}, {name:"白胡椒粉", amount:0.3, unit:"小匙"} ],
       tools: ["炒鍋（油炸用）"],
       preparationSteps: ["蝦仁切碎（保留一些顆粒感），荸薺切碎","蝦仁碎、絞肉、荸薺加太白粉、鹽、白胡椒粉拌勻摔打成餡"],
@@ -10656,7 +10657,8 @@
     { id:"ing022", name:"雞胸肉", icon:"🐔", category:"雞肉", aliases:[], matchNames:["雞胸肉"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing058", name:"雞翅", icon:"🍗", category:"雞肉", aliases:[], matchNames:["雞翅","雞翅膀"], commonUnits:["支"], status:"confirmed", source:"official" },
     // 海鮮
-    { id:"ing024", name:"蝦", icon:"🦐", category:"海鮮", aliases:[], matchNames:["蝦","蝦仁","草蝦","白蝦","鮮蝦","蝦子"], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing024", name:"蝦", icon:"🦐", category:"海鮮", aliases:["帶殼蝦"], matchNames:["蝦","草蝦","白蝦","鮮蝦","蝦子","明蝦"], commonUnits:["g"], status:"confirmed", source:"official" },
+    { id:"ing225", name:"蝦仁", icon:"🍤", category:"海鮮", aliases:["去殼蝦"], matchNames:["蝦仁","蝦仁（去殼）"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing025", name:"蛤蜊", icon:"🐚", category:"海鮮", aliases:[], matchNames:["蛤蜊"], commonUnits:["g"], status:"confirmed", source:"official" },
     { id:"ing026", name:"透抽", icon:"🦑", category:"海鮮", aliases:[], matchNames:[], commonUnits:["隻"], status:"confirmed", source:"official" },
     { id:"ing059", name:"花枝", icon:"🦑", category:"海鮮", aliases:[], matchNames:["花枝"], commonUnits:["隻"], status:"confirmed", source:"official" },
@@ -10948,7 +10950,10 @@
       return { dish, have, missing, missingCount: missing.length };
     });
     const relevant = results.filter(r => r.have.length > 0);
+    // 排序先看「用到你幾樣食材」，再看「還缺幾樣」。
+    // 只看缺幾樣的話，選了蝦仁＋雞蛋會跑出荷包蛋、滷蛋這種完全沒用到蝦仁的菜排在前面。
     relevant.sort((a, b) => {
+      if(a.have.length !== b.have.length) return b.have.length - a.have.length;
       if(a.missingCount !== b.missingCount) return a.missingCount - b.missingCount;
       const ap = a.dish.priority || 1, bp = b.dish.priority || 1;
       if(ap !== bp) return ap - bp;
@@ -12061,6 +12066,9 @@
       badge = '<span class="match-badge low">⚪ 需要再準備一些食材</span>';
       missingLine = '<p class="match-missing">缺少：' + r.missing.join('、') + '</p>';
     }
+    const haveLine = r.have.length
+      ? '<p class="match-have">用到你的：' + r.have.join('、') + '</p>'
+      : '';
     return '<div class="dish-card" data-id="' + d.id + '">' +
       '<div class="dish-card-emoji">' + getDishIcon(d) + '</div>' +
       '<div class="dish-card-body">' +
@@ -12070,7 +12078,7 @@
           '<span class="tag">' + (d.prepTime + d.cookTime) + ' 分鐘</span>' +
           '<span class="tag">' + getMenuServings(d.id) + ' 人份</span>' +
         '</div>' +
-        badge + missingLine +
+        badge + haveLine + missingLine +
       '</div>' +
     '</div>';
   }
