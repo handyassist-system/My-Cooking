@@ -22,6 +22,9 @@
     --color-accent-dark:#8A3722;
     --color-accent-soft:#F1DCD2;
     --color-jade:#4F6A52;
+  /* ── 智在生活共用命名（四個 App 都用這組名字，值各自不同）── */
+  --primary:#A8462E; --danger:#C0392B; --ink:#2B241D; --sub:#867A6C;
+  --line:#E7DDCC; --surface:#FFFFFF; --bg:#FBF8F3;
     --color-jade-soft:#E1E9DE;
     --color-border:#E7DDCC;
     --radius-lg:22px;
@@ -843,6 +846,30 @@
     display:flex; align-items:center; gap:8px;
   }
 
+  /* 免費版的「完整步驟需要完整版」卡片 */
+  .steps-locked-scale{
+    font-size:var(--fs-caption); color:var(--color-text-soft); margin:0 0 14px;
+  }
+  .steps-locked-box{
+    border:1px dashed var(--color-border); border-radius:var(--radius-md);
+    background:var(--color-bg); padding:20px 18px; text-align:center;
+  }
+  .steps-locked-title{
+    font-size:var(--fs-card-title); font-weight:var(--weight-bold);
+    color:var(--color-text); margin:0 0 8px;
+  }
+  .steps-locked-title::before{ content:"🔒 "; }
+  .steps-locked-desc{
+    font-size:var(--fs-caption); color:var(--color-text-soft);
+    line-height:var(--lh-loose); margin:0 0 16px;
+  }
+  .steps-locked-btn{
+    min-height:44px; padding:0 28px; border:none; border-radius:var(--radius-lg);
+    background:var(--color-accent); color:#FBF3EE;
+    font-size:var(--fs-body); font-weight:var(--weight-bold); font-family:inherit;
+  }
+  .steps-locked-btn:active{ transform:scale(.97); }
+
   .subgroup-label{font-size:var(--fs-label); font-weight:var(--weight-medium); color:var(--color-text-soft); margin:14px 0 8px;}
   .subgroup-label:first-child{margin-top:0;}
 
@@ -922,14 +949,25 @@
   .nav-item.active{color:var(--color-accent);}
   .nav-item:active{opacity:0.6;}
 
+  /* 點擊區補到 40px：只擴大可按範圍，不改外觀大小 */
+  .cook-log-edit, .cook-log-delete, .shopping-stepper-btn, .menu-card-remove-btn,
+  .shopping-item-delete, .menu-serv-btn, .header-upgrade-btn, .sop-close,
+  .back-btn, .header-settings-btn{ position:relative; }
+  .cook-log-edit::after, .cook-log-delete::after, .shopping-stepper-btn::after,
+  .menu-card-remove-btn::after, .shopping-item-delete::after, .menu-serv-btn::after,
+  .header-upgrade-btn::after, .sop-close::after, .back-btn::after, .header-settings-btn::after{
+    content:""; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    min-width:40px; min-height:40px; width:100%; height:100%;
+  }
   .toast{
-    position:fixed; left:50%; bottom:96px;
+    position:fixed; left:50%; bottom:calc(96px + env(safe-area-inset-bottom));
     transform:translateX(-50%) translateY(12px);
-    background:var(--color-text); color:#FBF3EE;
-    padding:11px 20px; border-radius:var(--radius-pill); font-size:var(--fs-caption); font-weight:var(--weight-regular);
+    background:rgba(45,50,56,.94); color:#fff;
+    padding:11px 18px; border-radius:var(--radius-pill); font-size:13.5px; line-height:1.5;
+    max-width:84%; text-align:center;
     opacity:0; pointer-events:none;
     transition:opacity .2s ease, transform .2s ease;
-    z-index:20; white-space:nowrap;
+    z-index:9999;
   }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
@@ -1067,6 +1105,59 @@
     border-radius:12px; padding:13px; font-size:15px; font-weight:800;
     margin-top:20px; cursor:pointer; font-family:var(--font-family); -webkit-tap-highlight-color:transparent;
   }
+/* ==================== 訂閱管理（跨 App）==================== */
+#subsPage{position:fixed;inset:0;background:#f5f6f8;z-index:10000;display:none;flex-direction:column;}
+#subsPage.on{display:flex;}
+.subs-head{background:#fff;border-bottom:1px solid #e5e7eb;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;display:flex;align-items:center;gap:8px;flex:none;}
+.subs-back{background:none;border:none;font-size:16px;color:#4A7A9B;padding:6px 4px;min-height:44px;cursor:pointer;font-family:inherit;}
+.subs-title{font-size:16px;font-weight:700;color:#2c3e50;flex:1;}
+.subs-count{font-size:12px;color:#95a5a6;}
+.subs-tools{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 12px 10px;flex:none;}
+.subs-search{width:100%;font-size:16px;font-family:inherit;padding:10px 12px;border:1px solid #dfe3e8;border-radius:10px;background:#f7f8fa;}
+.subs-search:focus{outline:none;border-color:#4A7A9B;background:#fff;}
+.subs-tabs{display:flex;gap:6px;overflow-x:auto;margin-top:10px;-webkit-overflow-scrolling:touch;}
+.subs-tab{flex:none;border:1px solid #dfe3e8;background:#fff;color:#5a6a78;border-radius:999px;padding:7px 14px;font-size:13px;font-family:inherit;min-height:36px;cursor:pointer;white-space:nowrap;}
+.subs-tab.on{background:#4A7A9B;border-color:#4A7A9B;color:#fff;font-weight:600;}
+.subs-body{flex:1;overflow-y:auto;padding:12px 12px 100px;-webkit-overflow-scrolling:touch;}
+.subs-card{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.subs-email{font-size:14px;font-weight:600;color:#2c3e50;word-break:break-all;margin-bottom:2px;}
+.subs-key{font-size:11px;color:#b0b8bf;word-break:break-all;margin-bottom:8px;}
+.subs-line{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid #f0f2f4;min-height:44px;cursor:pointer;}
+.subs-line:first-of-type{border-top:none;}
+.subs-ico{font-size:15px;width:20px;text-align:center;flex:none;}
+.subs-app{font-size:13px;color:#5a6a78;width:66px;flex:none;}
+.subs-stat{font-size:13px;flex:1;}
+.subs-arrow{color:#c8cfd6;font-size:16px;flex:none;}
+.subs-none{color:#c0c7ce;}
+.subs-ok{color:#2c3e50;}
+.subs-warn{color:#c87d1e;font-weight:600;}
+.subs-bad{color:#c0392b;font-weight:600;}
+.subs-gray{color:#95a5a6;}
+.subs-empty{text-align:center;color:#95a5a6;padding:48px 20px;font-size:14px;line-height:1.8;}
+.subs-fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));background:#4A7A9B;color:#fff;border:none;border-radius:999px;padding:14px 28px;font-size:15px;font-weight:600;font-family:inherit;box-shadow:0 4px 14px rgba(74,122,155,.35);z-index:10001;cursor:pointer;min-height:48px;}
+/* 第二層表單 */
+#subsSheet{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10002;display:none;align-items:flex-end;}
+#subsSheet.on{display:flex;}
+.subs-sheet{background:#fff;width:100%;max-height:88vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch;}
+.subs-sh-title{font-size:16px;font-weight:700;color:#2c3e50;margin-bottom:2px;word-break:break-all;}
+.subs-sh-sub{font-size:13px;color:#7b8794;margin-bottom:16px;}
+.subs-label{font-size:12px;color:#7b8794;margin:14px 0 6px;}
+.subs-input{width:100%;font-size:16px;font-family:inherit;padding:11px 12px;border:1px solid #dfe3e8;border-radius:10px;}
+.subs-input:focus{outline:none;border-color:#4A7A9B;box-shadow:0 0 0 3px rgba(74,122,155,.12);}
+.subs-chips{display:flex;gap:8px;flex-wrap:wrap;}
+.subs-chip{border:1px solid #dfe3e8;background:#fff;color:#5a6a78;border-radius:10px;padding:9px 14px;font-size:13px;font-family:inherit;min-height:42px;cursor:pointer;}
+.subs-chip.on{background:#4A7A9B;border-color:#4A7A9B;color:#fff;font-weight:600;}
+.subs-calc{background:#f3f6f8;border-radius:10px;padding:10px 12px;font-size:13px;color:#2c3e50;margin-top:14px;}
+.subs-calc b{color:#4A7A9B;}
+.subs-primary{width:100%;background:#4A7A9B;color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:600;font-family:inherit;margin-top:18px;min-height:50px;cursor:pointer;}
+.subs-primary:disabled{background:#c8cfd6;}
+.subs-ghost{width:100%;background:#fff;color:#7b8794;border:1px solid #dfe3e8;border-radius:10px;padding:12px;font-size:14px;font-family:inherit;margin-top:10px;min-height:46px;cursor:pointer;}
+.subs-danger{width:100%;background:#fff;color:#c0392b;border:1px solid #f0c8c2;border-radius:10px;padding:12px;font-size:14px;font-family:inherit;margin-top:10px;min-height:46px;cursor:pointer;}
+.subs-row2{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid #f0f2f4;font-size:14px;color:#2c3e50;}
+.subs-row2 span:first-child{color:#7b8794;font-size:13px;width:52px;flex:none;}
+.subs-row2 .v{flex:1;}
+.subs-mini{border:1px solid #dfe3e8;background:#fff;color:#5a6a78;border-radius:8px;padding:6px 12px;font-size:12px;font-family:inherit;min-height:34px;cursor:pointer;}
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1080,7 +1171,7 @@
     <h1 class="login-title">食在料理</h1>
     <p class="login-sub">把食材，變成好菜。</p>
     <input id="codeInput" class="code-input" type="email" inputmode="email" autocomplete="email" placeholder="請輸入 Email" maxlength="60">
-    <div class="code-hint">🎁 首次登入即享 7 天全功能免費試用</div>
+    <div class="code-hint">🎁 首次登入即享 14 天全功能免費試用</div>
     <label class="login-consent"><input type="checkbox" id="agreeChk"> <span>我已閱讀並同意 <a id="termsLink" class="login-terms-link">《服務條款與隱私政策》</a></span></label>
     <button id="loginBtn" class="btn-primary">登入</button>
     <div id="loginMsg" class="login-msg"></div>
@@ -1427,7 +1518,24 @@
   codeInput.addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
 
   function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+  // Email 正規化：gmail 的加號後綴與點號視為同一個帳號，避免換寫法重複試用
+  function normEmail(e){
+    var v = String(e||"").trim().toLowerCase();
+    var at = v.lastIndexOf("@");
+    if(at < 1) return v;
+    var user = v.slice(0, at), host = v.slice(at+1);
+    if(host === "gmail.com" || host === "googlemail.com"){
+      user = user.split("+")[0].replace(/\./g, "");
+      host = "gmail.com";
+    }
+    return user + "@" + host;
+  }
+  // 資料路徑的 key 必須跟 Firebase 規則一致：
+  //   $key == auth.token.email.toLowerCase().replace('.', '_')
+  // 所以這裡「不能」做 Gmail 正規化，否則含點的 Gmail 會讀寫全被拒。
   function emailKey(e){ return String(e||"").toLowerCase().replace(/[.#$\[\]]/g,"_"); }
+  // 只用於「這個信箱用過試用沒」的比對，不可當資料路徑
+  function trialEmailKey(e){ return normEmail(e).replace(/[.#$\[\]]/g,"_"); }
   function userBase(){
     var u=state.user||"";
     if(isEmail(u)) return "users/"+emailKey(u)+"/";
@@ -1447,7 +1555,7 @@
   }
   function showDeviceLimit(email, plan, limit){
     var root=document.getElementById("modalRoot");
-    // 單一付費版：付費／試用都是 2 台，只有免費版（1 台）才提示升級
+    // 單一完整版：付費／試用都是 2 台，只有免費版（1 台）才提示升級
     var canUpgrade=!(isPaidPlan(plan)||plan==="trial");
     root.innerHTML=
       '<div class="overlay" id="ovl" style="align-items:center"><div class="sheet" id="sheet" style="border-radius:20px;max-width:400px;margin:0 16px;padding:24px 20px">'+
@@ -1455,8 +1563,8 @@
         '<div style="text-align:center;font-size:19px;font-weight:900;color:#2E2E33">已達裝置上限</div>'+
         '<div style="text-align:center;font-size:13.5px;color:#8A8A93;margin-top:8px;line-height:1.7">您目前的方案可在 <b style="color:#E8735C">'+limit+' 台裝置</b>使用。<br>若這是您的新手機，可登出其他裝置。</div>'+
         '<button id="dlKick" style="width:100%;border:none;background:var(--color-accent);color:#fff;border-radius:12px;padding:14px;font-size:15px;font-weight:800;margin-top:18px">這是我的新裝置，登出其他裝置</button>'+
-        (canUpgrade?'<div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #EFEAE2"><div style="font-size:13px;color:#8A8A93;margin-bottom:10px">付費版可在 2 台裝置使用</div>'+
-        '<button id="dlUp" style="width:100%;border:none;background:#E8735C;color:#fff;border-radius:12px;padding:13px;font-size:15px;font-weight:800">💬 聯繫客服了解付費版</button></div>':'')+
+        (canUpgrade?'<div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #EFEAE2"><div style="font-size:13px;color:#8A8A93;margin-bottom:10px">完整版可在 3 台裝置使用</div>'+
+        '<button id="dlUp" style="width:100%;border:none;background:#E8735C;color:#fff;border-radius:12px;padding:13px;font-size:15px;font-weight:800">💬 聯繫客服了解完整版</button></div>':'')+
         '<button id="dlClose" style="width:100%;border:none;background:none;color:#8A8A93;font-size:13px;padding:12px;margin-top:6px">關閉</button>'+
       '</div></div>';
     document.getElementById("dlKick").addEventListener("click", async function(){
@@ -1471,7 +1579,7 @@
   }
   function closeSheet(){ var r=document.getElementById("modalRoot"); if(r) r.innerHTML=""; }
 
-  var DEV_KEY="cal_devid";
+  var DEV_KEY="cook_devid";   // 各 App 用自己的裝置 ID，不然會互吃試用期
   function _devId(){
     var id; try{ id=localStorage.getItem(DEV_KEY); }catch(e){}
     if(!id){ id="d"+Date.now().toString(36)+Math.random().toString(36).slice(2,8); try{ localStorage.setItem(DEV_KEY,id); }catch(e){} }
@@ -1482,10 +1590,12 @@
     var os=/iPhone|iPad/i.test(ua)?"iPhone":/Android/i.test(ua)?"Android":/Windows/i.test(ua)?"Windows":/Mac/i.test(ua)?"Mac":"裝置";
     return os;
   }
-  // 單一付費版：舊資料裡的 basic／full／family 一律視為付費，不用手動改客戶資料
+  // 單一完整版：舊資料裡的 basic／full／family 一律視為付費，不用手動改客戶資料
   function isPaidPlan(plan){ return plan==="basic"||plan==="full"||plan==="family"; }
+  var TRIAL_DAYS=14;               // 智在生活：食在料理 14 天
   function planDeviceLimit(plan){
-    if(isPaidPlan(plan)||plan==="trial") return 2;
+    // 智在生活共用規則：免費 1 台／試用 3 台／完整版 3 台
+    if(isPaidPlan(plan)||plan==="trial") return 3;
     return 1;
   }
   async function checkDevice(email, plan){
@@ -1554,9 +1664,27 @@
     }
     var sub=snap.val();
     if(!sub){
-      var expTs=now+7*86400000;
-      var rec={ email:email, plan:"trial", expiry:_ymdTs(expTs), status:"active", deviceLimit:2, createdAt:now, lastSeen:now, devices:{} };
+      // 這台裝置用過試用了嗎？用過就直接給免費版，避免換 Email 重複試用
+      var used=false;
+      try{
+        var tsnap=await withTimeout(db.ref("trial_devices/cook/"+_devId()).once("value"), VERIFY_TIMEOUT_MS);
+        used = !!tsnap.val();
+        if(!used){
+          var esnap=await withTimeout(db.ref("trial_devices/cook/e_"+trialEmailKey(email)).once("value"), VERIFY_TIMEOUT_MS);
+          used = !!esnap.val();
+        }
+      }catch(e){}
+      if(used){
+        var recF={ email:email, plan:"free", expiry:"", status:"active", deviceLimit:1, createdAt:now, lastSeen:now, devices:{} };
+        try{ await db.ref("jiachangzhu_subscribers/"+key).set(recF); }catch(e){}
+        savePlanCache(email, "free", "");
+        return { ok:true, plan:"free", expiry:"", trialUsedOnDevice:true };
+      }
+      var expTs=now+TRIAL_DAYS*86400000;
+      var rec={ email:email, plan:"trial", expiry:_ymdTs(expTs), status:"active", deviceLimit:planDeviceLimit("trial"), createdAt:now, lastSeen:now, devices:{} };
       try{ await db.ref("jiachangzhu_subscribers/"+key).set(rec); }catch(e){}
+      try{ await db.ref("trial_devices/cook/"+_devId()).set({ firstTrialAt:now }); }catch(e){}
+      try{ await db.ref("trial_devices/cook/e_"+trialEmailKey(email)).set({ firstTrialAt:now }); }catch(e){}
       savePlanCache(email, "trial", rec.expiry);
       return { ok:true, plan:"trial", expiry:rec.expiry, newTrial:true };
     }
@@ -1567,6 +1695,24 @@
     var effPlan = expired ? "free" : (sub.plan||"free");
     savePlanCache(email, effPlan, sub.expiry);
     return { ok:true, plan:effPlan, expiry:sub.expiry, expired:!!expired };
+  }
+
+  // 確認視窗：沿用本 App 的彈窗樣式，取代原生 confirm
+  function askConfirm(title, msg, onOk, okText){
+    var root=document.getElementById("modalRoot");
+    root.innerHTML=
+      '<div class="overlay" id="ovl" style="align-items:center"><div class="sheet" id="sheet" style="border-radius:20px;max-width:360px;margin:0 16px;padding:24px 20px">'+
+        '<div style="font-size:17px;font-weight:900;color:#2E2E33;margin-bottom:10px">'+title+'</div>'+
+        '<div style="font-size:13.5px;color:#5A5A62;line-height:1.8">'+msg+'</div>'+
+        '<div style="display:flex;gap:10px;margin-top:20px">'+
+          '<button id="akCancel" style="flex:1;min-height:46px;border:none;background:#F1ECE4;color:#5A5A62;border-radius:12px;font-size:15px;font-weight:800">取消</button>'+
+          '<button id="akOk" style="flex:1;min-height:46px;border:none;background:#C0392B;color:#fff;border-radius:12px;font-size:15px;font-weight:800">'+(okText||"確定")+'</button>'+
+        '</div>'+
+      '</div></div>';
+    document.getElementById("akCancel").addEventListener("click", closeSheet);
+    document.getElementById("akOk").addEventListener("click", function(){ closeSheet(); if(onOk) onOk(); });
+    var ovl=document.getElementById("ovl");
+    if(ovl) ovl.addEventListener("click", function(e){ if(e.target===ovl) closeSheet(); });
   }
 
   function showInfoSheet(emoji, title, bodyHtml, btnText){
@@ -1585,41 +1731,9 @@
   // 既有條款的架構與文字，只換品牌名稱／服務項目說明，
   // 付款方式改為藍新金流（D6），聯絡方式（官方LINE）維持
   // 完全一致
-  function showTermsSheet(){
-    var root = document.getElementById('modalRoot');
-    var body =
-      '<p class="terms-section-title">服務說明</p>' +
-      '<p class="terms-section-body">本服務（找食譜、菜單規劃、採購清單管理）為「食在料理」提供之個人／家庭料理規劃工具，以電子郵件登入使用。</p>' +
-      '<p class="terms-section-title">訂閱與付款</p>' +
-      '<p class="terms-section-body">提供免費試用及付費訂閱，方案與價格以App內公告為準。付款方式以App內公告為準，完成後由客服開通。數位服務一經開通原則上不退款，特殊情形請透過官方LINE協商。</p>' +
-      '<p class="terms-section-title">使用者義務</p>' +
-      '<p class="terms-section-body">不得利用本服務從事違法、侵權行為，不得破解、干擾或攻擊本服務，不得上傳違法或侵害他人權益之內容。帳號請妥善保管，勿提供他人使用。</p>' +
-      '<p class="terms-section-title">服務變更與資料備份</p>' +
-      '<p class="terms-section-body">我們得因維護、升級或不可抗力暫停或中斷服務，並儘可能事先公告。App內容資料儲存於您的裝置本機，帳號與訂閱資料儲存於Google Firebase雲端，仍強烈建議自行定期使用「設定→匯出備份」功能備份資料。因故障、第三方中斷或操作所致之資料遺失，於法律允許範圍內不負賠償責任。</p>' +
-      '<p class="terms-section-title">免責聲明</p>' +
-      '<p class="terms-section-body">本服務依「現況」提供，不保證全然無誤或不中斷。於法律允許之最大範圍內，對使用本服務所生之間接、附帶或衍生損害不負責任。</p>' +
-      '<p class="terms-section-title">隱私權政策（依個人資料保護法）</p>' +
-      '<p class="terms-section-body"><b>蒐集項目：</b>登入用電子郵件、您建立之料理／菜單／採購等內容、基本技術資訊。</p>' +
-      '<p class="terms-section-body"><b>目的與利用：</b>提供與改善服務、帳號識別、方案開通、客戶服務。我們不會出售您的個人資料或提供無關第三方作行銷。</p>' +
-      '<p class="terms-section-body"><b>第三方服務：</b>帳號與訂閱資料儲存於Google Firebase，僅為必要目的使用。</p>' +
-      '<p class="terms-section-body"><b>您的權利：</b>您得查詢、閱覽、更正、請求刪除您的個人資料，或申請刪除帳號（刪除後無法復原），請透過官方LINE聯繫。</p>' +
-      '<p class="terms-section-body"><b>未成年人：</b>未滿十八歲者，應在法定代理人同意後使用。</p>' +
-      '<p class="terms-section-title">準據法與管轄</p>' +
-      '<p class="terms-section-body">本條款以中華民國（台灣）法律為準據法；因本服務所生爭議，以臺灣高雄地方法院為第一審管轄法院。</p>' +
-      '<p class="terms-meta">最後更新：2026年9月2日<br>聯絡：「食在料理」官方LINE</p>';
-    root.innerHTML =
-      '<div class="overlay" id="ovl" style="align-items:center"><div class="sheet terms-sheet" id="sheet">' +
-        '<img class="terms-logo-img" src="terms-logo.png" alt="食在料理">' +
-        '<div class="terms-title">服務條款與隱私權政策</div>' +
-        '<p class="terms-subtitle">食在料理・請閱讀後同意再開始使用</p>' +
-        '<div class="terms-body">' + body + '</div>' +
-        '<button id="termsSheetOk" class="terms-close-btn">關閉</button>' +
-      '</div></div>';
-    document.getElementById('termsSheetOk').addEventListener('click', closeSheet);
-  }
   document.getElementById('termsLink').addEventListener('click', function(e){
     e.preventDefault();
-    showTermsSheet();
+    legalDocs.open('terms');
   });
 
   // Service Worker：網路優先，有網路永遠抓最新版、沒網路用上次的畫面。
@@ -1705,9 +1819,9 @@
 
   function showTrialWelcome(expiry){
     showInfoSheet("🎉", "歡迎使用食在料理！",
-      '已開啟 <b style="color:#3E9B8E">7 天全功能免費試用</b><br>到期日：'+expiry
+      '已開啟 <b style="color:#3E9B8E">14 天全功能免費試用</b><br>到期日：'+expiry
       +'<div style="margin:16px 0;border-top:1px dashed #E3DED4"></div>'
-      +'<b>📱 裝置數量</b><br>同一個 Email 最多可在 2 台裝置登入（免費版 1 台）。'
+      +'<b>📱 裝置數量</b><br>同一個 Email 最多可在 3 台裝置登入（免費版 1 台）。'
       +'<div style="margin-top:14px;color:#8A8A93">到期後仍可使用基本功能 😊</div>');
   }
   function showTrialExpired(){
@@ -1718,7 +1832,7 @@
       +'<div style="margin-top:14px;color:#8A8A93">😊</div>');
   }
   function showUpgradeSuccess(newPlan){
-    var name = "付費版";
+    var name = "完整版";
     showInfoSheet("🎉", "升級成功！",
       '感謝支持！<br>您現在是 <b style="color:#3E9B8E">'+name+'</b> 用戶，功能已全部解鎖'
       +'<div style="margin-top:14px;color:#8A8A93">祝使用愉快 😊</div>');
@@ -1922,13 +2036,12 @@
      ========================================================= */
   let adminSearchQuery = '';
   let adminExpiringOnly = false;
-  // 單一付費版：basic／full／family 都是舊代碼，一律顯示「付費版」
-  const PLAN_LABELS = { trial:'試用', basic:'付費版', full:'付費版', family:'付費版', free:'免費版' };
+  // 單一完整版：basic／full／family 都是舊代碼，一律顯示「完整版」
+  const PLAN_LABELS = { trial:'試用中', basic:'完整版', full:'完整版', family:'完整版', free:'免費版' };
 
   function openAdminView(){
     if(!state.isAdmin){ return; }
-    renderAdminView();
-    navigate('admin');
+    subsAdmin.open();   // 統一的跨 App 訂閱管理
   }
 
   async function renderAdminView(){
@@ -1972,7 +2085,7 @@
 
     html += '<div class="admin-actions-row" style="margin-top:20px;">';
     html += '<button class="admin-action-btn sim free" id="adminSimFreeBtn">🧪 模擬 free 版預覽</button>';
-    html += '<button class="admin-action-btn sim paid" id="adminSimPaidBtn">🧪 模擬 付費版</button>';
+    html += '<button class="admin-action-btn sim paid" id="adminSimPaidBtn">🧪 模擬 完整版</button>';
     html += '</div>';
     html += '<p class="app-version" style="padding-top:0;">（測試用，只改變你自己畫面上看到的方案，不會動到任何客戶的真實資料）</p>';
 
@@ -2044,7 +2157,7 @@
       renderSelectedMenuView();
       renderShoppingView();
       renderSignatureView();
-      showToast('已模擬付費版，付費功能都可以正常使用');
+      showToast('已模擬完整版，付費功能都可以正常使用');
       navigate('find');
     });
   }
@@ -2056,10 +2169,10 @@
     if(!isEmail(trimmed)){ alert('Email 格式不正確'); return; }
     const key = emailKey(trimmed);
     const now = await getServerTime();
-    const expTs = now + 7 * 86400000;
-    const rec = { email:trimmed, plan:'trial', expiry:_ymdTs(expTs), status:'active', deviceLimit:2, createdAt:now, lastSeen:now, devices:{} };
+    const expTs = now + 14 * 86400000;
+    const rec = { email:trimmed, plan:'trial', expiry:_ymdTs(expTs), status:'active', deviceLimit:planDeviceLimit('trial'), createdAt:now, lastSeen:now, devices:{} };
     try{ await db.ref('jiachangzhu_subscribers/' + key).set(rec); alert('已新增客戶：' + trimmed); }
-    catch(e){ alert('新增失敗'); }
+    catch(e){ alert(failMsg('新增', e)); }
     renderAdminView();
   }
 
@@ -2077,14 +2190,14 @@
       await db.ref('jiachangzhu_subscribers/' + key + '/expiry').set(newExp);
       await db.ref('jiachangzhu_subscribers/' + key + '/status').set('active');
       alert('已續約至 ' + newExp);
-    }catch(e){ alert('續約失敗'); }
+    }catch(e){ alert(failMsg('續約', e)); }
     renderAdminView();
   }
 
   async function adminChangePlan(key){
-    // 簡化成三選一，輸入數字即可；付費版統一存成 full
+    // 簡化成三選一，輸入數字即可；完整版統一存成 full
     const choiceMap = { '1':'trial', '2':'full', '3':'free' };
-    const plan = prompt('改成哪個方案？\n1 = 試用\n2 = 付費版\n3 = 免費版\n請輸入數字：');
+    const plan = prompt('改成哪個方案？\n1 = 試用\n2 = 完整版\n3 = 免費版\n請輸入數字：');
     if(!plan) return;
     const trimmed = choiceMap[plan.trim()];
     if(!trimmed){ alert('請輸入 1、2 或 3'); return; }
@@ -2092,7 +2205,7 @@
       await db.ref('jiachangzhu_subscribers/' + key + '/plan').set(trimmed);
       await db.ref('jiachangzhu_subscribers/' + key + '/deviceLimit').set(planDeviceLimit(trimmed));
       alert('已改成 ' + (PLAN_LABELS[trimmed] || trimmed));
-    }catch(e){ alert('修改失敗'); }
+    }catch(e){ alert(failMsg('修改', e)); }
     renderAdminView();
   }
 
@@ -2101,14 +2214,14 @@
       const snap = await db.ref('jiachangzhu_subscribers/' + key + '/status').once('value');
       const next = snap.val() === 'disabled' ? 'active' : 'disabled';
       await db.ref('jiachangzhu_subscribers/' + key + '/status').set(next);
-    }catch(e){ alert('操作失敗'); }
+    }catch(e){ alert(failMsg('更新', e)); }
     renderAdminView();
   }
 
   async function adminDeleteCustomer(key){
     if(!confirm('確定要刪除這位客戶嗎？此動作無法復原。')) return;
     try{ await db.ref('jiachangzhu_subscribers/' + key).remove(); }
-    catch(e){ alert('刪除失敗'); }
+    catch(e){ alert(failMsg('刪除', e)); }
     renderAdminView();
   }
 
@@ -2116,7 +2229,7 @@
     if(!state.isAdmin){ return; }
     if(!confirm("清除此客戶的所有裝置紀錄？\n客戶需重新登入。")) return;
     db.ref("jiachangzhu_subscribers/"+key+"/devices").remove().then(function(){ alert("已清除裝置"); renderAdminView(); })
-     .catch(function(){ alert("清除失敗"); });
+     .catch(function(e){ alert(failMsg("清除", e)); });
   }
 
   /* =========================================================
@@ -2143,16 +2256,16 @@
   function renderUpgradeView(){
     let html = '<p class="menu-subtitle">升級後，找食譜的整個流程都幫你打通</p>';
     html += '<div class="upgrade-compare">';
-    html += '<div class="upgrade-compare-row upgrade-compare-header"><span></span><span>免費</span><span>付費</span></div>';
+    html += '<div class="upgrade-compare-row upgrade-compare-header"><span></span><span>免費</span><span>完整版</span></div>';
     [
       ['找食譜／依食材找', true, true],
-      ['料理詳細頁／SOP步驟', true, true],
+      ['完整烹調步驟與小技巧', false, true],
       ['今日料理規劃', true, true],
       ['早中晚分類', false, true],
       ['採購清單自動彙整', false, true],
       ['我的庫存', false, true],
       ['我的菜單（收藏拿手菜）', false, true],
-      ['同帳號 2 台裝置使用', false, true]
+      ['同帳號 3 台裝置使用', false, true]
     ].forEach(row => {
       html += '<div class="upgrade-compare-row">' +
         '<span class="upgrade-compare-label">' + row[0] + '</span>' +
@@ -2161,9 +2274,11 @@
       '</div>';
     });
     html += '</div>';
+    html += payCardHtml({ app:'cook', email: state.user || '', price:799, per:67, accent:'#A8462E' });
     html += '<a href="' + LINE_SUPPORT_URL + '" target="_blank" rel="noopener" class="upgrade-line-btn">💬 聯繫客服</a>';
     html += '<p class="upgrade-note">對方案有疑問，或想了解升級方式，都可以直接詢問客服</p>';
     document.getElementById('upgradeContent').innerHTML = html;
+    payCardBind();
   }
 
   function openSettingsView(){
@@ -2173,7 +2288,7 @@
 
   function renderSettingsView(){
     // 帳號卡（智在生活 Standard：Email、方案、到期日）
-    var _plan = state.isAdmin ? '管理員' : ({trial:'試用中',basic:'付費版',full:'付費版',family:'付費版',free:'免費版'}[state.plan] || '免費版');
+    var _plan = state.isAdmin ? '管理員' : ({trial:'試用中',basic:'完整版',full:'完整版',family:'完整版',free:'免費版'}[state.plan] || '免費版');
     let html = '<div class="set-acc-card">'
       + '<div class="set-acc-em">' + (state.user || '—') + '</div>'
       + '<div class="set-acc-pl">' + _plan + '</div>'
@@ -2204,7 +2319,7 @@
       window.open(LINE_SUPPORT_URL, '_blank');
     });
     const _tfs = document.getElementById('termsFromSettings');
-    if(_tfs) _tfs.addEventListener('click', showTermsSheet);
+    if(_tfs) _tfs.addEventListener('click', function(){ legalDocs.open('terms'); });
     document.getElementById('exportDataBtn').addEventListener('click', exportBackup);
     document.getElementById('importDataBtn').addEventListener('click', () => document.getElementById('importFileInput').click());
     document.getElementById('importFileInput').addEventListener('change', importBackup);
@@ -2266,7 +2381,7 @@
         alert('匯入完成，即將重新整理頁面');
         location.reload();
       }catch(err){
-        alert('這個檔案看起來不是有效的備份檔');
+        alert('這不是本 App 的備份檔');
       }
     };
     reader.readAsText(file);
@@ -10168,10 +10283,6 @@
   function getUserCreatedDishes(){
     return userCreatedDishes;
   }
-  function addUserCreatedDish(dish){
-    userCreatedDishes.push(dish);
-    saveUserCreatedDishes();
-  }
   loadUserCreatedDishes();
 
   // 官方料理庫＋使用者自己建立（含AI建立）的料理，合併後的
@@ -10864,10 +10975,6 @@
       // localStorage 不可用時忽略，不影響本次操作
     }
   }
-  function addUserCreatedIngredient(ingredient){
-    userCreatedIngredients.push(ingredient);
-    saveUserCreatedIngredients();
-  }
   loadUserCreatedIngredients();
 
   // 官方食材 ＋ 使用者透過 AI 新增的食材，合併起來才是完整清單
@@ -11046,7 +11153,7 @@
             '<p class="ai-empty-desc">換個關鍵字，或看看「依食材找」能配到什麼</p>' +
           '</div>';
       } else {
-        list.innerHTML = '<div class="empty-state">找不到符合的料理，換個關鍵字試試看</div>';
+        list.innerHTML = '<div class="empty-state ai-empty-state"><p class="ai-empty-title">找不到符合的料理</p><p class="ai-empty-desc">換個關鍵字，或看看「依食材找」能配到什麼</p></div>';
       }
       return;
     }
@@ -11244,38 +11351,43 @@
       html += '</div>';
     }
 
-    html += '<div class="detail-section">';
-    html += '<p class="detail-section-title">🔪 備料</p>';
-    html += '<ul class="step-list">' + dish.preparationSteps.map((s, idx) =>
-      '<li class="prep-step"><span class="step-num">' + (idx + 1) + '</span><span>' + s + '</span></li>'
-    ).join('') + '</ul>';
-    html += '</div>';
+    // 免費版：只給規模（幾步、多久），不給做法內容
+    if(isFreePlan()){
+      html += renderStepsLocked(dish);
+    } else {
+      html += '<div class="detail-section">';
+      html += '<p class="detail-section-title">🔪 備料</p>';
+      html += '<ul class="step-list">' + dish.preparationSteps.map((s, idx) =>
+        '<li class="prep-step"><span class="step-num">' + (idx + 1) + '</span><span>' + s + '</span></li>'
+      ).join('') + '</ul>';
+      html += '</div>';
 
-    html += '<div class="detail-section">';
-    html += '<p class="detail-section-title">🔥 烹調步驟</p>';
-    html += '<ul class="step-list">' + dish.cookingSteps.map(s =>
-      '<li class="cook-step">' +
-        '<div class="cook-step-head">' +
-          '<span class="cook-step-num">' + s.step + '</span>' +
-          '<div class="cook-step-badges">' +
-            '<span class="badge">' + s.heatLevel + '</span>' +
-            (s.time ? '<span class="badge">' + s.time + ' 分</span>' : '') +
+      html += '<div class="detail-section">';
+      html += '<p class="detail-section-title">🔥 烹調步驟</p>';
+      html += '<ul class="step-list">' + dish.cookingSteps.map(s =>
+        '<li class="cook-step">' +
+          '<div class="cook-step-head">' +
+            '<span class="cook-step-num">' + s.step + '</span>' +
+            '<div class="cook-step-badges">' +
+              '<span class="badge">' + s.heatLevel + '</span>' +
+              (s.time ? '<span class="badge">' + s.time + ' 分</span>' : '') +
+            '</div>' +
           '</div>' +
-        '</div>' +
-        '<p class="cook-step-desc">' + s.description + '</p>' +
-      '</li>'
-    ).join('') + '</ul>';
-    html += '</div>';
+          '<p class="cook-step-desc">' + s.description + '</p>' +
+        '</li>'
+      ).join('') + '</ul>';
+      html += '</div>';
 
-    html += '<div class="detail-section">';
-    html += '<p class="detail-section-title">💡 小技巧</p>';
-    html += '<ul class="note-list">' + dish.tips.map(t => '<li class="note-item tip">' + t + '</li>').join('') + '</ul>';
-    html += '</div>';
+      html += '<div class="detail-section">';
+      html += '<p class="detail-section-title">💡 小技巧</p>';
+      html += '<ul class="note-list">' + dish.tips.map(t => '<li class="note-item tip">' + t + '</li>').join('') + '</ul>';
+      html += '</div>';
 
-    html += '<div class="detail-section">';
-    html += '<p class="detail-section-title">⚠️ 常見錯誤</p>';
-    html += '<ul class="note-list">' + dish.commonMistakes.map(m => '<li class="note-item mistake">' + m + '</li>').join('') + '</ul>';
-    html += '</div>';
+      html += '<div class="detail-section">';
+      html += '<p class="detail-section-title">⚠️ 常見錯誤</p>';
+      html += '<ul class="note-list">' + dish.commonMistakes.map(m => '<li class="note-item mistake">' + m + '</li>').join('') + '</ul>';
+      html += '</div>';
+    }
 
     const inSignature = mySignatureDishIds.includes(dish.id);
     const sigLocked = isFreePlan();
@@ -11286,14 +11398,18 @@
     html += '<button class="dish-action-btn" id="cookLogBtn">' + (sigLocked ? '🔒 儲存料理紀錄（付費功能）' : '📝 儲存料理紀錄') + '</button>';
     html += '</div>';
     html += '<div class="start-cook-wrap">';
-    html += '<button class="dish-action-btn primary" id="startSopBtn">▶ 開始 SOP 逐步模式</button>';
+    html += '<button class="dish-action-btn primary" id="startSopBtn">' + (sigLocked ? '🔒 SOP 逐步模式（完整版）' : '▶ 開始 SOP 逐步模式') + '</button>';
     html += '</div>';
 
     document.getElementById('detailContent').innerHTML = html;
     bindServingsEvents();
     bindSelectedMenuToggle(dish);
     document.getElementById('startSopBtn').addEventListener('click', () => {
+      if(isFreePlan()){ openUpgradeView(); return; }
       startSOP(currentDish, currentServings);
+    });
+    document.querySelectorAll('#detailContent [data-open-upgrade]').forEach(b => {
+      b.addEventListener('click', () => openUpgradeView());
     });
     document.getElementById('signatureToggleBtn').addEventListener('click', () => {
       if(isFreePlan()){ openUpgradeView(); return; }
@@ -11308,6 +11424,24 @@
 
   // 挑菜階段的「大致怎麼煮」：直接從烹調步驟濃縮，不用另外
   // 為331道菜寫簡介。取每步描述的第一個子句，最多三段
+  // 免費版看到的：只講規模，不講做法
+  function renderStepsLocked(dish){
+    const prep = (dish.preparationSteps || []).length;
+    const cook = (dish.cookingSteps || []).length;
+    const mins = (dish.cookingSteps || []).reduce((a, s) => a + (Number(s.time) || 0), 0)
+               + (Number(dish.prepTime) || 0);
+    const scale = '共 ' + (prep + cook) + ' 步' + (mins ? ' · 約 ' + mins + ' 分鐘' : '');
+    return '<div class="detail-section steps-locked">' +
+      '<p class="detail-section-title">🔥 烹調步驟</p>' +
+      '<p class="steps-locked-scale">' + scale + '</p>' +
+      '<div class="steps-locked-box">' +
+        '<p class="steps-locked-title">完整步驟需要完整版</p>' +
+        '<p class="steps-locked-desc">每一步的火候、時間、怎麼做，<br>還有備料、小技巧與容易失敗的地方。</p>' +
+        '<button class="steps-locked-btn" data-open-upgrade>看方案</button>' +
+      '</div>' +
+    '</div>';
+  }
+
   function renderCookingFlow(dish){
     const parts = dish.cookingSteps
       .map(s => String(s.description).split(/[，,。；;]/)[0].trim())
@@ -11376,11 +11510,18 @@
      ========================================================= */
   const toastEl = document.getElementById('toast');
   let toastTimer = null;
-  function showToast(msg){
+  function failMsg(act, err){
+    var code = String((err && (err.code || err.message)) || "");
+    if((typeof navigator!=="undefined" && navigator.onLine===false)
+       || /unavailable|network|timeout|deadline|offline/i.test(code)) return act+"失敗，請檢查網路連線";
+    if(/permission|denied|unauthenticated|auth/i.test(code)) return act+"失敗，請重新登入再試一次";
+    return act+"失敗，請稍後再試";
+  }
+  function showToast(msg, ms){
     toastEl.textContent = msg;
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=> toastEl.classList.remove('show'), 1600);
+    toastTimer = setTimeout(()=> toastEl.classList.remove('show'), ms || 1800);
   }
 
   /* ---------- 找食譜：choice（兩個大按鈕）／recipe／ingredients ----------
@@ -11613,7 +11754,9 @@
   // 找料理/我有食材/今日料理（加菜、份量調整）這些完全
   // 不受影響，一律免費使用。
   function isFreePlan(){
-    return state.plan === 'free';
+    // 驗證回來前 state.plan 是 null —— 預設當成免費版（鎖住），驗證完再開，
+    // 不然付費功能會先開放一下下再被收回，畫面會閃。
+    return !state.isAdmin && !isPaidPlan(state.plan) && state.plan !== 'trial';
   }
 
   function generateCookLogId(){
@@ -11871,9 +12014,13 @@
     const btn = document.getElementById('clearIngredientsBtn');
     if(btn){
       btn.addEventListener('click', () => {
-        selectedIngredients = [];
-        saveSelectedIngredients();
-        renderIngredientsView();
+        if(!selectedIngredients.length) return;
+        askConfirm('清空已選食材', '目前選了 ' + selectedIngredients.length + ' 樣食材，清空後要重新挑選。', function(){
+          selectedIngredients = [];
+          saveSelectedIngredients();
+          renderIngredientsView();
+          showToast('已清空');
+        }, '清空');
       });
     }
   }
@@ -12210,9 +12357,13 @@
     const clearBtn = document.getElementById('clearSelectedMenuBtn');
     if(clearBtn){
       clearBtn.addEventListener('click', () => {
-        selectedMenuDishIds = [];
-        saveSelectedMenu();
-        renderSelectedMenuView();
+        if(!selectedMenuDishIds.length) return;
+        askConfirm('清空今日料理', '目前有 ' + selectedMenuDishIds.length + ' 道料理，清空後份數與早中晚設定也會一起消失。', function(){
+          selectedMenuDishIds = [];
+          saveSelectedMenu();
+          renderSelectedMenuView();
+          showToast('已清空');
+        }, '清空');
       });
     }
     document.querySelectorAll('#selectedMenuContent [data-meal-dish]').forEach(btn => {
@@ -12562,6 +12713,7 @@
         '<p class="shopping-empty-emoji">📦</p>' +
         '<p class="shopping-empty-title">目前庫存是空的</p>' +
         '<p class="shopping-empty-desc">在採購清單勾選「已有」，或自己新增一項</p>' +
+        '<p class="shopping-empty-desc" style="margin-top:6px;opacity:.75">這裡管食材（冰箱裡有什麼）。家用品請用「生活管家」的庫存管理。</p>' +
       '</div>';
     } else {
       const categories = getShoppingCategoryOrder(inventory);
@@ -12837,9 +12989,13 @@
     const clearSigBtn = document.getElementById('clearSignatureBtn');
     if(clearSigBtn){
       clearSigBtn.addEventListener('click', () => {
-        mySignatureDishIds = [];
-        saveMySignatureDishIds();
-        renderSignatureView();
+        if(!mySignatureDishIds.length) return;
+        askConfirm('清空我的菜單', '目前收藏了 ' + mySignatureDishIds.length + ' 道料理，清空後無法復原。', function(){
+          mySignatureDishIds = [];
+          saveMySignatureDishIds();
+          renderSignatureView();
+          showToast('已清空');
+        }, '清空');
       });
     }
     document.querySelectorAll('#signatureContent .menu-card-remove-btn').forEach(btn => {
@@ -12901,9 +13057,12 @@
         e.stopPropagation();
         const idx = parseInt(btn.dataset.logIndex, 10);
         const target = sorted[idx];
-        cookLogs = cookLogs.filter(l => l !== target);
-        saveCookLogs();
-        renderCookLogTab();
+        askConfirm('刪除這筆紀錄', '刪除後無法復原。', function(){
+          cookLogs = cookLogs.filter(l => l !== target);
+          saveCookLogs();
+          renderCookLogTab();
+          showToast('已刪除');
+        }, '刪除');
       });
     });
     document.querySelectorAll('#signatureContent .cook-log-row[data-dish-id]').forEach(row => {
@@ -12969,7 +13128,716 @@
     _exitTimer=setTimeout(function(){ _exitArmed=false; pushGuard(); }, 2000);
   });
 })();
+/* ==================== 訂閱管理（跨 App 共用模組）====================
+   四個 App 共用同一份程式碼，只有 SUBS_APPS 這張表要一致。
+   權限由 Firebase 規則擋（只認 mp65p@hotmail.com），前端只是介面。
+   ==================================================================== */
+(function(){
+  var SUBS_APPS = [
+    { id:'cal',  icon:'📅', name:'行事曆',   path:'subscribers/' },
+    { id:'cook', icon:'🍳', name:'食在料理', path:'jiachangzhu_subscribers/' },
+    { id:'trv',  icon:'✈️', name:'旅遊計畫', path:'travel_subscribers/' },
+    { id:'crm',  icon:'👥', name:'客戶管理', path:'crm_subscribers/' }
+  ];
+  var PLAN_TXT = { trial:'試用', full:'完整版', basic:'完整版', family:'完整版', free:'免費版' };
+  function devLimit(p){ return (p==='full'||p==='basic'||p==='family'||p==='trial') ? 3 : 1; }
+
+  var S = { data:{}, tab:'all', q:'', loading:false, sel:null, selApp:null,
+            addPlan:'full', addMonths:12, addApp:'crm' };
+
+  /* ---------- 小工具 ---------- */
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  // 必須跟 Firebase 規則一致：email.toLowerCase().replace('.','_')
+  function eKey(e){ return String(e||'').toLowerCase().replace(/[.#$\[\]]/g,'_'); }
+  function isMail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e||'').trim()); }
+  function ymd(ts){ var d=new Date(ts);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function slash(s){ return String(s||'').replace(/-/g,'/'); }
+  function addMonths(ts, m){ var d=new Date(ts); var day=d.getDate();
+    d.setMonth(d.getMonth()+m);
+    if(d.getDate()<day) d.setDate(0);   // 1/31 +1月 → 2/28，不要跳到 3/3
+    return d.getTime(); }
+  function toast(msg){
+    var t=document.getElementById('subsToast');
+    if(!t){ t=document.createElement('div'); t.id='subsToast';
+      t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));background:rgba(32,38,44,.94);color:#fff;padding:11px 20px;border-radius:999px;font-size:13.5px;z-index:10005;opacity:0;transition:opacity .2s;pointer-events:none;max-width:86vw;text-align:center;';
+      document.body.appendChild(t); }
+    t.textContent=msg; t.style.opacity='1';
+    clearTimeout(t._tm); t._tm=setTimeout(function(){ t.style.opacity='0'; }, 2000);
+  }
+  function fail(act, err){
+    if(!navigator.onLine) return act+'失敗，請確認網路後再試';
+    var c=(err&&(err.code||err.message))||'';
+    if(/permission|denied|auth/i.test(c)) return act+'失敗，請重新登入後再試';
+    return act+'失敗，請稍後再試';
+  }
+  function confirmBox(msg, onOk){
+    if(window.showConfirm) return window.showConfirm(msg, onOk);
+    if(window.askConfirm){ var r=window.askConfirm(msg); if(r&&r.then){ r.then(function(ok){ if(ok) onOk(); }); return; } }
+    if(confirm(msg)) onOk();
+  }
+
+  /* ---------- 狀態判讀 ---------- */
+  function stat(sub){
+    if(!sub) return null;
+    var now=Date.now();
+    var exp = sub.expiry ? Date.parse(sub.expiry+'T23:59:59') : 0;
+    var expired = !!(exp && now>exp);
+    var days = exp ? Math.ceil((exp-now)/86400000) : null;
+    return { plan: expired?'free':(sub.plan||'free'), rawPlan:sub.plan||'free',
+             expiry:sub.expiry||'', expired:expired, days:days,
+             disabled: sub.status==='disabled', raw:sub };
+  }
+  function statHtml(st){
+    if(!st) return '<span class="subs-stat subs-none">－</span>';
+    if(st.disabled) return '<span class="subs-stat subs-gray">已停用</span>';
+    var name = PLAN_TXT[st.rawPlan]||st.rawPlan;
+    if(st.expired) return '<span class="subs-stat subs-bad">已過期 · 過期 '+Math.abs(st.days)+' 天</span>';
+    if(st.days==null) return '<span class="subs-stat subs-gray">'+name+'</span>';
+    if(st.days<=7)  return '<span class="subs-stat subs-bad">'+name+' · 剩 '+st.days+' 天</span>';
+    if(st.days<=30) return '<span class="subs-stat subs-warn">'+name+' · 剩 '+st.days+' 天</span>';
+    return '<span class="subs-stat subs-ok">'+name+' · '+slash(st.expiry)+'</span>';
+  }
+
+  /* ---------- 讀取 ---------- */
+  async function load(){
+    S.loading=true; render();
+    var out={};
+    for(var i=0;i<SUBS_APPS.length;i++){
+      var a=SUBS_APPS[i];
+      try{ var snap=await firebase.database().ref(a.path).once('value'); out[a.id]=snap.val()||{}; }
+      catch(e){ out[a.id]=null; }
+    }
+    S.data=out; S.loading=false; render();
+  }
+  function rows(){
+    var map={};
+    SUBS_APPS.forEach(function(a){
+      var d=S.data[a.id]; if(!d) return;
+      Object.keys(d).forEach(function(k){
+        if(!map[k]) map[k]={ key:k, email:'', apps:{} };
+        var s=d[k]||{};
+        if(!map[k].email) map[k].email = s.email || k;
+        map[k].apps[a.id]=s;
+      });
+    });
+    var arr=Object.keys(map).map(function(k){ return map[k]; });
+    // 篩選
+    var q=S.q.trim().toLowerCase();
+    if(q) arr=arr.filter(function(r){ return (r.email+' '+r.key).toLowerCase().indexOf(q)>=0; });
+    if(S.tab==='soon'){
+      arr=arr.filter(function(r){
+        return SUBS_APPS.some(function(a){
+          var st=stat(r.apps[a.id]);
+          return st && !st.disabled && st.days!=null && st.days<=30 && st.days>-30;
+        });
+      });
+      arr.sort(function(x,y){ return minDays(x)-minDays(y); });
+    } else if(S.tab!=='all'){
+      arr=arr.filter(function(r){ return !!r.apps[S.tab]; });
+      arr.sort(function(x,y){ return String(x.email).localeCompare(String(y.email)); });
+    } else {
+      arr.sort(function(x,y){ return String(x.email).localeCompare(String(y.email)); });
+    }
+    return arr;
+  }
+  function minDays(r){
+    var m=99999;
+    SUBS_APPS.forEach(function(a){ var st=stat(r.apps[a.id]);
+      if(st && st.days!=null && st.days<m) m=st.days; });
+    return m;
+  }
+
+  /* ---------- 畫面 ---------- */
+  function render(){
+    var body=document.getElementById('subsBody'); if(!body) return;
+    var cnt=document.getElementById('subsCount');
+    document.querySelectorAll('.subs-tab').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-tab')===S.tab); });
+
+    if(S.loading){ body.innerHTML='<div class="subs-empty">載入中…</div>'; if(cnt) cnt.textContent=''; return; }
+
+    var bad=SUBS_APPS.filter(function(a){ return S.data[a.id]===null; });
+    var warn = bad.length ? '<div class="subs-empty" style="padding:14px;color:#c0392b;font-size:13px">'+
+      esc(bad.map(function(a){return a.name;}).join('、'))+' 讀取失敗，請確認網路或 Firebase 規則</div>' : '';
+
+    var arr=rows();
+    if(cnt) cnt.textContent='共 '+arr.length+' 位';
+    if(!arr.length){
+      body.innerHTML = warn + '<div class="subs-empty">📭<br>'+
+        (S.q ? '找不到「'+esc(S.q)+'」' : S.tab==='soon' ? '沒有快到期的客戶' : '還沒有客戶')+
+        '<br><span style="font-size:13px">'+(S.q?'換個關鍵字試試':'有人付款後，按下面的「新增客戶」')+'</span></div>';
+      return;
+    }
+    var only = (S.tab==='all'||S.tab==='soon') ? null : S.tab;
+    body.innerHTML = warn + arr.map(function(r){
+      var lines = SUBS_APPS.filter(function(a){ return !only || a.id===only; }).map(function(a){
+        var st=stat(r.apps[a.id]);
+        return '<div class="subs-line" data-k="'+esc(r.key)+'" data-a="'+a.id+'">'+
+               '<span class="subs-ico">'+a.icon+'</span>'+
+               '<span class="subs-app">'+a.name+'</span>'+
+               statHtml(st)+
+               '<span class="subs-arrow">›</span></div>';
+      }).join('');
+      return '<div class="subs-card"><div class="subs-email">'+esc(r.email)+'</div>'+
+             '<div class="subs-key">'+esc(r.key)+'</div>'+lines+'</div>';
+    }).join('');
+
+    body.querySelectorAll('.subs-line').forEach(function(el){
+      el.onclick=function(){ openManage(el.getAttribute('data-k'), el.getAttribute('data-a')); };
+    });
+  }
+
+  /* ---------- 新增 ---------- */
+  function openAdd(){
+    S.addPlan='full'; S.addMonths=12; S.addApp = (S.tab!=='all'&&S.tab!=='soon') ? S.tab : 'crm';
+    sheet(addHtml());
+    wireAdd();
+  }
+  function addHtml(){
+    return '<div class="subs-sh-title">新增客戶</div>'+
+      '<div class="subs-sh-sub">有人付款後用這個開通</div>'+
+      '<div class="subs-label">哪個 App</div>'+
+      '<div class="subs-chips" id="ax">'+SUBS_APPS.map(function(a){
+        return '<button type="button" class="subs-chip'+(a.id===S.addApp?' on':'')+'" data-v="'+a.id+'">'+a.icon+' '+a.name+'</button>';
+      }).join('')+'</div>'+
+      '<div class="subs-label">客戶 Email</div>'+
+      '<input type="email" class="subs-input" id="aEmail" placeholder="linda@gmail.com" autocomplete="off" inputmode="email">'+
+      '<div class="subs-label">方案</div>'+
+      '<div class="subs-chips" id="ap">'+
+        '<button type="button" class="subs-chip on" data-v="full">完整版</button>'+
+        '<button type="button" class="subs-chip" data-v="trial">試用</button>'+
+        '<button type="button" class="subs-chip" data-v="free">免費版</button>'+
+      '</div>'+
+      '<div class="subs-label">期間</div>'+
+      '<div class="subs-chips" id="am">'+
+        '<button type="button" class="subs-chip on" data-v="12">一年</button>'+
+        '<button type="button" class="subs-chip" data-v="24">兩年</button>'+
+        '<button type="button" class="subs-chip" data-v="1">一個月</button>'+
+      '</div>'+
+      '<div class="subs-calc" id="aCalc"></div>'+
+      '<button type="button" class="subs-primary" id="aGo">確定新增</button>'+
+      '<button type="button" class="subs-ghost" onclick="subsAdmin.closeSheet()">取消</button>';
+  }
+  function wireAdd(){
+    var em=document.getElementById('aEmail');
+    function chips(id, set){
+      var box=document.getElementById(id); if(!box) return;
+      box.querySelectorAll('.subs-chip').forEach(function(b){
+        b.onclick=function(){
+          box.querySelectorAll('.subs-chip').forEach(function(x){ x.classList.remove('on'); });
+          b.classList.add('on'); set(b.getAttribute('data-v')); calc();
+        };
+      });
+    }
+    chips('ax', function(v){ S.addApp=v; });
+    chips('ap', function(v){ S.addPlan=v; });
+    chips('am', function(v){ S.addMonths=Number(v); });
+    if(em) em.addEventListener('input', calc);
+    calc();
+    document.getElementById('aGo').onclick=doAdd;
+
+    function calc(){
+      var c=document.getElementById('aCalc'); if(!c) return;
+      var v=(em&&em.value||'').trim().toLowerCase();
+      var mp=document.getElementById('am');
+      if(mp) mp.style.display = (S.addPlan==='free') ? 'none' : 'flex';
+      var expTxt = (S.addPlan==='free') ? '不到期' : slash(ymd(addMonths(Date.now(), S.addMonths)));
+      c.innerHTML = '資料位置　<b>'+(v?esc(eKey(v)):'—')+'</b><br>到期日　　<b>'+expTxt+'</b>';
+    }
+  }
+  async function doAdd(){
+    var em=document.getElementById('aEmail'), btn=document.getElementById('aGo');
+    var v=(em&&em.value||'').trim().toLowerCase();
+    if(!isMail(v)){ toast('Email 格式不對，請檢查'); if(em) em.focus(); return; }
+    var app=SUBS_APPS.filter(function(a){ return a.id===S.addApp; })[0];
+    var key=eKey(v), now=Date.now();
+    var free = S.addPlan==='free';
+    var rec={ email:v, plan:S.addPlan, expiry: free?'':ymd(addMonths(now,S.addMonths)),
+              status:'active', deviceLimit:devLimit(S.addPlan), createdAt:now, lastSeen:now };
+    btn.disabled=true; btn.textContent='處理中…';
+    try{
+      var ref=firebase.database().ref(app.path+key);
+      var snap=await ref.once('value');
+      if(snap.val()){ // 已存在 → 只改方案與到期，不動 devices / clientsCreated
+        await ref.update({ plan:rec.plan, expiry:rec.expiry, status:'active', deviceLimit:rec.deviceLimit });
+        toast('已更新　'+app.name+'　'+(PLAN_TXT[S.addPlan]||S.addPlan));
+      } else {
+        rec.devices={}; if(app.id==='crm') rec.clientsCreated=0;
+        await ref.set(rec);
+        toast('已新增　'+app.name+'　'+(PLAN_TXT[S.addPlan]||S.addPlan));
+      }
+      closeSheet(); await load();
+    }catch(e){ toast(fail('新增', e)); btn.disabled=false; btn.textContent='確定新增'; }
+  }
+
+  /* ---------- 管理單一客戶 ---------- */
+  function openManage(key, appId){
+    S.sel=key; S.selApp=appId;
+    var app=SUBS_APPS.filter(function(a){ return a.id===appId; })[0];
+    var sub=(S.data[appId]||{})[key];
+    var st=stat(sub);
+    var email=(sub&&sub.email)||key;
+
+    if(!sub){
+      sheet('<div class="subs-sh-title">'+esc(email)+'</div>'+
+        '<div class="subs-sh-sub">'+app.icon+' '+app.name+'　尚未開通</div>'+
+        '<button type="button" class="subs-primary" id="mNew">開通完整版一年</button>'+
+        '<button type="button" class="subs-ghost" onclick="subsAdmin.closeSheet()">關閉</button>');
+      document.getElementById('mNew').onclick=function(){
+        S.addApp=appId; S.addPlan='full'; S.addMonths=12;
+        sheet(addHtml()); wireAdd();
+        var e=document.getElementById('aEmail'); if(e){ e.value=email; e.dispatchEvent(new Event('input')); }
+      };
+      return;
+    }
+    var used=Object.keys(sub.devices||{}).length;
+    sheet(
+      '<div class="subs-sh-title">'+esc(email)+'</div>'+
+      '<div class="subs-sh-sub">'+app.icon+' '+app.name+'　'+
+        (st.expiry ? (PLAN_TXT[st.rawPlan]||st.rawPlan)+' · '+slash(st.expiry) : (PLAN_TXT[st.rawPlan]||st.rawPlan))+
+        '</div>'+
+      '<button type="button" class="subs-primary" id="mRenew">續約一年</button>'+
+      '<div class="subs-label">改方案</div>'+
+      '<div class="subs-chips" id="mp">'+
+        ['full','trial','free'].map(function(p){
+          return '<button type="button" class="subs-chip'+(st.rawPlan===p?' on':'')+'" data-v="'+p+'">'+PLAN_TXT[p]+'</button>';
+        }).join('')+
+      '</div>'+
+      '<div class="subs-label">延長</div>'+
+      '<div class="subs-chips" id="me">'+
+        '<button type="button" class="subs-chip" data-v="1">＋1 月</button>'+
+        '<button type="button" class="subs-chip" data-v="12">＋1 年</button>'+
+        '<button type="button" class="subs-chip" data-v="ask">自訂…</button>'+
+      '</div>'+
+      '<div class="subs-row2"><span>裝置</span><span class="v">'+used+' / '+(sub.deviceLimit||devLimit(st.rawPlan))+'</span>'+
+        '<button type="button" class="subs-mini" id="mDev">清除</button></div>'+
+      '<div class="subs-row2"><span>狀態</span><span class="v">'+(st.disabled?'已停用':'啟用中')+'</span>'+
+        '<button type="button" class="subs-mini" id="mTog">'+(st.disabled?'恢復':'停用')+'</button></div>'+
+      '<button type="button" class="subs-ghost" onclick="subsAdmin.closeSheet()">關閉</button>'+
+      '<button type="button" class="subs-danger" id="mDel">刪除此 App 的訂閱</button>'
+    );
+
+    var path=app.path+key;
+    document.getElementById('mRenew').onclick=function(){ extend(path, 12); };
+    document.getElementById('me').querySelectorAll('.subs-chip').forEach(function(b){
+      b.onclick=function(){
+        var v=b.getAttribute('data-v');
+        if(v==='ask'){ var m=prompt('延長幾個月？','12'); if(m===null) return;
+          m=parseInt(m,10); if(!m||m<1){ toast('請輸入 1 以上的數字'); return; } extend(path, m); }
+        else extend(path, Number(v));
+      };
+    });
+    document.getElementById('mp').querySelectorAll('.subs-chip').forEach(function(b){
+      b.onclick=function(){ changePlan(path, b.getAttribute('data-v')); };
+    });
+    document.getElementById('mDev').onclick=function(){
+      confirmBox('清除這位客戶的裝置紀錄？\n他需要重新登入。', async function(){
+        try{ await firebase.database().ref(path+'/devices').remove(); toast('已清除裝置'); closeSheet(); await load(); }
+        catch(e){ toast(fail('清除', e)); }
+      });
+    };
+    document.getElementById('mTog').onclick=async function(){
+      var next = st.disabled ? 'active' : 'disabled';
+      try{ await firebase.database().ref(path+'/status').set(next);
+        toast(next==='disabled'?'已停用':'已恢復'); closeSheet(); await load(); }
+      catch(e){ toast(fail('更新', e)); }
+    };
+    document.getElementById('mDel').onclick=function(){
+      confirmBox('確定刪除「'+email+'」在'+app.name+'的訂閱嗎？\n此動作無法復原。', async function(){
+        try{ await firebase.database().ref(path).remove(); toast('已刪除'); closeSheet(); await load(); }
+        catch(e){ toast(fail('刪除', e)); }
+      });
+    };
+  }
+
+  // 續約：從「原到期日」往後加，已過期才從今天算，剩餘天數不會被吃掉
+  async function extend(path, months){
+    try{
+      var snap=await firebase.database().ref(path+'/expiry').once('value');
+      var cur=snap.val(), now=Date.now();
+      var base = cur ? Math.max(Date.parse(cur+'T23:59:59'), now) : now;
+      var next = ymd(addMonths(base, months));
+      await firebase.database().ref(path).update({ expiry:next, status:'active' });
+      toast('已延長至 '+slash(next));
+      closeSheet(); await load();
+    }catch(e){ toast(fail('續約', e)); }
+  }
+  async function changePlan(path, plan){
+    try{
+      var up={ plan:plan, deviceLimit:devLimit(plan) };
+      if(plan==='free') up.expiry='';
+      await firebase.database().ref(path).update(up);
+      toast('已改成 '+(PLAN_TXT[plan]||plan));
+      closeSheet(); await load();
+    }catch(e){ toast(fail('修改', e)); }
+  }
+
+  /* ---------- 容器 ---------- */
+  function sheet(html){
+    var w=document.getElementById('subsSheet');
+    w.querySelector('.subs-sheet').innerHTML=html;
+    w.classList.add('on');
+  }
+  function closeSheet(){ var w=document.getElementById('subsSheet'); if(w) w.classList.remove('on'); }
+
+  function mount(){
+    if(document.getElementById('subsPage')) return;
+    var tabs='<button type="button" class="subs-tab on" data-tab="all">全部</button>'+
+      '<button type="button" class="subs-tab" data-tab="soon">⚠️ 快到期</button>'+
+      SUBS_APPS.map(function(a){ return '<button type="button" class="subs-tab" data-tab="'+a.id+'">'+a.icon+' '+a.name+'</button>'; }).join('');
+    var d=document.createElement('div');
+    d.innerHTML=
+      '<div id="subsPage">'+
+        '<div class="subs-head"><button type="button" class="subs-back" onclick="subsAdmin.close()">‹ 返回</button>'+
+          '<span class="subs-title">訂閱管理</span><span class="subs-count" id="subsCount"></span></div>'+
+        '<div class="subs-tools">'+
+          '<input type="search" class="subs-search" id="subsQ" placeholder="搜尋 Email" autocomplete="off">'+
+          '<div class="subs-tabs">'+tabs+'</div>'+
+        '</div>'+
+        '<div class="subs-body" id="subsBody"></div>'+
+        '<button type="button" class="subs-fab" onclick="subsAdmin.add()">＋ 新增客戶</button>'+
+      '</div>'+
+      '<div id="subsSheet" onclick="if(event.target===this)subsAdmin.closeSheet()"><div class="subs-sheet"></div></div>';
+    while(d.firstChild) document.body.appendChild(d.firstChild);
+    document.getElementById('subsQ').addEventListener('input', function(e){ S.q=e.target.value; render(); });
+    document.querySelectorAll('.subs-tab').forEach(function(b){
+      b.onclick=function(){ S.tab=b.getAttribute('data-tab'); render(); };
+    });
+  }
+
+  window.subsAdmin={
+    open: function(){ mount(); document.getElementById('subsPage').classList.add('on'); load(); },
+    close: function(){ closeSheet(); var p=document.getElementById('subsPage'); if(p) p.classList.remove('on'); },
+    add: openAdd,
+    closeSheet: closeSheet,
+    _s: S
+  };
+})();
+
+/* ==================== 付款說明卡（四個 App 共用）====================
+   藍新「快速收款連結」拿到後，把該 App 的 url 填進 PAY_LINKS 即可，
+   其餘都不用動。留空時會顯示「請聯繫客服」。
+   ==================================================================== */
+(function(){
+  var PAY_LINKS = {
+    cal:  '',   // 行事曆   $999／年
+    cook: '',   // 食在料理 $799／年
+    trv:  '',   // 旅遊計畫 $999／年
+    crm:  ''    // 客戶管理 $6,000／年（早鳥）
+  };
+  var LINE_URL = 'https://lin.ee/DwhMLJm';
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  function tip(msg){
+    var t=document.getElementById('payTip');
+    if(!t){ t=document.createElement('div'); t.id='payTip';
+      t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));background:rgba(32,38,44,.94);color:#fff;padding:11px 20px;border-radius:999px;font-size:13.5px;z-index:10050;opacity:0;transition:opacity .2s;pointer-events:none;';
+      document.body.appendChild(t); }
+    t.textContent=msg; t.style.opacity='1';
+    clearTimeout(t._tm); t._tm=setTimeout(function(){ t.style.opacity='0'; },1800);
+  }
+
+  /* opts: { app:'crm', email:'...', price:6000, per:500, accent:'#4A7A9B', note:'早鳥價' } */
+  window.payCardHtml = function(opts){
+    var o=opts||{}, ac=o.accent||'#E8735C';
+    var mail=o.email||'';
+    var per = o.per ? '<div style="color:#6B7280;font-size:13px;margin-top:4px">平均每月約 $'+o.per+'</div>' : '';
+    var badge = o.note ? '<span style="background:'+ac+';color:#fff;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:999px;margin-left:8px;vertical-align:middle">'+esc(o.note)+'</span>' : '';
+    return '<div id="payCard" data-app="'+esc(o.app||'')+'" data-ac="'+ac+'" style="border:2px solid '+ac+';border-radius:16px;padding:18px;margin-top:18px;background:#fff">'+
+      '<div style="font-size:15px;font-weight:800;color:#2E2E33">完整版'+badge+'</div>'+
+      '<div style="display:flex;align-items:baseline;gap:8px;margin-top:8px">'+
+        '<span style="font-size:34px;font-weight:900;color:'+ac+';letter-spacing:-.5px">$'+Number(o.price||0).toLocaleString()+'</span>'+
+        '<span style="color:#8A8A93;font-size:14px">/年</span></div>'+ per +
+      '<div style="background:#F6F7F9;border-radius:12px;padding:13px;margin-top:15px">'+
+        '<div style="font-size:12px;color:#7b8794;margin-bottom:6px">你的帳號</div>'+
+        '<div style="display:flex;align-items:center;gap:8px">'+
+          '<div id="payMail" style="flex:1;font-size:14px;font-weight:700;color:#2E2E33;word-break:break-all">'+esc(mail||'（請先登入）')+'</div>'+
+          (mail?'<button type="button" id="payCopy" style="flex:none;border:1px solid #dfe3e8;background:#fff;color:#5a6a78;border-radius:8px;padding:7px 12px;font-size:12px;font-family:inherit;min-height:36px">複製</button>':'')+
+        '</div>'+
+        '<div style="font-size:12.5px;color:#B45309;line-height:1.65;margin-top:10px">⚠️ 付款時「電子郵件」欄請填上面這個信箱，我們才知道要幫誰開通。</div>'+
+      '</div>'+
+      '<label for="payAgree" style="display:flex;gap:9px;align-items:flex-start;margin-top:15px;font-size:12.5px;line-height:1.65;color:#39423C;cursor:pointer">'+
+        '<input type="checkbox" id="payAgree" style="flex:none;width:18px;height:18px;margin-top:1px;accent-color:'+ac+'">'+
+        '<span>我了解本服務提供免費試用，並同意付款開通後不適用七日猶豫期、恕不退費。'+
+          '<a href="javascript:void(0)" id="payTerms" style="color:'+ac+';text-decoration:underline">付款與退款說明</a></span>'+
+      '</label>'+
+      '<button type="button" id="payGo" disabled style="width:100%;border:none;background:#C8CFD6;color:#fff;border-radius:12px;padding:15px;font-size:16px;font-weight:800;margin-top:12px;min-height:50px;font-family:inherit;cursor:not-allowed">前往付款</button>'+
+      '<div style="text-align:center;color:#8A8A93;font-size:12px;margin-top:10px;line-height:1.7">付款後 1 個工作天內完成開通<br>有問題可隨時聯繫客服</div>'+
+    '</div>';
+  };
+
+  // 插入 payCardHtml 之後呼叫，綁定按鈕
+  window.payCardBind = function(){
+    var card=document.getElementById('payCard'); if(!card) return;
+    var app=card.getAttribute('data-app');
+    var mail=(document.getElementById('payMail')||{}).textContent||'';
+    var cp=document.getElementById('payCopy');
+    if(cp) cp.onclick=function(){
+      var done=function(){ tip('已複製　'+mail); };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(mail).then(done, fallback);
+      } else fallback();
+      function fallback(){
+        var ta=document.createElement('textarea'); ta.value=mail;
+        ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta);
+        ta.select(); try{ document.execCommand('copy'); done(); }catch(e){ tip('複製失敗，請手動選取'); }
+        document.body.removeChild(ta);
+      }
+    };
+    var chk=document.getElementById('payAgree');
+    var go=document.getElementById('payGo');
+    var tl=document.getElementById('payTerms');
+    if(tl) tl.onclick=function(){ if(window.legalDocs) legalDocs.open('pay'); };
+    // 沒勾選就不能付款 —— 這個勾選是「事先同意放棄猶豫期」的證明，不是裝飾
+    var accent = card.getAttribute('data-ac') || '#14564A';
+    if(chk && go) chk.onchange=function(){
+      go.disabled = !chk.checked;
+      go.style.background = chk.checked ? accent : '#C8CFD6';
+      go.style.cursor = chk.checked ? 'pointer' : 'not-allowed';
+    };
+    if(go) go.onclick=function(){
+      if(go.disabled) return;
+      var url=PAY_LINKS[app];
+      if(url){ window.open(url,'_blank','noopener'); return; }
+      tip('付款連結準備中，先幫你開客服');
+      setTimeout(function(){ window.open(LINE_URL,'_blank','noopener'); }, 700);
+    };
+  };
+})();
+
 </script>
+<script>window.LEGAL_APP='cook';</script>
+<script>
+/* ==================== 法律文件（四個 App 共用）====================
+   三份文件：服務條款、隱私權政策、付款與退款說明。
+   客戶管理另加第四份：客戶資料處理說明。
+   只要改 LEGAL_CFG 一個物件，其餘文字自動帶入。
+   ==================================================================== */
+(function(){
+  var APP = (window.LEGAL_APP || 'cal');           // cal / cook / trv / crm
+  var UPDATED = '2026/09/30';
+  var MAIL = 'beyunself@hotmail.com';
+  var LINE_NAME = '智在生活';
+  var LINE_URL = 'https://line.me/R/ti/p/@373pfdee';
+
+  var CFG = {
+    cal:  { name:'生活管家', trial:21, price:'999',
+            what:'行程、待辦、記事、目標追蹤、採購清單與庫存管理' },
+    cook: { name:'食在料理', trial:14, price:'999',
+            what:'食譜查詢、依食材找菜、今日料理規劃、烹調步驟、採購清單與食材庫存' },
+    trv:  { name:'旅遊計畫', trial:14, price:'999',
+            what:'逐日行程安排、交通段銜接、花費彙總與匯率換算、行前準備清單與列印匯出' },
+    crm:  { name:'客戶管理', trial:30, price:'7,200',
+            what:'客戶管理、合約、預約、收款紀錄、營運儀表板與服務追蹤' }
+  };
+  var C = CFG[APP] || CFG.cal;
+
+  function h(title, body){ return { t:title, b:body }; }
+  function p(){ return Array.prototype.slice.call(arguments)
+    .map(function(s){ return '<p>'+s+'</p>'; }).join(''); }
+  function sec(n, t, body){ return '<h4>'+n+'. '+t+'</h4>'+body; }
+
+  var CONTACT = p('Email：'+MAIL, '官方 LINE：'+LINE_NAME);
+
+  var TERMS =
+    sec(1,'我們提供什麼', p(
+      '智在生活提供以下網頁應用程式：生活管家、食在料理、旅遊計畫、客戶管理。各產品獨立計費，可單獨或組合使用。',
+      '你現在使用的是「'+C.name+'」，提供'+C.what+'功能。',
+      '這些是持續開發中的產品，功能會隨版本調整與增加。')) +
+    sec(2,'你的帳號', p(
+      '用 Email 收登入連結即可使用，不需要設密碼。請保管好你的信箱 —— 能收到信的人就能登入你的帳號。',
+      '付費後同一個帳號最多 3 台裝置，免費版 1 台。共用裝置請記得登出。',
+      '未滿 18 歲請由家長或監護人同意後使用。')) +
+    sec(3,'怎麼使用都可以，除了這幾件事', p(
+      '你可以自由使用所有功能，把資料用在任何你需要的地方。請不要：') +
+      '<ul><li>複製或散布本服務的程式碼</li><li>用程式大量擷取服務內的資料</li>' +
+      '<li>反向工程、拆解或破解</li><li>轉售、出租或分享帳號給他人營利</li>' +
+      '<li>未經同意重製或公開發布服務內容</li></ul>' +
+      p('正常使用不會踩到這些線。')) +
+    sec(4,'誰擁有什麼', p(
+      '你的資料是你的。你隨時可以匯出或要求刪除。',
+      '本服務的程式碼、介面設計、文字、圖片、資料結構與「智在生活」品牌名稱，屬於我們所有。')) +
+    sec(5,'服務可能會變', p(
+      '我們會因維護或升級暫停服務，會盡量事先告知。',
+      '如果要停止營運，我們會提前至少 30 天公告，並提供資料匯出方式。',
+      '建議你定期用「匯出備份」自己留一份。')) +
+    sec(6,'我們的責任範圍', p(
+      '我們盡力讓服務穩定，但無法保證完全不出錯。',
+      '若造成損失，賠償以你當年度已付的費用為上限；但如果是我們故意或重大疏失造成的，不在此限。')) +
+    sec(7,'條款有變動', p(
+      '修改會在服務內公告。公告後你繼續使用，視為同意。')) +
+    sec(8,'聯絡我們', CONTACT);
+
+  var PRIVACY =
+    sec(1,'我們蒐集什麼',
+      '<ul><li>你的登入 Email —— 用來辨識帳號、寄登入連結</li>' +
+      '<li>你自己輸入的內容 —— 你在 App 裡建立的各項資料</li>' +
+      '<li>裝置識別碼 —— 用來計算你登入了幾台裝置</li></ul>' +
+      p('我們不蒐集你的通訊錄、位置、照片或其他裝置資訊。我們沒有使用廣告或行為追蹤工具。')) +
+    sec(2,'資料放在哪', p(
+      '儲存於 Google Firebase（Google 提供的雲端資料庫服務）。',
+      '每個帳號的資料以你的 Email 隔離，其他使用者讀不到。')) +
+    sec(3,'誰看得到', p('除了你自己，只有我們在下列情況會存取：') +
+      '<ul><li>你回報問題，需要協助排除故障</li><li>系統異常需要修復</li></ul>' +
+      p('除此之外不會查看，不會用於行銷，不會提供給任何第三人。')) +
+    sec(4,'我們用到的第三方服務',
+      '<ul><li>Google Firebase —— 帳號登入與資料儲存</li>' +
+      '<li>藍新金流 —— 付款處理（我們不會取得你的信用卡號）</li></ul>' +
+      p('這些服務有各自的隱私政策。')) +
+    sec(5,'資料保存多久', p(
+      '帳號存在期間持續保存。',
+      '你可以隨時要求刪除帳號，我們會在 7 天內刪除全部資料。刪除後無法復原，請先自行匯出。')) +
+    sec(6,'你的權利', p(
+      '你可以查詢、更正、匯出或刪除你的資料。大部分在 App 內就能做到，其餘請透過 LINE 或 Email 聯繫。')) +
+    sec(7,'Cookie', p(
+      '我們只使用讓你保持登入狀態的必要儲存，沒有用於追蹤或廣告。')) +
+    sec(8,'聯絡我們', CONTACT);
+
+  var PAY =
+    sec(1,'價格',
+      '<table class="lg-t"><tbody>' +
+      '<tr><td>生活管家</td><td>$999／年</td></tr>' +
+      '<tr><td>食在料理</td><td>$999／年</td></tr>' +
+      '<tr><td>旅遊計畫</td><td>$999／年</td></tr>' +
+      '<tr><td>三個組合</td><td>$1,999／年</td></tr>' +
+      '<tr><td>客戶管理</td><td>$7,200／年（前 15 位早鳥 $6,000，續約同價）</td></tr>' +
+      '</tbody></table>' + p('全部為新台幣，年繳。')) +
+    sec(2,'先試用再決定', p('每個產品都有免費試用，期間功能全部開放：') +
+      '<table class="lg-t"><tbody>' +
+      '<tr><td>生活管家</td><td>21 天</td></tr>' +
+      '<tr><td>食在料理</td><td>14 天</td></tr>' +
+      '<tr><td>旅遊計畫</td><td>14 天</td></tr>' +
+      '<tr><td>客戶管理</td><td>30 天</td></tr>' +
+      '</tbody></table>' +
+      p('試用結束會轉成免費版，功能較少但不會到期，你建立的資料都還在。')) +
+    sec(3,'怎麼付款', p(
+      '藍新金流線上刷卡。',
+      '付款時請填寫你登入用的那個 Email —— 這是我們判斷要幫誰開通的唯一依據，填錯會無法開通。')) +
+    sec(4,'多久開通', p(
+      '收到款項後 1 個工作天內完成。開通後重開一次 App 就是完整版。',
+      '超過時間還沒開通，請透過 LINE 或 Email 聯繫。')) +
+    sec(5,'使用期間', p(
+      '從開通日起算一年。',
+      '提前續約會從原到期日往後延長，剩下的天數不會被吃掉。')) +
+    sec(6,'關於退款', p(
+      '<b>我們不提供退款，所以請務必先試用。</b>',
+      '法律上的說明：依「通訊交易解除權合理例外情事適用準則」第 2 條第 5 款，線上數位服務經你事先同意後提供，不適用七日猶豫期。你在付款前會看到一個勾選框，勾選即表示你了解並同意這一點。',
+      '如果因為系統重大問題導致你完全無法使用，而我們在合理時間內修不好，可以個別討論處理方式。')) +
+    sec(7,'聯絡我們', CONTACT);
+
+  var CLIENTDATA =
+    p('你用這套系統管理你自己的客戶資料，以下說明我們各自的責任。') +
+    sec(1,'誰負什麼責任', p(
+      '個人資料保護法上，你是「蒐集者」，我們是「受託處理者」。簡單說：資料是你的，你決定怎麼用；我們只負責幫你安全地存放與處理。')) +
+    sec(2,'你要做的', p(
+      '向你的客戶蒐集資料時，請依個人資料保護法盡告知義務（告訴他們你為什麼要這些資料、會怎麼用）。這一步在你這邊，我們無法代勞。')) +
+    sec(3,'請不要存這些', p(
+      '與服務無關的個人資料，以及下列特種個人資料：') +
+      '<ul><li>病歷、醫療、基因</li><li>性生活、健康檢查</li><li>犯罪前科</li></ul>' +
+      p('這類資料的保護要求更高，本系統不適合存放。例如客戶備註欄請避免寫健康狀況。')) +
+    sec(4,'我們做到的',
+      '<ul><li>你的資料以登入 Email 隔離，其他使用者讀不到</li>' +
+      '<li>僅在協助你排除問題時存取</li>' +
+      '<li>不作行銷、不提供第三人</li></ul>') +
+    sec(5,'萬一外洩', p(
+      '我們知悉後會盡快通知你，並說明已掌握的範圍與影響，讓你能依法進行後續處理。')) +
+    sec(6,'刪除', p(
+      '你可隨時要求刪除帳號與全部客戶資料，7 天內完成。')) +
+    sec(7,'聯絡我們', CONTACT);
+
+  var DOCS = [
+    h('服務條款', TERMS),
+    h('隱私權政策', PRIVACY),
+    h('付款與退款', PAY)
+  ];
+  if(APP === 'crm') DOCS.push(h('客戶資料處理', CLIENTDATA));
+
+  var cur = 0;
+
+  function css(){
+    if(document.getElementById('lgCss')) return;
+    var s=document.createElement('style'); s.id='lgCss';
+    s.textContent =
+      '#lgWrap{position:fixed;inset:0;background:rgba(20,24,22,.5);z-index:10040;display:none;align-items:flex-end;}'+
+      '#lgWrap.on{display:flex;}'+
+      '.lg-box{background:#fff;color:#1F2724;width:100%;max-height:90vh;display:flex;flex-direction:column;border-radius:16px 16px 0 0;overflow:hidden;}'+
+      '.lg-head{padding:16px 18px 0;border-bottom:1px solid #E6E9E4;flex:none;}'+
+      '.lg-title{font-size:16px;font-weight:700;margin-bottom:2px;}'+
+      '.lg-upd{font-size:11.5px;color:#8A928C;margin-bottom:10px;}'+
+      '.lg-tabs{display:flex;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;}'+
+      '.lg-tab{flex:none;background:none;border:none;border-bottom:2px solid transparent;color:#6B736D;'+
+        'font-size:13.5px;font-family:inherit;padding:9px 10px;min-height:42px;cursor:pointer;white-space:nowrap;}'+
+      '.lg-tab.on{color:#14564A;border-bottom-color:#14564A;font-weight:700;}'+
+      '.lg-body{overflow-y:auto;padding:16px 18px 24px;-webkit-overflow-scrolling:touch;'+
+        'font-size:14px;line-height:1.85;color:#39423C;}'+
+      '.lg-body h4{font-size:14.5px;color:#1F2724;margin:18px 0 6px;font-weight:700;}'+
+      '.lg-body h4:first-child{margin-top:2px;}'+
+      '.lg-body p{margin:0 0 8px;}'+
+      '.lg-body ul{margin:4px 0 10px;padding-left:20px;}'+
+      '.lg-body li{margin-bottom:3px;}'+
+      '.lg-t{width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:13.5px;}'+
+      '.lg-t td{padding:6px 0;border-bottom:1px solid #EDF0EC;}'+
+      '.lg-t td:last-child{text-align:right;color:#14564A;font-weight:600;white-space:nowrap;padding-left:12px;}'+
+      '.lg-foot{flex:none;padding:12px 18px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #E6E9E4;}'+
+      '.lg-close{width:100%;background:#F2F4F1;color:#39423C;border:1px solid #DDE2DA;border-radius:10px;'+
+        'padding:13px;font-size:15px;font-family:inherit;min-height:48px;cursor:pointer;}';
+    document.head.appendChild(s);
+  }
+
+  function mount(){
+    css();
+    if(document.getElementById('lgWrap')) return;
+    var w=document.createElement('div'); w.id='lgWrap';
+    w.innerHTML =
+      '<div class="lg-box">'+
+        '<div class="lg-head">'+
+          '<div class="lg-title">智在生活 · '+C.name+'</div>'+
+          '<div class="lg-upd">最後更新 '+UPDATED+'</div>'+
+          '<div class="lg-tabs" id="lgTabs"></div>'+
+        '</div>'+
+        '<div class="lg-body" id="lgBody"></div>'+
+        '<div class="lg-foot"><button type="button" class="lg-close" id="lgClose">關閉</button></div>'+
+      '</div>';
+    document.body.appendChild(w);
+    w.addEventListener('click', function(e){ if(e.target===w) close(); });
+    document.getElementById('lgClose').addEventListener('click', close);
+    var tabs=document.getElementById('lgTabs');
+    DOCS.forEach(function(d,i){
+      var b=document.createElement('button');
+      b.type='button'; b.className='lg-tab'; b.textContent=d.t;
+      b.addEventListener('click', function(){ show(i); });
+      tabs.appendChild(b);
+    });
+  }
+  function show(i){
+    cur=i;
+    var tabs=document.querySelectorAll('.lg-tab');
+    for(var k=0;k<tabs.length;k++) tabs[k].classList.toggle('on', k===i);
+    var body=document.getElementById('lgBody');
+    body.innerHTML = DOCS[i].b;
+    body.scrollTop = 0;
+  }
+  function open(which){
+    mount();
+    var i = 0;
+    if(typeof which === 'number') i = which;
+    else if(which === 'privacy') i = 1;
+    else if(which === 'pay') i = 2;
+    else if(which === 'clientdata') i = 3;
+    if(i >= DOCS.length) i = 0;
+    show(i);
+    document.getElementById('lgWrap').classList.add('on');
+  }
+  function close(){ var w=document.getElementById('lgWrap'); if(w) w.classList.remove('on'); }
+
+  window.legalDocs = { open:open, close:close, appName:C.name };
+})();
+</script>
+
 
 </body>
 </html>
