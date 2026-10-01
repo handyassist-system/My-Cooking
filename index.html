@@ -940,12 +940,13 @@
     z-index:10;
   }
   .nav-item{
-    flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
     padding:6px 0; background:none; border:none; color:var(--color-text-soft);
-    font-family:var(--font-family); font-size:var(--fs-label); font-weight:var(--weight-regular); cursor:pointer;
-    -webkit-tap-highlight-color:transparent;
+    font-family:var(--font-family); font-size:11.5px; font-weight:var(--weight-regular); cursor:pointer;
+    white-space:nowrap; -webkit-tap-highlight-color:transparent;
   }
-  .nav-item svg{width:22px; height:22px;}
+  /* 圖示改用 emoji，尺寸與另外三個 App 的底部導覽對齊（21px／間距 3px／字 11.5px） */
+  .nav-item .ic{font-size:21px; line-height:1;}
   .nav-item.active{color:var(--color-accent);}
   .nav-item:active{opacity:0.6;}
 
@@ -1167,18 +1168,74 @@
   border-radius:18px !important; padding:15px !important; overflow:visible !important;
   box-shadow:0 2px 10px rgba(46,46,51,.06) !important; margin-bottom:14px !important;
 }
-.settings-row{
-  width:100% !important; display:flex !important; align-items:center !important; gap:10px !important;
-  padding:12px !important; border-radius:12px !important;
-  border:1px solid #E7E2DA !important; border-bottom:1px solid #E7E2DA !important;
-  background:#FBF8F3 !important; color:#2E2E33 !important;
-  font-size:14px !important; font-weight:600 !important; font-family:inherit !important;
-  text-align:left !important; min-height:48px !important; cursor:pointer;
-  margin-bottom:8px !important;
-}
-.settings-row:last-child{ margin-bottom:0 !important; }
-.settings-row:active{ background:#F1ECE3 !important; }
 .settings-row.admin{ background:#FAF0EC !important; border-color:#E0BFB3 !important; }
+
+/* ===== 底部導覽：四個 App 同一套規格（高度 58px、圖示 21px、字 11.5px、反白加底色）===== */
+.bottom-nav{
+  position:fixed; left:0; right:0; bottom:0; box-sizing:border-box;
+  max-width:520px; margin:0 auto; z-index:40; display:flex; align-items:stretch;
+  background:var(--color-surface); border-top:1px solid var(--color-border);
+  padding:5px 8px calc(5px + env(safe-area-inset-bottom));
+}
+.bottom-nav .nav-item{
+  flex:1 1 0; min-width:0; box-sizing:border-box;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  padding:6px 2px; min-height:48px;
+  background:none; border:none; border-radius:12px;
+  color:var(--color-text-soft); font-family:inherit; font-size:11.5px; font-weight:600;
+  line-height:1.25; white-space:nowrap; cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
+.bottom-nav .nav-item .ic{ font-size:21px; line-height:1; }
+.bottom-nav .nav-item.active{ color:#A8462E; background:#F1DCD2; font-weight:700; }
+.bottom-nav .nav-item:active{ opacity:.65; }
+
+/* ===== 空狀態：四個 App 同一套尺寸（圖示 40px、標題 14px、副標 12.5px）===== */
+.empty-state{
+  text-align:center; padding:44px 20px; font-size:14px; font-weight:600; line-height:1.6;
+}
+.empty-state .menu-empty-emoji, .empty-state .ai-empty-emoji{
+  display:block; font-size:40px; line-height:1; margin:0 0 10px; opacity:.85; font-weight:400;
+}
+.empty-state .ai-empty-desc, .empty-state .menu-empty-desc{
+  display:block; font-size:12.5px; font-weight:400; margin-top:6px; opacity:.85;
+}
+
+/* ===== 設定列表：四個 App 同一套規格（列高 52、圖示 18、名稱 15、狀態值 13）=====
+   三個 App 的 class 名稱不同（.set-row／.settings-row，內層 .ic/.tx/.ar 與
+   .set-ico/.set-name/.set-val/.set-arrow），這裡一次涵蓋，不動既有標籤。 */
+.set-row, .settings-row{
+  display:flex; align-items:center; gap:10px; width:100%; box-sizing:border-box;
+  min-height:52px; padding:14px; margin:0;
+  background:none; border:none; border-bottom:1px solid var(--color-border); border-radius:0;
+  font-family:inherit; font-size:15px; font-weight:500; color:var(--color-text);
+  text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
+.set-row:last-child, .settings-row:last-child{ border-bottom:none; }
+.set-row:active, .settings-row:active{ background:var(--color-bg); }
+.set-row .ic, .set-row .set-ico, .settings-row .settings-row-icon{
+  flex:0 0 auto; width:24px; text-align:center; font-size:18px; line-height:1;
+}
+.set-row .tx, .set-row .set-name, .settings-row .settings-row-label{
+  flex:0 0 auto; white-space:nowrap;
+}
+.set-row .set-val{
+  flex:1 1 auto; min-width:0; text-align:right; font-size:13px; font-weight:400;
+  color:var(--color-text-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.set-row .ar, .set-row .set-arrow{
+  flex:0 0 auto; margin-left:auto; font-size:19px; line-height:1; color:var(--color-text-soft);
+}
+.set-gap{ height:14px; background:none; border:none; }
+
+  /* 危險動作（登出）不給箭頭：它不是「進入某頁」，而是當下就執行 */
+  .set-row.danger .ar, .set-row.danger .set-arrow{ display:none; }
+  .set-row.danger, .settings-row.danger{ color:var(--color-danger); font-weight:700; }
+  /* 管理員項目不另外加底色，跟其他 App 一致 */
+  .settings-row.admin{ background:none; border-color:inherit; }
+  /* 食在料理原本沒有箭頭，用 CSS 補上，標籤不用改 */
+  .settings-row:not(.danger)::after{
+    content:"›"; margin-left:auto; font-size:19px; line-height:1; color:var(--color-text-soft); flex:0 0 auto;
+  }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1312,17 +1369,6 @@
     <div id="settingsContent"></div>
   </section>
 
-  <!-- ============ UPGRADE VIEW（升級方案比較）============ -->
-  <section class="view" id="view-upgrade">
-    <div class="page-header">
-      <button class="back-btn" id="upgradeBackBtn" aria-label="返回">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B241D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
-      </button>
-      <h2 class="page-title">⭐ 升級方案</h2>
-    </div>
-    <div id="upgradeContent"></div>
-  </section>
-
   <!-- ============ ADMIN VIEW（訂閱管理後台）============ -->
   <section class="view" id="view-admin">
     <div class="page-header">
@@ -1389,22 +1435,10 @@
 <div class="toast" id="toast">此功能尚未實作</div>
 
 <nav class="bottom-nav">
-  <button class="nav-item active" data-tab="find">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"></path></svg>
-    首頁
-  </button>
-  <button class="nav-item" data-tab="selected-menu">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 3-3 4-3 7a3 3 0 0 0 6 0c0-1-1-2-1-3 1 1 3 3 3 6a5 5 0 0 1-10 0c0-4 3-6 5-10z"></path></svg>
-    今日料理
-  </button>
-  <button class="nav-item" data-tab="shopping">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1"></circle><circle cx="18" cy="20" r="1"></circle><path d="M2 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 7H6"></path></svg>
-    採購清單
-  </button>
-  <button class="nav-item" data-tab="signature">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h13a2 2 0 0 1 2 2v13a1 1 0 0 1-1.55.83L12 16l-5.45 3.83A1 1 0 0 1 5 19V6a2 2 0 0 1 2-2z"></path></svg>
-    我的菜單
-  </button>
+  <button class="nav-item active" data-tab="find"><span class="ic">🏠</span>首頁</button>
+  <button class="nav-item" data-tab="selected-menu"><span class="ic">🍳</span>今日料理</button>
+  <button class="nav-item" data-tab="shopping"><span class="ic">🛒</span>採購清單</button>
+  <button class="nav-item" data-tab="signature"><span class="ic">📖</span>我的菜單</button>
 </nav>
 </div>
 
@@ -1440,6 +1474,7 @@
   function enterApp(){
     var _login = document.getElementById('login');
     var _root  = document.getElementById('appRoot');
+    try{ appLoading.show("載入中…", "#A8462E"); }catch(e){}
     try{
       _root.style.display = 'block';
       renderVerTag();
@@ -1447,8 +1482,10 @@
       // 全部畫好了才收掉登入畫面。順序反過來的話，只要下面
       // 任何一步出錯，使用者就只會看到一片空白。
       _login.style.display = 'none';
+      try{ appLoading.hide(); }catch(e){}
       maybeShowOnboarding();
     }catch(err){
+      try{ appLoading.hide(); }catch(e){}
       // 進不去時把登入畫面放回來，並把原因寫在看得到的地方，
       // 不要留下一片空白讓人不知道發生什麼事。
       try{ _root.style.display='none'; _login.style.display='flex'; }catch(e){}
@@ -2391,7 +2428,6 @@
     btn.addEventListener('click', openUpgradeView);
   });
   document.getElementById('settingsBackBtn').addEventListener('click', () => navigate('find'));
-  document.getElementById('upgradeBackBtn').addEventListener('click', () => navigate('find'));
   document.getElementById('adminBackBtn').addEventListener('click', () => navigate('settings'));
 
   /* =========================================================
@@ -11069,7 +11105,7 @@
   /* =========================================================
      路由 / 畫面切換
      ========================================================= */
-  const views = { find:"view-find", detail:"view-detail", "selected-menu":"view-selected-menu", shopping:"view-shopping", signature:"view-signature", settings:"view-settings", admin:"view-admin", upgrade:"view-upgrade" };
+  const views = { find:"view-find", detail:"view-detail", "selected-menu":"view-selected-menu", shopping:"view-shopping", signature:"view-signature", settings:"view-settings", admin:"view-admin" };
   function navigate(name){
     // 離開採購頁就把展開中的新增表單收掉
     if(name !== 'shopping' && typeof closeManualForms === 'function'){ closeManualForms(); }
@@ -13078,6 +13114,7 @@
     return 'find';
   }
   function appHandleBack(){
+    if(window.closeTopSharedOverlay && closeTopSharedOverlay()) return true;   // 條款／升級／備份／訂閱等共用彈窗
     var onb=document.getElementById('onbOverlay');
     if(onb){ try{ localStorage.setItem(ONBOARD_KEY,'1'); }catch(e){} onb.remove(); return true; }   // 新手引導 → 當作略過
     var mr=document.getElementById('modalRoot');
@@ -13096,7 +13133,7 @@
     if(v==='shopping' && (manualItemFormOpen || manualInventoryFormOpen)){ closeManualForms(); renderShoppingView(); return true; }
     if(v==='detail'){ goBackFromDetail(); return true; }
     if(v==='admin'){ navigate('settings'); return true; }
-    if(v==='settings' || v==='upgrade'){ navigate('find'); return true; }
+    if(v==='settings'){ navigate('find'); return true; }
     if(v==='find'){
       if(typeof findMode!=='undefined' && findMode!=='choice'){ findGoBack(); return true; }
       return false;                                                                                  // 首頁 → 提示再按一次離開
@@ -14088,6 +14125,77 @@ previewMode.init({
   }
 
   window.expiryNotice = { check: check, close: close, _daysLeft: daysLeft };
+})();
+
+/* ==================== 返回鍵：先關最上層彈窗（四個 App 共用）====================
+   共用模組的彈窗都是後來才加的，各 App 原本的返回鍵不認得它們，
+   按下去會「穿過」彈窗去關底下的設定頁或分頁。這裡依 z-index 由高到低
+   檢查，有開著的就關掉並回報 true，讓呼叫端知道這次返回已經處理掉了。
+   ==================================================================== */
+(function(){
+  var LAYERS = [
+    { id:'cfWrap',    z:10090, close:function(){ var b=document.getElementById('cfNo'); if(b) b.click(); } },
+    { id:'exWrap',    z:10080, close:function(){ if(window.expiryNotice) expiryNotice.close(); } },
+    { id:'bkWrap',    z:10070, close:function(w){ w.classList.remove('on'); } },
+    { id:'pvWrap',    z:10061, close:function(w){ w.classList.remove('on'); } },
+    { id:'lgWrap',    z:10040, close:function(){ if(window.legalDocs) legalDocs.close(); } },
+    { id:'upWrap',    z:10030, close:function(){ if(window.upgradeSheet) upgradeSheet.close(); } },
+    { id:'subsSheet', z:10002, close:function(w){ w.classList.remove('on'); } }
+  ];
+  window.closeTopSharedOverlay = function(){
+    for(var i=0;i<LAYERS.length;i++){
+      var w = document.getElementById(LAYERS[i].id);
+      if(w && w.classList.contains('on')){
+        try{ LAYERS[i].close(w); }catch(e){ try{ w.classList.remove('on'); }catch(e2){} }
+        return true;
+      }
+    }
+    return false;
+  };
+})();
+
+/* ==================== 載入指示（四個 App 共用）====================
+   網路慢的時候畫面不能完全靜止，否則使用者會重複點按鈕或以為當掉。
+   appLoading.show("訊息") / appLoading.hide()；重複呼叫 show 只會換訊息。
+   ==================================================================== */
+(function(){
+  function css(){
+    if(document.getElementById('ldCss')) return;
+    var s=document.createElement('style'); s.id='ldCss';
+    s.textContent =
+      '#ldWrap{position:fixed;inset:0;z-index:10095;display:none;flex-direction:column;'+
+        'align-items:center;justify-content:center;gap:14px;background:rgba(252,252,250,.94);'+
+        '-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);}'+
+      '#ldWrap.on{display:flex;}'+
+      '#ldWrap .ld-sp{width:34px;height:34px;border-radius:50%;'+
+        'border:3px solid rgba(90,100,95,.18);border-top-color:var(--ld-ac,#5B6F79);'+
+        'animation:ldSpin .8s linear infinite;}'+
+      '#ldWrap .ld-tx{font-size:14px;color:#5B6F79;font-family:inherit;letter-spacing:.02em;}'+
+      '@keyframes ldSpin{to{transform:rotate(360deg)}}'+
+      '@media (prefers-reduced-motion:reduce){#ldWrap .ld-sp{animation-duration:2.4s}}';
+    document.head.appendChild(s);
+  }
+  css();   // 立刻注入：CRM 有一顆寫在 HTML 裡的載入遮罩也要用到 .ld-sp
+  function el(){
+    var w=document.getElementById('ldWrap');
+    if(!w){
+      w=document.createElement('div'); w.id='ldWrap';
+      w.setAttribute('role','status'); w.setAttribute('aria-live','polite');
+      w.innerHTML='<div class="ld-sp"></div><div class="ld-tx" id="ldTx">載入中…</div>';
+      document.body.appendChild(w);
+    }
+    return w;
+  }
+  window.appLoading = {
+    show: function(msg, accent){
+      var w=el();
+      if(accent) w.style.setProperty('--ld-ac', accent);
+      var t=document.getElementById('ldTx'); if(t) t.textContent = msg || '載入中…';
+      w.classList.add('on');
+    },
+    hide: function(){ var w=document.getElementById('ldWrap'); if(w) w.classList.remove('on'); },
+    visible: function(){ var w=document.getElementById('ldWrap'); return !!(w && w.classList.contains('on')); }
+  };
 })();
 
 /* ==================== 確認對話框（四個 App 共用）====================
