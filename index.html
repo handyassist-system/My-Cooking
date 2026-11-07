@@ -1624,7 +1624,7 @@ body:has(#view-settings.active) .bottom-nav{ display:none; }
   //  APP_VERSION = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
   //  BUILD_ID    = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
   const APP_VERSION = "v1.0";
-  const BUILD_ID = "1009-31";
+  const BUILD_ID = "1009-33";
   function appVersionText(){
     return APP_VERSION + ((typeof state!=="undefined" && state && state.isAdmin) ? " · " + BUILD_ID : "");
   }
@@ -10534,8 +10534,11 @@ document.addEventListener("visibilitychange", async function(){
     });
   }
 
+  // 庫存不記數量與單位：只要名稱相同就視為「已有」，避免同名重複
+  function _normName(n){ return String(n||'').trim().toLowerCase(); }
   function isInInventory(name, unit){
-    return inventory.some(i => i.name === name && i.unit === unit);
+    var k=_normName(name);
+    return inventory.some(i => _normName(i.name) === k);
   }
   // 我有食材頁用：只看名稱是否在庫存中出現過（不管單位），
   // 純粹當作「提示」，不會影響任何自動勾選
@@ -10561,7 +10564,8 @@ document.addEventListener("visibilitychange", async function(){
     saveInventory();
   }
   function removeFromInventory(name, unit){
-    inventory = inventory.filter(i => !(i.name === name && i.unit === unit));
+    var k=_normName(name);
+    inventory = inventory.filter(i => _normName(i.name) !== k);
     saveInventory();
   }
   function adjustInventoryItemAmount(id, delta){
@@ -12920,7 +12924,7 @@ document.addEventListener("visibilitychange", async function(){
         const item = overview.find(i => (i.name + '|' + i.unit) === key);
         if(!item) return;
         toggleInventoryStatus(item);
-        showToast(item.status === 'have' ? '已標記已買，移到我的庫存' : '已標記為要買');
+        showToast(item.status === 'have' ? '已標記為要買' : '已標記已買，移到我的庫存');
         renderShoppingView();
       });
     });
