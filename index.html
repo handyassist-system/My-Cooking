@@ -1624,7 +1624,7 @@ body:has(#view-settings.active) .bottom-nav{ display:none; }
   //  APP_VERSION = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
   //  BUILD_ID    = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
   const APP_VERSION = "v1.0";
-  const BUILD_ID = "1009-33";
+  const BUILD_ID = "1009-35";
   function appVersionText(){
     return APP_VERSION + ((typeof state!=="undefined" && state && state.isAdmin) ? " · " + BUILD_ID : "");
   }
@@ -10458,7 +10458,8 @@ document.addEventListener("visibilitychange", async function(){
     uref('stockLocs').on('value', function(sn){ var v=sn.val(); STOCK_SYNC.locs=Array.isArray(v)?v.filter(Boolean):(v?Object.keys(v).map(function(k){return v[k];}):null); }, function(){});
     uref('stock').on('value', function(sn){
       var v=sn.val()||{}, food={};
-      Object.keys(v).forEach(function(id){ var r=v[id]; if(r && r.kind==='food' && r.name) food[id]=_stockToCook(id,r); });
+      Object.keys(v).forEach(function(id){ var r=v[id]; if(r && r.kind==='food' && r.name && !r.need) food[id]=_stockToCook(id,r); /* 用完了(待買)的不算「有」 */ });
+      STOCK_SYNC.raw=v;
       var importing=false, synced=false;
       try{ importing=localStorage.getItem('jiachangzhu_inv_import')==='1'; synced=localStorage.getItem(syncedKey)==='1'; }catch(e){}
       if(!STOCK_SYNC.ready){
@@ -10550,6 +10551,16 @@ document.addEventListener("visibilitychange", async function(){
   }
   function addToInventory(item){
     if(isInInventory(item.name, item.unit)) return;
+    // 庫存管理裡「用完了／待買」的同名項目：買到了就恢復它，不另外新增一筆
+    try{
+      var raw=STOCK_SYNC.raw||{}, nk=_normName(item.name), rid=null;
+      Object.keys(raw).forEach(function(k){ var x=raw[k]; if(!rid && x && x.need && _normName(x.name)===nk) rid=k; });
+      if(rid && typeof db!=='undefined' && db && isEmail(state.user||'')){
+        var t=new Date(), bd=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+        db.ref(userBase()+'stock/'+rid).update({need:null, needAt:null, expiry:null, buyDate:bd}).catch(function(e){ try{console.error(e);}catch(_){} });
+        return;
+      }
+    }catch(e){}
     inventory.push({
       id: generateInventoryId(),
       name: item.name,
@@ -12699,7 +12710,7 @@ document.addEventListener("visibilitychange", async function(){
         '<div class="menu-empty-state">' +
           '<p class="menu-empty-emoji">🔒</p>' +
           '<p class="menu-empty-title">採購清單／我的庫存是付費功能</p>' +
-          '<p class="menu-empty-desc">升級後即可自動彙整採購清單、追蹤庫存，不用再拿著手機一道菜一道菜對食材</p>' +
+          '<p class="menu-empty-desc">升級後可自動列出採購清單、記錄庫存</p>' +
           '<button class="menu-cta-btn" id="shoppingUpgradeBtn" style="margin-top:16px;">查看升級方案</button>' +
         '</div>';
       document.getElementById('shoppingUpgradeBtn').addEventListener('click', openUpgradeView);
@@ -12731,7 +12742,7 @@ document.addEventListener("visibilitychange", async function(){
       });
     }
 
-    html += '<p class="menu-subtitle">這次要煮需要準備的全部食材，點一下標記已買，會移到我的庫存</p>';
+    html += '<p class="menu-subtitle">點一下標記已買，會移到我的庫存</p>';
 
     // 頂端固定列出這次要煮的菜（不受買完與否影響）——買完菜
     // 回家後採購清單會變空，但這裡還看得到要煮什麼，點了直接進去
@@ -12749,7 +12760,7 @@ document.addEventListener("visibilitychange", async function(){
       html += '<div class="shopping-empty-state">' +
         '<p class="shopping-empty-emoji">🛒</p>' +
         '<p class="shopping-empty-title">' + (overview.length === 0 ? '目前沒有需要準備的食材' : '要買的都買齊了') + '</p>' +
-        '<p class="shopping-empty-desc">' + (overview.length === 0 ? '先到「要煮」分頁加入想煮的料理，或自己新增一項' : '標記過已買的項目，都在「我的庫存」分頁') + '</p>' +
+        '<p class="shopping-empty-desc">' + (overview.length === 0 ? '先到「要煮」加入料理，或自己新增一項' : '已買的都在「我的庫存」') + '</p>' +
       '</div>';
     } else {
       html += renderShoppingSection('🛒 要買', needItems);
@@ -12777,14 +12788,14 @@ document.addEventListener("visibilitychange", async function(){
       });
     }
 
-    html += '<p class="menu-subtitle">手邊現有的食材／用品，跟今日料理是否用到無關</p>';
+    html += '<p class="menu-subtitle">家裡現有的食材</p>';
 
     if(inventory.length === 0){
       html += '<div class="shopping-empty-state">' +
         '<p class="shopping-empty-emoji">📦</p>' +
         '<p class="shopping-empty-title">目前庫存是空的</p>' +
-        '<p class="shopping-empty-desc">在採購清單勾選「已有」，或自己新增一項</p>' +
-        '<p class="shopping-empty-desc" style="margin-top:6px;opacity:.75">這裡管食材（冰箱裡有什麼）。家用品請用「生活管家」的庫存管理。</p>' +
+        '<p class="shopping-empty-desc">在採購清單標記已買，或自己新增一項</p>' +
+        '<p class="shopping-empty-desc" style="margin-top:6px;opacity:.75">只放食材。其他東西請用庫存管理。</p>' +
       '</div>';
     } else {
       const rowHtml = item => {
