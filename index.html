@@ -220,7 +220,16 @@
     padding:12px 14px; border-radius:var(--radius-md);
     border:1px solid var(--color-border); background:var(--color-surface);
   }
-  .inventory-item-name{flex:1; font-size:var(--fs-body); font-weight:var(--weight-medium); color:var(--color-text);}
+  .inventory-item-name{flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:3px; word-break:break-all; font-size:var(--fs-body); font-weight:var(--weight-medium); color:var(--color-text);}
+  .inv-exp{flex-shrink:0; font-size:var(--fs-caption); padding:2px 8px; border-radius:var(--radius-pill); background:var(--color-bg); color:var(--color-text-soft);}
+  .inv-exp.soon{background:#FDF3E3; color:#C98A1B; font-weight:var(--weight-semibold);}
+  .inv-exp.over{background:#FBEAE6; color:#E8735C; font-weight:var(--weight-semibold);}
+  .inv-exp-btn{position:relative; flex-shrink:0; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; background:var(--color-bg); border:1px solid var(--color-border); font-size:16px; cursor:pointer;}
+  .inv-exp-in{position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer;}
+  .inv-row-tap{cursor:pointer}
+  .inv-sub{display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+  .inv-loc{font-size:var(--fs-caption); color:var(--color-text-soft)}
+  .inv-alert{margin:0 0 10px; padding:10px 13px; border-radius:var(--radius-md); background:#FDF3E3; color:#8A6112; font-size:var(--fs-caption); line-height:1.6;}
   .inventory-item-amount{font-size:var(--fs-caption); color:var(--color-text-soft); margin-right:4px;}
   .inventory-item-used-btn{
     flex-shrink:0; padding:6px 12px; border-radius:var(--radius-pill); border:1px solid var(--color-border);
@@ -1520,6 +1529,7 @@ body:has(#view-settings.active) .bottom-nav{ display:none; }
     try{
       _root.style.display = 'block';
       renderVerTag();
+      try{ startStockSync(); }catch(e){}
       renderFindView();
       // 全部畫好了才收掉登入畫面。順序反過來的話，只要下面
       // 任何一步出錯，使用者就只會看到一片空白。
@@ -1614,7 +1624,7 @@ body:has(#view-settings.active) .bottom-nav{ display:none; }
   //  APP_VERSION = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
   //  BUILD_ID    = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
   const APP_VERSION = "v1.0";
-  const BUILD_ID = "1009-29";
+  const BUILD_ID = "1009-31";
   function appVersionText(){
     return APP_VERSION + ((typeof state!=="undefined" && state && state.isAdmin) ? " · " + BUILD_ID : "");
   }
@@ -2314,6 +2324,7 @@ document.addEventListener("visibilitychange", async function(){
         Object.keys(payload.data).forEach(k => {
           if(BACKUP_KEYS.indexOf(k) !== -1){ localStorage.setItem(k, payload.data[k]); }
         });
+        if(payload.data['jiachangzhu_inventory_v1'] != null){ try{ localStorage.setItem('jiachangzhu_inv_import','1'); }catch(e){} }   // 庫存已改存雲端：下次連線以匯入的為準
         alert('匯入完成，即將重新整理頁面');
         location.reload();
       }catch(err){
@@ -10399,8 +10410,129 @@ document.addEventListener("visibilitychange", async function(){
   }
   function saveInventory(){
     try { localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory)); } catch(e){}
+    try { pushStock(); } catch(e){}
   }
   loadInventory();
+
+  /* ===== 與「庫存管理」共用同一份清單（users/<信箱>/stock）=====
+     這裡的「我的庫存」只是那份清單裡「食材」的檢視：
+     本機的 inventory 陣列照舊給採購、料理邏輯使用，
+     存檔時只把差異寫到雲端、雲端有變動時整份換回來。
+     非食材（家電、其他）不會出現在這裡，也不會被動到。 */
+  var STOCK_SYNC = { started:false, ready:false, last:{}, cfg:{}, locs:null };
+  var DEFAULT_STOCK_LOCS = ['客廳','廚房','臥室','浴室','陽台','儲藏室'];
+  function _stockClean(o){ var r={}; Object.keys(o).forEach(function(k){ var v=o[k]; if(v===undefined||v===''||(Array.isArray(v)&&!v.length)) v=null; r[k]=v; }); return r; }
+  function _cookToStock(i){
+    return _stockClean({ name:i.name, kind:'food', src:'cook', cookUnit:i.unit||'', cookAmount:(parseInt(i.amount,10)||1),
+      cookCat:i.category||'', cookType:i.type||'ingredient', cookSrc:i.source||'dish', cookDishes:i.sourceDishIds||[],
+      markedAt:i.markedAt||'', expiry:i.expiry||'', loc:i.loc||'', note:i.note||'' });
+  }
+  function _stockToCook(id, r){
+    return { id:id, name:r.name, unit:r.cookUnit||'', amount:r.cookAmount||1,
+      category:r.cookCat||findIngredientCategoryByName(r.name), type:r.cookType||'ingredient',
+      sourceDishIds:r.cookDishes||[], source:r.cookSrc||'manual', markedAt:r.markedAt||'', expiry:r.expiry||'', loc:r.loc||'', note:r.note||'' };
+  }
+  function pushStock(){
+    if(!STOCK_SYNC.ready || typeof db==='undefined' || !db || !isEmail(state.user||'')) return;
+    var cur={}, ups={}, any=false;
+    inventory.forEach(function(i){
+      var f=_cookToStock(i), js=JSON.stringify(f); cur[i.id]=js;
+      if(STOCK_SYNC.last[i.id]!==js){ Object.keys(f).forEach(function(k){ ups['stock/'+i.id+'/'+k]=f[k]; }); any=true; }
+    });
+    Object.keys(STOCK_SYNC.last).forEach(function(id){ if(!(id in cur)){ ups['stock/'+id]=null; any=true; } });
+    STOCK_SYNC.last=cur;
+    if(!any) return;
+    db.ref(userBase()).update(ups).catch(function(e){ try{ console.error('庫存同步失敗', e); }catch(_){} });
+  }
+  function _stockRefreshView(){
+    try{
+      var c=document.getElementById('shoppingContent');
+      if(c && c.offsetParent!==null) renderShoppingView();
+    }catch(e){}
+  }
+  function startStockSync(){
+    if(STOCK_SYNC.started || typeof db==='undefined' || !db || !isEmail(state.user||'')) return;
+    STOCK_SYNC.started=true;
+    var ek=emailKey(state.user), syncedKey='jiachangzhu_inv_synced_'+ek;
+    uref('stockCfg').on('value', function(sn){ STOCK_SYNC.cfg=sn.val()||{}; _stockRefreshView(); }, function(){});
+    uref('stockLocs').on('value', function(sn){ var v=sn.val(); STOCK_SYNC.locs=Array.isArray(v)?v.filter(Boolean):(v?Object.keys(v).map(function(k){return v[k];}):null); }, function(){});
+    uref('stock').on('value', function(sn){
+      var v=sn.val()||{}, food={};
+      Object.keys(v).forEach(function(id){ var r=v[id]; if(r && r.kind==='food' && r.name) food[id]=_stockToCook(id,r); });
+      var importing=false, synced=false;
+      try{ importing=localStorage.getItem('jiachangzhu_inv_import')==='1'; synced=localStorage.getItem(syncedKey)==='1'; }catch(e){}
+      if(!STOCK_SYNC.ready){
+        if(importing){
+          // 匯入備份＝以本機為準：雲端有、本機沒有的食材要刪
+          STOCK_SYNC.last={}; Object.keys(food).forEach(function(id){ STOCK_SYNC.last[id]=JSON.stringify(_cookToStock(food[id])); });
+          STOCK_SYNC.ready=true; pushStock();
+          try{ localStorage.removeItem('jiachangzhu_inv_import'); localStorage.setItem(syncedKey,'1'); }catch(e){}
+          _stockRefreshView(); return;
+        }
+        if(!synced){
+          // 第一次連上：本機原有的食材合併上去（雲端已有的 id 不動）
+          var mine=inventory.filter(function(i){ return !food[i.id]; });
+          Object.keys(food).forEach(function(id){ STOCK_SYNC.last[id]=JSON.stringify(_cookToStock(food[id])); });
+          inventory=Object.keys(food).map(function(id){ return food[id]; }).concat(mine);
+          STOCK_SYNC.ready=true; pushStock();
+          try{ localStorage.setItem(syncedKey,'1'); localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory)); }catch(e){}
+          _stockRefreshView(); return;
+        }
+        STOCK_SYNC.ready=true;
+      }
+      inventory=Object.keys(food).map(function(id){ return food[id]; });
+      STOCK_SYNC.last={}; inventory.forEach(function(i){ STOCK_SYNC.last[i.id]=JSON.stringify(_cookToStock(i)); });
+      try{ localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory)); }catch(e){}
+      _stockRefreshView();
+    }, function(){});
+  }
+  function invExpiryInfo(item){
+    if(!item || !item.expiry) return null;
+    var p=String(item.expiry).split('-'), t=new Date(); t.setHours(0,0,0,0);
+    var n=Math.round((new Date(+p[0],+p[1]-1,+p[2])-t)/86400000);
+    var thr=(STOCK_SYNC.cfg && STOCK_SYNC.cfg.foodDays!=null)?STOCK_SYNC.cfg.foodDays:3;
+    if(n<0) return {n:n, cls:'over', label:'過期 '+(-n)+' 天'};
+    if(n===0) return {n:n, cls:'soon', label:'今天到期'};
+    if(n<=thr) return {n:n, cls:'soon', label:'剩 '+n+' 天'};
+    return {n:n, cls:'', label:'到期 '+(+p[1])+'/'+(+p[2])};
+  }
+  function setInventoryExpiry(id, ymd){
+    var it=inventory.find(function(i){ return i.id===id; }); if(!it) return;
+    it.expiry=ymd||''; saveInventory();
+  }
+  function _escH(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  // 點一個庫存食材 → 編輯名稱、位置、有效日期、備註（跟庫存管理同一套欄位）
+  function openInventoryEdit(id){
+    var it=inventory.find(function(i){ return i.id===id; }); if(!it) return;
+    var locs=(STOCK_SYNC.locs&&STOCK_SYNC.locs.length)?STOCK_SYNC.locs.slice():DEFAULT_STOCK_LOCS.slice();
+    if(it.loc && locs.indexOf(it.loc)<0) locs.push(it.loc);
+    var fs='width:100%;box-sizing:border-box;border:1px solid var(--color-border);border-radius:12px;padding:12px 13px;font-size:16px;background:#fff;color:var(--color-text);font-family:inherit';
+    var lb='display:block;font-size:12.5px;color:var(--color-text-soft);margin:12px 0 4px';
+    var root=document.getElementById('modalRoot');
+    root.innerHTML='<div class="overlay" id="invEditOvl"><div class="sheet" style="padding:20px 18px calc(16px + env(safe-area-inset-bottom))">'+
+      '<div style="font-size:17px;font-weight:800;margin-bottom:2px">編輯食材</div>'+
+      '<label style="'+lb+'">名稱</label><input id="ie_name" style="'+fs+'" value="'+_escH(it.name)+'">'+
+      '<label style="'+lb+'">放在哪裡</label><select id="ie_loc" style="'+fs+'"><option value="">（不指定）</option>'+locs.map(function(l){return '<option value="'+_escH(l)+'"'+(l===it.loc?' selected':'')+'>'+_escH(l)+'</option>';}).join('')+'</select>'+
+      '<label style="'+lb+'">有效日期</label><input id="ie_exp" type="date" style="'+fs+'" value="'+_escH(it.expiry||'')+'">'+
+      '<label style="'+lb+'">備註（選填）</label><textarea id="ie_note" rows="2" style="'+fs+';resize:none">'+_escH(it.note||'')+'</textarea>'+
+      '<div style="display:flex;gap:8px;margin-top:16px">'+
+        '<button id="ie_del" style="border:1.5px solid #C0392B;background:none;color:#C0392B;border-radius:12px;padding:12px 14px;font-size:14.5px;font-weight:800;font-family:inherit">刪除</button>'+
+        '<button id="ie_cancel" style="border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text-soft);border-radius:12px;padding:12px 14px;font-size:14.5px;font-weight:700;font-family:inherit">取消</button>'+
+        '<button id="ie_save" style="flex:1;border:none;background:var(--color-accent);color:#fff;border-radius:12px;padding:12px;font-size:15px;font-weight:800;font-family:inherit">儲存</button>'+
+      '</div></div></div>';
+    document.getElementById('invEditOvl').addEventListener('click', function(e){ if(e.target===this) closeSheet(); });
+    document.getElementById('ie_cancel').addEventListener('click', closeSheet);
+    document.getElementById('ie_save').addEventListener('click', function(){
+      var nm=document.getElementById('ie_name').value.trim();
+      if(!nm){ showToast('請輸入名稱'); return; }
+      it.name=nm; it.loc=document.getElementById('ie_loc').value; it.expiry=document.getElementById('ie_exp').value||''; it.note=document.getElementById('ie_note').value.trim();
+      saveInventory(); closeSheet(); showToast('已儲存'); renderInventoryTab();
+    });
+    document.getElementById('ie_del').addEventListener('click', function(){
+      inventory=inventory.filter(function(i){ return i.id!==id; });
+      saveInventory(); closeSheet(); showToast('已從庫存移除'); renderInventoryTab();
+    });
+  }
 
   function isInInventory(name, unit){
     return inventory.some(i => i.name === name && i.unit === unit);
@@ -12651,30 +12783,34 @@ document.addEventListener("visibilitychange", async function(){
         '<p class="shopping-empty-desc" style="margin-top:6px;opacity:.75">這裡管食材（冰箱裡有什麼）。家用品請用「生活管家」的庫存管理。</p>' +
       '</div>';
     } else {
-      const categories = getShoppingCategoryOrder(inventory);
+      const rowHtml = item => {
+        // 只顯示「還在今日料理裡」的菜色連結——那道菜被刪掉後，
+        // 庫存食材照樣留著，只是不再有連結
+        const activeDishIds = (item.sourceDishIds || []).filter(id => selectedMenuDishIds.includes(id));
+        const e = invExpiryInfo(item);
+        const sub = (item.loc ? '<span class="inv-loc">📍' + _escH(item.loc) + '</span>' : '') + (e ? '<span class="inv-exp ' + e.cls + '">' + e.label + '</span>' : '');
+        return '<div class="shopping-item-wrap">' +
+          '<div class="inventory-item-row inv-row-tap" data-inv-edit-id="' + item.id + '">' +
+            '<span class="inventory-item-name"><span>' + _escH(item.name) + ((item.unit && !isBuyByPack(item.name)) ? '（' + _escH(item.unit) + '）' : '') + '</span>' +
+              (sub ? '<span class="inv-sub">' + sub + '</span>' : '') + '</span>' +
+            '<button class="inventory-item-used-btn" data-inv-id="' + item.id + '">用完了</button>' +
+          '</div>' +
+          renderDishLinks(activeDishIds, item.id) +
+        '</div>';
+      };
+      const soon = inventory.map(i => ({ i: i, e: invExpiryInfo(i) })).filter(x => x.e && x.e.cls).sort((a, b) => a.e.n - b.e.n);
+      const soonIds = new Set(soon.map(x => x.i.id));
+      if(soon.length){
+        html += '<div class="shopping-group"><p class="shopping-group-title">⚠️ 快到期（' + soon.length + '）</p>' + soon.map(x => rowHtml(x.i)).join('') + '</div>';
+      }
+      const rest = inventory.filter(i => !soonIds.has(i.id));
+      const categories = getShoppingCategoryOrder(rest);
       categories.forEach(cat => {
-        const items = inventory.filter(i => i.category === cat);
+        const items = rest.filter(i => i.category === cat);
         if(items.length === 0) return;
         html += '<div class="shopping-group">';
         html += '<p class="shopping-group-title">' + ingredientCategoryIcon(cat) + ' ' + cat + '</p>';
-        items.forEach(item => {
-          const qty = parseInt(item.amount, 10) || 1;
-          // 只顯示「還在今日料理裡」的菜色連結——那道菜被刪掉後，
-          // 庫存食材照樣留著，只是不再有連結
-          const activeDishIds = (item.sourceDishIds || []).filter(id => selectedMenuDishIds.includes(id));
-          html += '<div class="shopping-item-wrap">' +
-            '<div class="inventory-item-row">' +
-              '<span class="inventory-item-name">' + item.name + ((item.unit && !isBuyByPack(item.name)) ? '（' + item.unit + '）' : '') + '</span>' +
-              '<span class="shopping-stepper">' +
-                '<button class="shopping-stepper-btn" data-inv-step-id="' + item.id + '" data-step="-1" aria-label="減少">−</button>' +
-                '<span class="shopping-stepper-num">' + qty + '</span>' +
-                '<button class="shopping-stepper-btn" data-inv-step-id="' + item.id + '" data-step="1" aria-label="增加">＋</button>' +
-              '</span>' +
-              '<button class="inventory-item-used-btn" data-inv-id="' + item.id + '">用完了</button>' +
-            '</div>' +
-            renderDishLinks(activeDishIds, item.id) +
-          '</div>';
-        });
+        items.forEach(item => { html += rowHtml(item); });
         html += '</div>';
       });
     }
@@ -12685,8 +12821,15 @@ document.addEventListener("visibilitychange", async function(){
 
   function bindInventoryTabEvents(){
     bindDishLinkEvents();
+    document.querySelectorAll('#shoppingContent .inv-row-tap').forEach(row => {
+      row.addEventListener('click', e => {
+        if(e.target.closest('.inventory-item-used-btn')) return;
+        openInventoryEdit(row.dataset.invEditId);
+      });
+    });
     document.querySelectorAll('#shoppingContent .inventory-item-used-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
         const item = inventory.find(i => i.id === btn.dataset.invId);
         if(!item) return;
         inventory = inventory.filter(i => i.id !== item.id);
