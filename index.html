@@ -820,6 +820,9 @@
     cursor:pointer; -webkit-tap-highlight-color:transparent; font-family:var(--font-family);
   }
   .shopping-stepper-num{min-width:20px; text-align:center; font-size:var(--fs-body); font-weight:var(--weight-semibold); color:var(--color-text);}
+  .shopping-queue-btn{ border:1px solid var(--accent,#c9743a); background:transparent; color:var(--accent,#c9743a); border-radius:999px; padding:4px 10px; font-size:12px; margin-left:6px; white-space:nowrap; }
+  .shopping-queue-btn.done{ background:var(--accent,#c9743a); color:#fff; }
+  .shopping-queue-hint{ font-size:11px; font-weight:400; opacity:.7; margin-left:6px; }
   .shopping-item-delete{
     flex-shrink:0; width:32px; height:32px; margin-right:8px; border-radius:50%;
     border:1px solid var(--color-border); background:var(--color-bg); color:var(--color-text-soft);
@@ -1624,7 +1627,7 @@ body:has(#view-settings.active) .bottom-nav{ display:none; }
   //  APP_VERSION = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
   //  BUILD_ID    = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
   const APP_VERSION = "v1.0";
-  const BUILD_ID = "1009-35";
+  const BUILD_ID = "1009-38";
   function appVersionText(){
     return APP_VERSION + ((typeof state!=="undefined" && state && state.isAdmin) ? " · " + BUILD_ID : "");
   }
@@ -10420,7 +10423,7 @@ document.addEventListener("visibilitychange", async function(){
      存檔時只把差異寫到雲端、雲端有變動時整份換回來。
      非食材（家電、其他）不會出現在這裡，也不會被動到。 */
   var STOCK_SYNC = { started:false, ready:false, last:{}, cfg:{}, locs:null };
-  var DEFAULT_STOCK_LOCS = ['客廳','廚房','臥室','浴室','陽台','儲藏室'];
+  var DEFAULT_STOCK_LOCS = ['廚房','冰箱','冷凍庫','客廳','臥室','浴室','儲藏室'];
   function _stockClean(o){ var r={}; Object.keys(o).forEach(function(k){ var v=o[k]; if(v===undefined||v===''||(Array.isArray(v)&&!v.length)) v=null; r[k]=v; }); return r; }
   function _cookToStock(i){
     return _stockClean({ name:i.name, kind:'food', src:'cook', cookUnit:i.unit||'', cookAmount:(parseInt(i.amount,10)||1),
@@ -10605,6 +10608,48 @@ document.addEventListener("visibilitychange", async function(){
     }
   }
 
+  // ---------- 待買：使用者按了「＋待買」才寫進共用庫存（need），生活管家的待購看得到 ----------
+  // needOnly＝只是待買的佔位，還沒入庫；取消就整筆刪掉，買到了才變成庫存
+  function _todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function _needMap(){
+    var m={}, raw=STOCK_SYNC.raw||{};
+    Object.keys(raw).forEach(function(k){ var x=raw[k]; if(x && x.need && x.name) m[_normName(x.name)]=k; });
+    return m;
+  }
+  function _canStockWrite(){ return typeof db!=='undefined' && db && isEmail(state.user||''); }
+  function addToNeed(list){
+    if(!_canStockWrite()){ showToast('要登入才能加入待買'); return 0; }
+    var nm=_needMap(), raw=STOCK_SYNC.raw||(STOCK_SYNC.raw={}), have={}, added=0;
+    Object.keys(raw).forEach(function(k){ var x=raw[k]; if(x && x.name && !x.need) have[_normName(x.name)]=1; });
+    list.forEach(function(i){
+      var nk=_normName(i.name);
+      if(!nk || nm[nk] || have[nk]) return;
+      var id=uref('stock').push().key;
+      var rec=_stockClean({ name:i.name, kind:'food', need:true, needAt:Date.now(), needOnly:true, created:Date.now(), src:'cook',
+        cookUnit:i.unit||'', cookAmount:(parseInt(i.amount,10)||1), cookCat:i.category||'', cookType:i.type||'ingredient',
+        cookSrc:i.source||'dish', cookDishes:i.sourceDishIds||[] });
+      raw[id]=rec; nm[nk]=id; added++;
+      uref('stock/'+id).set(rec).catch(function(e){ try{console.error(e);}catch(_){} showToast('⚠️ 加入失敗，請檢查網路'); });
+    });
+    return added;
+  }
+  function cancelNeed(id){
+    var raw=STOCK_SYNC.raw||{}, r=raw[id]; if(!r || !_canStockWrite()) return;
+    if(r.needOnly){ delete raw[id]; uref('stock/'+id).remove().catch(function(e){ try{console.error(e);}catch(_){} }); }
+    else { r.need=null; r.needAt=null; uref('stock/'+id).update({need:null,needAt:null}).catch(function(e){ try{console.error(e);}catch(_){} }); }
+  }
+  function buyNeed(id){
+    var raw=STOCK_SYNC.raw||{}, r=raw[id]; if(!r || !_canStockWrite()) return;
+    var upd={need:null,needAt:null,needOnly:null,expiry:null,buyDate:_todayStr()};
+    Object.keys(upd).forEach(function(k){ if(upd[k]===null) delete r[k]; else r[k]=upd[k]; });
+    uref('stock/'+id).update(upd).catch(function(e){ try{console.error(e);}catch(_){} });
+  }
+  function needListFood(){
+    var raw=STOCK_SYNC.raw||{}, out=[];
+    Object.keys(raw).forEach(function(k){ var x=raw[k]; if(x && x.need && x.name && x.kind==='food') out.push({id:k,name:x.name,needAt:x.needAt||0,category:x.cookCat||findIngredientCategoryByName(x.name)}); });
+    return out.sort(function(a,b){return b.needAt-a.needAt;});
+  }
+
   // 使用者自己手動新增的採購項目（不透過料理，例如牛奶、
   // 衛生紙），獨立持久化，跟「這次要煮」算出來的食材需求
   // 分開存，最後在畫面上會合併顯示成同一份清單。
@@ -10765,7 +10810,7 @@ document.addEventListener("visibilitychange", async function(){
     }));
 
     return dishItems.concat(manualItems).map(item => Object.assign({}, item, {
-      status: isInInventory(item.name, item.unit) ? 'have' : 'need'
+      status: isInInventory(item.name, item.unit) ? 'have' : (_needMap()[_normName(item.name)] ? 'queued' : 'need')
     }));
   }
 
@@ -12677,6 +12722,7 @@ document.addEventListener("visibilitychange", async function(){
           '<span class="shopping-item-name">' + item.name + '</span>' +
         '</button>' +
         amountHtml +
+        (item.status === 'need' ? '<button class="shopping-queue-btn" data-queue-key="' + key + '" aria-label="加入待買">＋待買</button>' : '') +
         deleteBtn +
       '</div>' +
       renderDishLinks(item.sourceDishIds, key) +
@@ -12742,7 +12788,7 @@ document.addEventListener("visibilitychange", async function(){
       });
     }
 
-    html += '<p class="menu-subtitle">點一下標記已買，會移到我的庫存</p>';
+    html += '<p class="menu-subtitle">買到了點名稱；之後才買按「＋待買」</p>';
 
     // 頂端固定列出這次要煮的菜（不受買完與否影響）——買完菜
     // 回家後採購清單會變空，但這裡還看得到要煮什麼，點了直接進去
@@ -12756,13 +12802,24 @@ document.addEventListener("visibilitychange", async function(){
       '</div>';
     }
 
-    if(needItems.length === 0){
+    const queued = needListFood();
+    if(queued.length > 0){
+      html += '<p class="section-label">📝 待買（' + queued.length + ' 項）</p><div class="shopping-item-list">' +
+        queued.map(q => '<div class="shopping-item-wrap"><div class="shopping-item-row">' +
+          '<button class="shopping-item-toggle" data-qbuy="' + q.id + '"><span class="shopping-item-box">🛒</span><span class="shopping-item-name">' + q.name + '</span></button>' +
+          '<button class="shopping-queue-btn done" data-qbuy="' + q.id + '" aria-label="已買">✓ 已買</button>' +
+          '<button class="shopping-item-delete" data-qcancel="' + q.id + '" aria-label="取消待買">✕</button>' +
+        '</div></div>').join('') + '</div>';
+    }
+
+    if(needItems.length === 0 && queued.length === 0){
       html += '<div class="shopping-empty-state">' +
         '<p class="shopping-empty-emoji">🛒</p>' +
         '<p class="shopping-empty-title">' + (overview.length === 0 ? '目前沒有需要準備的食材' : '要買的都買齊了') + '</p>' +
         '<p class="shopping-empty-desc">' + (overview.length === 0 ? '先到「要煮」加入料理，或自己新增一項' : '已買的都在「我的庫存」') + '</p>' +
       '</div>';
-    } else {
+    } else if(needItems.length > 0){
+      html += '<div class="shopping-actions-row"><button class="shopping-action-link" id="queueAllBtn">全部加入待買</button></div>';
       html += renderShoppingSection('🛒 要買', needItems);
     }
 
@@ -12928,7 +12985,30 @@ document.addEventListener("visibilitychange", async function(){
 
   function bindShoppingViewEvents(){
     bindDishLinkEvents();
-    document.querySelectorAll('#shoppingContent .shopping-item-toggle').forEach(row => {
+    document.querySelectorAll('#shoppingContent .shopping-queue-btn[data-queue-key]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const item = computeShoppingOverview().find(i => (i.name + '|' + i.unit) === btn.dataset.queueKey);
+        if(!item) return;
+        if(addToNeed([item])) showToast('已加入待買');
+        renderShoppingView();
+      });
+    });
+    const queueAll = document.getElementById('queueAllBtn');
+    if(queueAll){
+      queueAll.addEventListener('click', () => {
+        const n = addToNeed(computeShoppingOverview().filter(i => i.status === 'need'));
+        if(n) showToast('已加入 ' + n + ' 項待買');
+        renderShoppingView();
+      });
+    }
+    document.querySelectorAll('#shoppingContent [data-qbuy]').forEach(b => {
+      b.addEventListener('click', () => { buyNeed(b.dataset.qbuy); showToast('已買到，移到我的庫存'); renderShoppingView(); });
+    });
+    document.querySelectorAll('#shoppingContent [data-qcancel]').forEach(b => {
+      b.addEventListener('click', () => { cancelNeed(b.dataset.qcancel); showToast('已取消待買'); renderShoppingView(); });
+    });
+    document.querySelectorAll('#shoppingContent .shopping-item-toggle:not([data-qbuy])').forEach(row => {
       row.addEventListener('click', () => {
         const key = row.dataset.itemKey;
         const overview = computeShoppingOverview();
@@ -12939,7 +13019,7 @@ document.addEventListener("visibilitychange", async function(){
         renderShoppingView();
       });
     });
-    document.querySelectorAll('#shoppingContent .shopping-item-delete').forEach(btn => {
+    document.querySelectorAll('#shoppingContent .shopping-item-delete:not([data-qcancel])').forEach(btn => {
       btn.addEventListener('click', () => {
         const key = btn.dataset.deleteKey;
         const separatorIdx = key.lastIndexOf('|');
