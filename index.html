@@ -1627,7 +1627,7 @@ body:has(#view-settings.active) .bottom-nav{ display:none; }
   //  APP_VERSION = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
   //  BUILD_ID    = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
   const APP_VERSION = "v1.0";
-  const BUILD_ID = "1009-39";
+  const BUILD_ID = "1009-41";
   function appVersionText(){
     return APP_VERSION + ((typeof state!=="undefined" && state && state.isAdmin) ? " · " + BUILD_ID : "");
   }
@@ -10508,7 +10508,8 @@ document.addEventListener("visibilitychange", async function(){
   // 點一個庫存食材 → 編輯名稱、位置、有效日期、備註（跟庫存管理同一套欄位）
   function openInventoryEdit(id){
     var it=inventory.find(function(i){ return i.id===id; }); if(!it) return;
-    var locs=(STOCK_SYNC.locs&&STOCK_SYNC.locs.length)?STOCK_SYNC.locs.slice():DEFAULT_STOCK_LOCS.slice();
+    var FOOD_LOCS=['冰箱','冷凍庫','廚房','儲藏室'], OLDL=['客廳','廚房','臥室','浴室','陽台','儲藏室'];
+    var locs=FOOD_LOCS.concat(DEFAULT_STOCK_LOCS.filter(function(l){ return FOOD_LOCS.indexOf(l)<0; })).concat((STOCK_SYNC.locs||[]).filter(function(l){ return l && DEFAULT_STOCK_LOCS.indexOf(l)<0 && OLDL.indexOf(l)<0; }));
     if(it.loc && locs.indexOf(it.loc)<0) locs.push(it.loc);
     var fs='width:100%;box-sizing:border-box;border:1px solid var(--color-border);border-radius:12px;padding:12px 13px;font-size:16px;background:#fff;color:var(--color-text);font-family:inherit';
     var lb='display:block;font-size:12.5px;color:var(--color-text-soft);margin:12px 0 4px';
