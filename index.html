@@ -983,6 +983,10 @@
     z-index:9999;
   }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast.act{pointer-events:auto;}
+  .toast-undo{margin-left:12px; border:none; background:none; color:#ffd08a; font-weight:700; font-size:14px; padding:2px 4px; cursor:pointer;}
+  .shopping-have-toggle{display:block; width:100%; text-align:left; border:none; background:none; padding:10px 4px; font-size:13px; color:var(--color-text-soft); cursor:pointer; font-family:inherit;}
+  .shopping-have-all{font-size:13px; color:var(--color-text-soft); padding:6px 4px;}
 
   /* ---------- 登入頁 ---------- */
   #login{
@@ -1627,7 +1631,7 @@ body:has(#view-settings.active) .bottom-nav{ display:none; }
   //  APP_VERSION = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
   //  BUILD_ID    = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
   const APP_VERSION = "v1.0";
-  const BUILD_ID = "1009-42";
+  const BUILD_ID = "1009-43";
   function appVersionText(){
     return APP_VERSION + ((typeof state!=="undefined" && state && state.isAdmin) ? " · " + BUILD_ID : "");
   }
@@ -11647,7 +11651,15 @@ document.addEventListener("visibilitychange", async function(){
     if(/permission|denied|unauthenticated|auth/i.test(code)) return act+"失敗，請重新登入再試一次";
     return act+"失敗，請稍後再試";
   }
+  function showToastUndo(msg, fn){
+    toastEl.textContent = msg;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'toast-undo'; b.textContent = '復原';
+    b.addEventListener('click', () => { clearTimeout(toastTimer); toastEl.classList.remove('show','act'); fn(); });
+    toastEl.appendChild(b); toastEl.classList.add('show','act');
+    clearTimeout(toastTimer); toastTimer = setTimeout(()=> toastEl.classList.remove('show','act'), 5000);
+  }
   function showToast(msg, ms){
+    toastEl.classList.remove('act');
     toastEl.textContent = msg;
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
@@ -12749,6 +12761,7 @@ document.addEventListener("visibilitychange", async function(){
     return html;
   }
 
+  let shoppingHaveOpen = false;
   function renderShoppingView(){
     const tabRow = document.getElementById('shoppingTabRow');
     const tabList = document.getElementById('shoppingTabList');
@@ -12816,9 +12829,16 @@ document.addEventListener("visibilitychange", async function(){
       '</div>';
     }
     if(overview.length > 0){
-      html += renderShoppingSection('🥬 需要食材', overview, '（已有 ' + haveCount + '／' + overview.length + '）');
+      const todoItems = overview.filter(i => i.status !== 'have');
+      const haveItems = overview.filter(i => i.status === 'have');
+      html += '<p class="section-label">🥬 需要食材（已有 ' + haveCount + '／' + overview.length + '）</p>';
+      html += todoItems.length ? renderShoppingSection('', todoItems) : '<p class="shopping-have-all">這次的食材都有了</p>';
       if(needItems.length > 0){
         html += '<div class="shopping-actions-row"><button class="shopping-action-link" id="queueAllBtn">全部加入待買（' + needItems.length + '）</button></div>';
+      }
+      if(haveItems.length > 0){
+        html += '<button class="shopping-have-toggle" id="haveToggle">✅ 已有 ' + haveItems.length + ' 項 ' + (shoppingHaveOpen ? '▾' : '▸') + '</button>';
+        if(shoppingHaveOpen) html += renderShoppingSection('', haveItems);
       }
     }
     if(queued.length > 0){
@@ -13001,6 +13021,8 @@ document.addEventListener("visibilitychange", async function(){
         renderShoppingView();
       });
     });
+    const haveToggle = document.getElementById('haveToggle');
+    if(haveToggle){ haveToggle.addEventListener('click', () => { shoppingHaveOpen = !shoppingHaveOpen; renderShoppingView(); }); }
     const queueAll = document.getElementById('queueAllBtn');
     if(queueAll){
       queueAll.addEventListener('click', () => {
@@ -13021,9 +13043,20 @@ document.addEventListener("visibilitychange", async function(){
         const overview = computeShoppingOverview();
         const item = overview.find(i => (i.name + '|' + i.unit) === key);
         if(!item) return;
-        if(item.status === 'queued'){ buyNeed(_needMap()[_normName(item.name)]); }
-        else { toggleInventoryStatus(item); }
-        showToast(item.status === 'have' ? '已取消勾選' : '已勾選，加入我的庫存');
+        if(item.status === 'queued'){ buyNeed(_needMap()[_normName(item.name)]); showToast('已勾選，加入我的庫存'); }
+        else if(item.status === 'have'){
+          // 取消勾選會把庫存那一筆移除：先留一份，5 秒內可復原（位置、有效日期、備註都回來）
+          const nk = _normName(item.name), raw = STOCK_SYNC.raw || {};
+          const savedLocal = inventory.filter(i => _normName(i.name) === nk).map(i => Object.assign({}, i));
+          const savedRaw = savedLocal.map(i => ({ id: i.id, rec: raw[i.id] ? JSON.parse(JSON.stringify(raw[i.id])) : null }));
+          toggleInventoryStatus(item);
+          showToastUndo('已取消勾選「' + item.name + '」', () => {
+            savedRaw.forEach(x => { if(x.rec && _canStockWrite()){ raw[x.id] = x.rec; uref('stock/' + x.id).set(x.rec).catch(function(e){ try{console.error(e);}catch(_){} }); } });
+            savedLocal.forEach(l => { if(!inventory.some(i => i.id === l.id)) inventory.push(l); });
+            saveInventory(); renderShoppingView(); showToast('已復原');
+          });
+        }
+        else { toggleInventoryStatus(item); showToast('已勾選，加入我的庫存'); }
         renderShoppingView();
       });
     });
