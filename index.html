@@ -795,7 +795,7 @@
   }
   .shopping-menu-bar .shopping-dish-links{padding:0;}
   .shopping-item-row{
-    display:flex; align-items:center; gap:8px; width:100%;
+    display:flex; align-items:center; gap:8px; width:100%; box-sizing:border-box; padding-right:10px;
     border-radius:var(--radius-md);
     border:1px solid var(--color-border); background:var(--color-surface);
   }
@@ -820,9 +820,9 @@
     cursor:pointer; -webkit-tap-highlight-color:transparent; font-family:var(--font-family);
   }
   .shopping-stepper-num{min-width:20px; text-align:center; font-size:var(--fs-body); font-weight:var(--weight-semibold); color:var(--color-text);}
-  .shopping-queue-btn{ border:1px solid var(--accent,#c9743a); background:transparent; color:var(--accent,#c9743a); border-radius:999px; padding:4px 10px; font-size:12px; margin-left:6px; white-space:nowrap; }
+  .shopping-queue-btn{ border:1px solid var(--accent,#c9743a); background:transparent; color:var(--accent,#c9743a); border-radius:999px; padding:8px 12px; font-size:13px; margin-left:2px; white-space:nowrap; flex-shrink:0; min-height:36px; }
   .shopping-queue-btn.done{ background:var(--accent,#c9743a); color:#fff; }
-  .shopping-queue-hint{ font-size:11px; font-weight:400; opacity:.7; margin-left:6px; }
+  .shopping-queue-hint{ font-size:11px; font-weight:400; opacity:.7; margin-left:6px; white-space:nowrap; }
   .shopping-item-delete{
     flex-shrink:0; width:32px; height:32px; margin-right:8px; border-radius:50%;
     border:1px solid var(--color-border); background:var(--color-bg); color:var(--color-text-soft);
@@ -1627,7 +1627,7 @@ body:has(#view-settings.active) .bottom-nav{ display:none; }
   //  APP_VERSION = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
   //  BUILD_ID    = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
   const APP_VERSION = "v1.0";
-  const BUILD_ID = "1009-41";
+  const BUILD_ID = "1009-42";
   function appVersionText(){
     return APP_VERSION + ((typeof state!=="undefined" && state && state.isAdmin) ? " · " + BUILD_ID : "");
   }
@@ -10620,18 +10620,20 @@ document.addEventListener("visibilitychange", async function(){
   function _canStockWrite(){ return typeof db!=='undefined' && db && isEmail(state.user||''); }
   function addToNeed(list){
     if(!_canStockWrite()){ showToast('要登入才能加入待買'); return 0; }
-    var nm=_needMap(), raw=STOCK_SYNC.raw||(STOCK_SYNC.raw={}), have={}, added=0;
+    var nm=_needMap(), raw=STOCK_SYNC.raw||(STOCK_SYNC.raw={}), have={}, added=0, blocked=[];
     Object.keys(raw).forEach(function(k){ var x=raw[k]; if(x && x.name && !x.need) have[_normName(x.name)]=1; });
     list.forEach(function(i){
       var nk=_normName(i.name);
-      if(!nk || nm[nk] || have[nk]) return;
+      if(!nk || nm[nk]) return;
+      if(have[nk]){ blocked.push(i.name); return; }
       var id=uref('stock').push().key;
       var rec=_stockClean({ name:i.name, kind:'food', need:true, needAt:Date.now(), needOnly:true, created:Date.now(), src:'cook',
         cookUnit:i.unit||'', cookAmount:(parseInt(i.amount,10)||1), cookCat:i.category||'', cookType:i.type||'ingredient',
         cookSrc:i.source||'dish', cookDishes:i.sourceDishIds||[] });
       raw[id]=rec; nm[nk]=id; added++;
-      uref('stock/'+id).set(rec).catch(function(e){ try{console.error(e);}catch(_){} showToast('⚠️ 加入失敗，請檢查網路'); });
+      uref('stock/'+id).set(rec).catch(function(e){ try{console.error(e);}catch(_){} delete raw[id]; showToast('⚠️ 加入失敗，請檢查網路'); try{ renderShoppingView(); }catch(_){} });
     });
+    if(blocked.length) showToast('庫存已有「' + blocked[0] + '」' + (blocked.length > 1 ? ' 等 ' + blocked.length + ' 項' : ''));
     return added;
   }
   function cancelNeed(id){
